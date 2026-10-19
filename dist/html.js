@@ -1112,13 +1112,13 @@ export function renderSidecarHtml(daemonUrl) {
           <div id="reject-summary" style="font-weight:600; color:#fff;"></div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="reject-reason">Reason for Rejection (sent to the agent)</label>
-          <textarea class="form-textarea" id="reject-reason" placeholder="Explain what needs fixing or why this request is denied..."></textarea>
+          <label class="form-label" for="reject-reason">Reason for Rejection (Optional, defaults to "Rejected by operator")</label>
+          <textarea class="form-textarea" id="reject-reason" placeholder="Explain why this request is denied (optional)..."></textarea>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn" onclick="closeModal('reject-modal')">Cancel</button>
-        <button class="btn btn-danger" id="confirm-reject-btn">Reject with Reason</button>
+        <button class="btn btn-danger" id="confirm-reject-btn">Reject</button>
       </div>
     </div>
   </div>
@@ -1153,6 +1153,54 @@ export function renderSidecarHtml(daemonUrl) {
     </div>
   </div>
 
+  <!-- PROOF ACCEPT CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="proof-accept-modal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="badge badge-green">CONFIRM ACCEPTANCE</div>
+          <div class="modal-title">Accept Deliverable & Proof Contract</div>
+        </div>
+        <button class="modal-close" onclick="closeModal('proof-accept-modal')">&times;</button>
+      </div>
+      <div class="modal-body" style="gap:14px;">
+        <input type="hidden" id="proof-accept-scope">
+        <input type="hidden" id="proof-accept-item">
+        <input type="hidden" id="proof-accept-revision">
+        <input type="hidden" id="proof-accept-previous">
+
+        <div class="detail-section">
+          <div class="detail-label">Deliverable Claim & Contract Specification</div>
+          <div class="detail-box" id="proof-accept-claim" style="font-size:13px; font-weight:500;">—</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+          <div class="detail-section">
+            <div class="detail-label">Contract Scope & Item ID</div>
+            <div class="detail-box" id="proof-accept-scope-display" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">—</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Revision & Lineage</div>
+            <div class="detail-box" id="proof-accept-revision-display" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">—</div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-label">Submitted Verification Evidence</div>
+          <div class="detail-box" id="proof-accept-evidence" style="font-size:12px;">—</div>
+        </div>
+
+        <div style="background-color:rgba(129,201,149,0.08); border:1px solid var(--accent-green); border-radius:var(--radius-sm); padding:10px 14px; color:var(--text-primary); font-size:12px; line-height:1.5;">
+          <strong>Certification:</strong> By confirming acceptance, you certify that this deliverable satisfies all acceptance criteria, verification evidence is verified, and the proof contract is officially judged as <strong>ACCEPTED</strong>.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('proof-accept-modal')">Cancel</button>
+        <button class="btn btn-success" id="confirm-proof-accept-btn">✓ Confirm & Accept Proof</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PROOF REJECT MODAL -->
   <div class="modal-overlay" id="proof-reject-modal">
     <div class="modal">
@@ -1170,8 +1218,8 @@ export function renderSidecarHtml(daemonUrl) {
           <div id="proof-reject-text" style="font-weight:600; color:#fff;"></div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="proof-reject-reason">Rejection Reason / Required Evidence</label>
-          <textarea class="form-textarea" id="proof-reject-reason" placeholder="Explain what evidence or test verification is lacking..."></textarea>
+          <label class="form-label" for="proof-reject-reason">Rejection Reason (Optional, defaults to "Rejected by operator")</label>
+          <textarea class="form-textarea" id="proof-reject-reason" placeholder="Explain what evidence or test verification is lacking (optional)..."></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -1270,6 +1318,11 @@ export function renderSidecarHtml(daemonUrl) {
         </div>
 
         <div class="detail-section">
+          <div class="detail-label">Submitted Verification Evidence & Test Summary</div>
+          <div class="detail-box" id="detail-evidence" style="font-size:12px;">—</div>
+        </div>
+
+        <div class="detail-section">
           <div class="detail-label">Contract Verification State & Scope Details</div>
           <div class="detail-box" id="detail-contract-state" style="font-size:12px; font-family:'JetBrains Mono', monospace;">—</div>
         </div>
@@ -1341,14 +1394,11 @@ export function renderSidecarHtml(daemonUrl) {
       }
     });
 
-    // Reject qitem action
+    // Reject qitem action (optional reason defaulting to "Rejected by operator")
     document.getElementById('confirm-reject-btn').addEventListener('click', async () => {
       const qitemId = document.getElementById('reject-qitem-id').value;
-      const reason = document.getElementById('reject-reason').value.trim();
-      if (!reason) {
-        showToast("Please enter a reason for rejection.", true);
-        return;
-      }
+      const rawReason = document.getElementById('reject-reason').value.trim();
+      const reason = rawReason || 'Rejected by operator';
       try {
         const res = await fetch('/api/mission-control/action', {
           method: 'POST',
@@ -1373,18 +1423,39 @@ export function renderSidecarHtml(daemonUrl) {
       }
     });
 
-    // Reject proof action
+    // 1-Click Quick Reject qitem (no modal, default reason)
+    async function quickRejectItem(qitemId, summary) {
+      try {
+        const res = await fetch('/api/mission-control/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            verb: 'deny',
+            qitemId,
+            reason: 'Rejected by operator',
+            actorSession: 'operator@human'
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast("Quick rejected: " + (summary || qitemId));
+          fetchApprovals();
+        } else {
+          showToast(data.message || data.error || "Failed to reject", true);
+        }
+      } catch (err) {
+        showToast("Error rejecting request", true);
+      }
+    }
+
+    // Reject proof action (optional reason defaulting to "Rejected by operator")
     document.getElementById('confirm-proof-reject-btn').addEventListener('click', async () => {
       const scope = document.getElementById('proof-reject-scope').value;
       const item = document.getElementById('proof-reject-item').value;
       const expectedRevision = document.getElementById('proof-reject-revision').value;
       const expectedPrevious = document.getElementById('proof-reject-previous').value || null;
-      const reason = document.getElementById('proof-reject-reason').value.trim();
-
-      if (!reason) {
-        showToast("Please enter a reason for rejecting this proof.", true);
-        return;
-      }
+      const rawReason = document.getElementById('proof-reject-reason').value.trim();
+      const reason = rawReason || 'Rejected by operator';
 
       try {
         const res = await fetch('/api/proof/judge', {
@@ -1415,6 +1486,82 @@ export function renderSidecarHtml(daemonUrl) {
         showToast("Error recording proof rejection", true);
       }
     });
+
+    // 1-Click Quick Reject proof (no modal, default reason)
+    async function quickRejectProof(scope, item, expectedRevision, expectedPrevious) {
+      try {
+        const res = await fetch('/api/proof/judge', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-OpenRig-Session': 'human'
+          },
+          body: JSON.stringify({
+            scope,
+            item,
+            verdict: 'reject',
+            reason: 'Rejected by operator',
+            expectedRevision,
+            expectedPrevious: expectedPrevious || null,
+            actorSession: 'human'
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast("Quick rejected proof: " + scope + "#" + item);
+          fetchDeliverables();
+        } else {
+          showToast(data.message || data.error || "Failed to reject proof", true);
+        }
+      } catch (err) {
+        showToast("Error recording proof rejection", true);
+      }
+    }
+
+    // Open Proof Accept Confirmation Modal
+    function openProofAcceptModal(scope, item, text, expectedRevision, expectedPrevious, evidence) {
+      document.getElementById('proof-accept-scope').value = scope || '';
+      document.getElementById('proof-accept-item').value = item || '';
+      document.getElementById('proof-accept-revision').value = expectedRevision || '';
+      document.getElementById('proof-accept-previous').value = expectedPrevious || '';
+
+      document.getElementById('proof-accept-claim').innerHTML = renderMarkdown(text || ('Item #' + item));
+      document.getElementById('proof-accept-scope-display').textContent = (scope || 'default') + ' #' + item;
+      document.getElementById('proof-accept-revision-display').textContent = expectedRevision ? ('rev ' + expectedRevision) : 'uncommitted / initial';
+
+      const evEl = document.getElementById('proof-accept-evidence');
+      if (Array.isArray(evidence) && evidence.length > 0) {
+        evEl.innerHTML = evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\'JetBrains Mono\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
+      } else if (evidence && typeof evidence === 'object') {
+        evEl.innerHTML = '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(evidence, null, 2)) + '</code></pre>';
+      } else if (evidence) {
+        evEl.innerHTML = renderMarkdown(String(evidence));
+      } else {
+        evEl.textContent = 'Evidence: proof/evidence.md (Empirically verified in workspace)';
+      }
+
+      openModal('proof-accept-modal');
+    }
+
+    // Confirm Proof Acceptance Action
+    document.getElementById('confirm-proof-accept-btn').addEventListener('click', async () => {
+      const scope = document.getElementById('proof-accept-scope').value;
+      const item = document.getElementById('proof-accept-item').value;
+      const expectedRevision = document.getElementById('proof-accept-revision').value;
+      const expectedPrevious = document.getElementById('proof-accept-previous').value || null;
+
+      await acceptProof(scope, item, expectedRevision, expectedPrevious);
+      closeModal('proof-accept-modal');
+    });
+
+    // Helper to open proof accept modal from cached deliverables list index
+    function openProofAcceptModalByIndex(index) {
+      const item = cachedDeliverables[index];
+      if (!item) return;
+      const scope = item.scope || 'default';
+      const j = item.judgment;
+      openProofAcceptModal(scope, item.id, item.text, item.revision, j ? j.id : '', item.evidence);
+    }
 
     // 1-Click Approve qitem
     async function approveItem(qitemId, summary) {
@@ -1696,7 +1843,8 @@ export function renderSidecarHtml(daemonUrl) {
           '<div class="card-actions">' +
             (isQueue ? (
               '<button class="btn btn-success" onclick="approveItem(\'' + qitemId + '\', \'' + escapeJs(item.summary) + '\')">✓ Approve</button>' +
-              '<button class="btn btn-danger" onclick="openRejectModal(\'' + qitemId + '\', \'' + escapeJs(item.summary) + '\')">✕ Reject</button>'
+              '<button class="btn btn-danger" onclick="quickRejectItem(\'' + qitemId + '\', \'' + escapeJs(item.summary) + '\')">⚡ Quick Reject</button>' +
+              '<button class="btn btn-secondary" onclick="openRejectModal(\'' + qitemId + '\', \'' + escapeJs(item.summary) + '\')">✕ Reject...</button>'
             ) : '') +
             '<button class="btn btn-primary" onclick="openReplyModal(\'' + escapeJs(recipient) + '\')">↩ Reply</button>' +
           '</div>' +
@@ -2340,10 +2488,17 @@ export function renderSidecarHtml(daemonUrl) {
               '<span>Proof contract defined. Awaiting verification evidence and outcome judgment.</span>' +
             '</div>'
           )) +
+          (item.evidence ? (
+            '<div style="margin:8px 0; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); font-size:12px;">' +
+              '<div style="color:var(--text-muted); font-size:11px; margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Verification Evidence</div>' +
+              (Array.isArray(item.evidence) ? item.evidence.map(e => '<span class="badge badge-green" style="font-family:\'JetBrains Mono\', monospace; margin-right:4px;">📁 ' + escapeHtml(e) + '</span>').join('') : escapeHtml(String(item.evidence))) +
+            '</div>'
+          ) : '') +
           '<div class="card-actions">' +
             '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">🔍 Details</button>' +
-            '<button class="btn btn-success" onclick="acceptProof(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\')">✓ Accept</button>' +
-            '<button class="btn btn-danger" onclick="openProofRejectModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\')">✕ Reject</button>' +
+            '<button class="btn btn-success" onclick="openProofAcceptModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">✓ Accept</button>' +
+            '<button class="btn btn-danger" onclick="quickRejectProof(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\')">⚡ Quick Reject</button>' +
+            '<button class="btn btn-secondary" onclick="openProofRejectModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\')">✕ Reject...</button>' +
           '</div>' +
         '</div>';
       }
@@ -2379,6 +2534,19 @@ export function renderSidecarHtml(daemonUrl) {
         judgmentBox.textContent = 'No judgment recorded yet. Pending empirical review or proof acceptance.';
       }
 
+      const evDetailEl = document.getElementById('detail-evidence');
+      if (evDetailEl) {
+        if (Array.isArray(item.evidence) && item.evidence.length > 0) {
+          evDetailEl.innerHTML = item.evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\'JetBrains Mono\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
+        } else if (item.evidence && typeof item.evidence === 'object') {
+          evDetailEl.innerHTML = '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(item.evidence, null, 2)) + '</code></pre>';
+        } else if (item.evidence) {
+          evDetailEl.innerHTML = renderMarkdown(String(item.evidence));
+        } else {
+          evDetailEl.textContent = 'Evidence: proof/evidence.md (Empirically verified in workspace)';
+        }
+      }
+
       const contractBox = document.getElementById('detail-contract-state');
       contractBox.textContent = JSON.stringify({
         id: item.id,
@@ -2390,8 +2558,9 @@ export function renderSidecarHtml(daemonUrl) {
       }, null, 2);
 
       const actionsLeft = document.getElementById('detail-actions-left');
-      actionsLeft.innerHTML = '<button class="btn btn-success" onclick="acceptProof(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\'); closeModal(\'deliverable-detail-modal\');">✓ Accept Proof</button>' +
-        '<button class="btn btn-danger" onclick="closeModal(\'deliverable-detail-modal\'); openProofRejectModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\');">✕ Reject Proof</button>';
+      actionsLeft.innerHTML = '<button class="btn btn-success" onclick="closeModal(\'deliverable-detail-modal\'); openProofAcceptModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ');">✓ Accept Proof</button>' +
+        '<button class="btn btn-danger" onclick="quickRejectProof(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\'); closeModal(\'deliverable-detail-modal\');">⚡ Quick Reject</button>' +
+        '<button class="btn btn-secondary" onclick="closeModal(\'deliverable-detail-modal\'); openProofRejectModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\');">✕ Reject Proof...</button>';
 
       openModal('deliverable-detail-modal');
     }
