@@ -13,6 +13,8 @@ A standalone, lightweight, zero-dependency web companion and control plane for O
   - Complete multi-rig topology map (Kernel, Antigravity Demo, OpenRig Dev, DnD World, etc.).
   - Live seat health, runtime classification (`antigravity`, `omp`, `claude-code`, `codex`), and token burn rate.
   - Pod membership, delegation edges, and active communication links.
+  - **Live Terminal Screen Capture Modal**: Inspect live terminal screens for any active seat with clean ANSI stripping, configurable line depths (30/50/100/200), auto-refresh, and one-click clipboard copy.
+  - **Fleet Telemetry Dashboard**: Real-time aggregated token metrics, estimated cost tracking, and per-seat context utilization indicators.
 
 - **Tab 3: Deliverables & Artifacts Showcase**
   - Rich preview of generated artifacts: Markdown documents, PR diffs, images, architecture diagrams, and release packets.
