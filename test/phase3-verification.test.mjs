@@ -47,7 +47,7 @@ test("OpenRig Sidecar Phase 3 Verification Suite: 5 Core Capabilities", async (t
         .replace(/^### (.*$)/gim, "<h3>$1</h3>")
         .replace(/^## (.*$)/gim, "<h2>$1</h2>")
         .replace(/^# (.*$)/gim, "<h1>$1</h1>")
-        .replace(/^> (.*$)/gim, "<blockquote>$1</blockquote>")
+        .replace(/^(?:>|&gt;)\s*(.*$)/gim, "<blockquote>$1</blockquote>")
         .replace(/^\s*-\s+(.*$)/gim, "<li>$1</li>");
       return res;
     }

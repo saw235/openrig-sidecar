@@ -52,6 +52,9 @@ export function startSidecarServer(opts?: SidecarServerOptions): Promise<Running
         "content-type": "application/json",
         "content-length": Buffer.byteLength(postBody),
       };
+      delete proxyHeaders.origin;
+      delete proxyHeaders.referer;
+
       if (opts?.bearerToken && !proxyHeaders["authorization"]) {
         proxyHeaders["authorization"] = `Bearer ${opts.bearerToken}`;
       }
@@ -79,6 +82,9 @@ export function startSidecarServer(opts?: SidecarServerOptions): Promise<Running
       const targetPath = url.pathname === "/api/capture" ? "/api/transport/capture" : url.pathname;
       const targetUrl = new URL(targetPath + url.search, daemonUrl);
       const proxyHeaders = { ...req.headers, host: targetUrl.host };
+      delete proxyHeaders.origin;
+      delete proxyHeaders.referer;
+
 
       if (opts?.bearerToken && !proxyHeaders["authorization"]) {
         proxyHeaders["authorization"] = `Bearer ${opts.bearerToken}`;
