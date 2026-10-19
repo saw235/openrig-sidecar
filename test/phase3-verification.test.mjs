@@ -177,4 +177,65 @@ test("OpenRig Sidecar Phase 3 Verification Suite: 5 Core Capabilities", async (t
       "Clipboard copy button must be retained alongside the deep hyperlink"
     );
   });
+
+  await t.test("Capability 6: Proof Usability & Accept Confirmation Modal", () => {
+    // Check that Proof Accept Modal exists
+    assert.ok(
+      html.includes('id="proof-accept-modal"'),
+      "Must include a dedicated Accept Confirmation Modal for deliverables"
+    );
+
+    // Check modal components: claim, evidence, scope/revision, confirm button
+    assert.ok(
+      html.includes('id="proof-accept-claim"'),
+      "Modal must clearly display the deliverable claim"
+    );
+    assert.ok(
+      html.includes('id="proof-accept-evidence"'),
+      "Modal must clearly present the verification evidence"
+    );
+    assert.ok(
+      html.includes('id="confirm-proof-accept-btn"'),
+      "Modal must have an explicit confirmation action button"
+    );
+
+    // Check client JS openProofAcceptModal function
+    assert.ok(
+      html.includes("openProofAcceptModal"),
+      "Client JS must implement openProofAcceptModal to inspect proof before judging accept"
+    );
+  });
+
+  await t.test("Capability 7: 1-Click Quick Reject & Default Rejection Reason", () => {
+    // Check 1-click quick reject handler for mission approvals / queue items
+    const hasQuickRejectItem =
+      html.includes("quickRejectItem") ||
+      html.includes("Quick Reject");
+
+    assert.ok(
+      hasQuickRejectItem,
+      "Tab 1 attention cards must support 1-click Quick Reject without mandatory modal prompt"
+    );
+
+    // Check 1-click quick reject handler for deliverable proof contracts
+    const hasQuickRejectProof =
+      html.includes("quickRejectProof") ||
+      html.includes("Quick Reject");
+
+    assert.ok(
+      hasQuickRejectProof,
+      "Tab 3 proof cards must support 1-click Quick Reject"
+    );
+
+    // Check optional rejection reason defaulting to 'Rejected by operator'
+    const hasDefaultReason =
+      html.includes("Rejected by operator") ||
+      html.includes("defaultReason");
+
+    assert.ok(
+      hasDefaultReason,
+      "Rejection actions must allow optional reason defaulting to 'Rejected by operator'"
+    );
+  });
 });
+
