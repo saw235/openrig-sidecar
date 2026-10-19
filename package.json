@@ -1,0 +1,32 @@
+{
+  "name": "openrig-sidecar",
+  "version": "0.1.0",
+  "description": "Antigravity Studio web companion and control plane for OpenRig fleets",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "openrig-sidecar": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "node --watch src/index.ts"
+  },
+  "keywords": [
+    "openrig",
+    "antigravity",
+    "multi-agent",
+    "sidecar",
+    "control-plane",
+    "dashboard"
+  ],
+  "author": "Antigravity & OpenRig Team",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
