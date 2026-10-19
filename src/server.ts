@@ -36,13 +36,48 @@ export function startSidecarServer(opts?: SidecarServerOptions): Promise<Running
     // Health check endpoint
     if (url.pathname === "/healthz") {
       res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ status: "ok", sidecar: true, daemonUrl }));
+      res.end(JSON.stringify({ status: "ok", sidecar: true, daemonUrl, version: "0.1.0" }));
+      return;
+    }
+
+    // Convenience alias: GET /api/capture?session=...&lines=...
+    if (url.pathname === "/api/capture" && req.method === "GET") {
+      const session = url.searchParams.get("session") || "";
+      const lines = Number(url.searchParams.get("lines")) || 50;
+      const targetUrl = new URL("/api/transport/capture", daemonUrl);
+      const postBody = JSON.stringify({ session, lines });
+      const proxyHeaders: http.OutgoingHttpHeaders = {
+        ...req.headers,
+        host: targetUrl.host,
+        "content-type": "application/json",
+        "content-length": Buffer.byteLength(postBody),
+      };
+      if (opts?.bearerToken && !proxyHeaders["authorization"]) {
+        proxyHeaders["authorization"] = `Bearer ${opts.bearerToken}`;
+      }
+      const proxyReq = http.request(
+        targetUrl,
+        {
+          method: "POST",
+          headers: proxyHeaders,
+        },
+        (proxyRes) => {
+          res.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
+          proxyRes.pipe(res);
+        }
+      );
+      proxyReq.on("error", (err) => {
+        res.writeHead(502, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "daemon_unreachable", message: err.message, daemonUrl }));
+      });
+      proxyReq.end(postBody);
       return;
     }
 
     // Proxy /api/* to OpenRig daemon
     if (url.pathname.startsWith("/api/")) {
-      const targetUrl = new URL(url.pathname + url.search, daemonUrl);
+      const targetPath = url.pathname === "/api/capture" ? "/api/transport/capture" : url.pathname;
+      const targetUrl = new URL(targetPath + url.search, daemonUrl);
       const proxyHeaders = { ...req.headers, host: targetUrl.host };
 
       if (opts?.bearerToken && !proxyHeaders["authorization"]) {
