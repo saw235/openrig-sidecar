@@ -800,6 +800,113 @@ export function renderSidecarHtml(daemonUrl) {
       border: 1px dashed var(--border-subtle);
       border-radius: var(--radius-lg);
     }
+
+    /* Antigravity deep link styling */
+    .conv-link {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: color 0.15s ease;
+    }
+    .conv-link:hover {
+      color: var(--accent-blue-hover);
+      text-decoration: underline;
+    }
+
+    /* View Mode Toggle buttons */
+    .btn-group {
+      display: inline-flex;
+      border-radius: var(--radius-sm);
+      background-color: var(--bg-card);
+      padding: 2px;
+      border: 1px solid var(--border-subtle);
+      gap: 2px;
+    }
+    .view-toggle-btn {
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-weight: 500;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .view-toggle-btn:hover {
+      color: var(--text-primary);
+    }
+    .view-toggle-btn.active {
+      background-color: var(--bg-elevated);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Topology SVG Visual Graph */
+    #topology-graph-container {
+      display: none;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      overflow-x: auto;
+      min-height: 440px;
+    }
+    .svg-graph {
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* Zero-dependency Markdown styles */
+    .md-h1 { font-size: 16px; font-weight: 700; color: #fff; margin: 8px 0 4px; }
+    .md-h2 { font-size: 14px; font-weight: 600; color: #fff; margin: 6px 0 4px; }
+    .md-h3 { font-size: 13px; font-weight: 600; color: var(--accent-blue); margin: 4px 0 2px; }
+    .md-p { margin-bottom: 6px; line-height: 1.5; }
+    .md-p:last-child { margin-bottom: 0; }
+    .md-inline-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--accent-blue);
+    }
+    .md-code-block {
+      background-color: #0d0d0d;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin: 6px 0;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: #e6e6e6;
+    }
+    .md-blockquote {
+      border-left: 3px solid var(--accent-blue);
+      background-color: var(--bg-card);
+      padding: 6px 12px;
+      margin: 6px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+    .md-ul, .md-ol {
+      margin: 6px 0 6px 18px;
+      padding-left: 6px;
+    }
+    .md-li-ul, .md-li-ol {
+      margin-bottom: 3px;
+    }
   </style>
 </head>
 <body>
@@ -856,7 +963,16 @@ export function renderSidecarHtml(daemonUrl) {
           <button class="filter-pill" data-filter="action" onclick="setApprovalsStatusFilter('action', this)">Action Required</button>
           <button class="filter-pill" data-filter="pending" onclick="setApprovalsStatusFilter('pending', this)">Pending</button>
         </div>
-        <button class="btn btn-primary" id="open-new-send-btn">+ Send to Agent</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <select id="approvals-rig-filter" class="form-select" onchange="filterApprovals()">
+            <option value="all">All Rigs</option>
+          </select>
+          <select id="approvals-sort" class="form-select" onchange="filterApprovals()">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+          <button class="btn btn-primary" id="open-new-send-btn">+ Send to Agent</button>
+        </div>
       </div>
       <div id="approvals-list" class="card-grid">
         <div class="empty-state">Loading pending attention items...</div>
@@ -905,6 +1021,9 @@ export function renderSidecarHtml(daemonUrl) {
           <input type="text" id="topology-search" class="search-input" placeholder="Search seats by logical ID, session, pod, model, runtime..." oninput="filterTopology()">
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
+          <select id="topology-rig-filter" class="form-select" onchange="filterTopology()">
+            <option value="all">All Rigs</option>
+          </select>
           <select id="topology-runtime-filter" class="form-select" onchange="filterTopology()">
             <option value="all">All Runtimes</option>
             <option value="antigravity">Google Antigravity</option>
@@ -918,11 +1037,27 @@ export function renderSidecarHtml(daemonUrl) {
             <option value="idle">Idle</option>
             <option value="needs_input">Needs Input</option>
           </select>
+          <select id="topology-sort" class="form-select" onchange="filterTopology()">
+            <option value="newest">Newest / Active</option>
+            <option value="oldest">Oldest</option>
+          </select>
+          <div class="btn-group" id="topology-view-toggle">
+            <button class="view-toggle-btn active" id="view-toggle-grid" onclick="toggleTopologyView('grid')">
+              ⊞ Matrix Grid
+            </button>
+            <button class="view-toggle-btn" id="view-toggle-graph" onclick="toggleTopologyView('graph')">
+              ☊ Visual Graph
+            </button>
+          </div>
         </div>
       </div>
 
       <div id="topology-list">
         <div class="empty-state">Loading agent topology...</div>
+      </div>
+
+      <div id="topology-graph-container">
+        <div class="empty-state">Generating visual topology graph...</div>
       </div>
     </section>
 
@@ -945,6 +1080,15 @@ export function renderSidecarHtml(daemonUrl) {
           <button class="filter-pill" data-filter="accepted" onclick="setDeliverablesVerdictFilter('accepted', this)">Accepted</button>
           <button class="filter-pill" data-filter="rejected" onclick="setDeliverablesVerdictFilter('rejected', this)">Rejected</button>
           <button class="filter-pill" data-filter="pending" onclick="setDeliverablesVerdictFilter('pending', this)">Pending</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <select id="deliverables-rig-filter" class="form-select" onchange="filterDeliverables()">
+            <option value="all">All Rigs</option>
+          </select>
+          <select id="deliverables-sort" class="form-select" onchange="filterDeliverables()">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
         </div>
       </div>
 
@@ -987,6 +1131,12 @@ export function renderSidecarHtml(daemonUrl) {
         <button class="modal-close" onclick="closeModal('reply-modal')">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="reply-session-select">Select Live Agent / Session</label>
+          <select id="reply-session-select" class="form-select" style="width:100%; padding:8px 12px; font-size:12.5px;" onchange="onReplySessionSelect(this.value)">
+            <option value="">-- Choose live seat or enter custom session below --</option>
+          </select>
+        </div>
         <div class="form-group">
           <label class="form-label" for="reply-session">Target Agent / Session</label>
           <input type="text" class="form-input" id="reply-session" placeholder="e.g. operator.agent@kernel or conversation UUID">
@@ -1162,9 +1312,7 @@ export function renderSidecarHtml(daemonUrl) {
 
     // Modal triggers
     document.getElementById('open-new-send-btn').addEventListener('click', () => {
-      document.getElementById('reply-session').value = '';
-      document.getElementById('reply-text').value = '';
-      openModal('reply-modal');
+      openReplyModal('');
     });
 
     // Send reply action
@@ -1301,11 +1449,125 @@ export function renderSidecarHtml(daemonUrl) {
       openModal('reject-modal');
     }
 
+    // Live Agent Dropdown in Send/Reply modal
+    function populateAgentDropdown(rigs) {
+      const select = document.getElementById('reply-session-select');
+      if (!select) return;
+      const currentVal = select.value;
+      let html = '<option value="">-- Choose live seat or enter custom session below --</option>';
+      if (Array.isArray(rigs)) {
+        for (const r of rigs) {
+          const rig = r.rig || r;
+          const nodes = rig.nodes || [];
+          if (nodes.length === 0) continue;
+          html += '<optgroup label="Rig: ' + escapeHtml(rig.name) + '">';
+          for (const node of nodes) {
+            const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
+            const runtime = node.runtime || 'antigravity';
+            html += '<option value="' + escapeHtml(sessionName) + '">' + escapeHtml(node.logicalId) + ' (' + escapeHtml(runtime) + ')</option>';
+          }
+          html += '</optgroup>';
+        }
+      }
+      select.innerHTML = html;
+      if (currentVal) select.value = currentVal;
+    }
+    const updateAgentSelect = populateAgentDropdown;
+
+    function onReplySessionSelect(val) {
+      if (val) {
+        document.getElementById('reply-session').value = val;
+      }
+    }
+
     // Open reply modal for seat
     function openReplyModal(session) {
-      document.getElementById('reply-session').value = session;
+      document.getElementById('reply-session').value = session || '';
+      const select = document.getElementById('reply-session-select');
+      if (select) {
+        select.value = session || '';
+      }
       document.getElementById('reply-text').value = '';
       openModal('reply-modal');
+    }
+
+    // Dynamic Rig Filters across all three tabs
+    function updateAllRigFilters(rigNames) {
+      const filterIds = ['approvals-rig-filter', 'topology-rig-filter', 'deliverables-rig-filter'];
+      for (const id of filterIds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const current = el.value || 'all';
+        let html = '<option value="all">All Rigs</option>';
+        for (const name of rigNames) {
+          html += '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>';
+        }
+        el.innerHTML = html;
+        if (rigNames.includes(current)) {
+          el.value = current;
+        } else {
+          el.value = 'all';
+        }
+      }
+    }
+
+    // Zero-dependency client-side markdown rendering
+    function renderMarkdown(str) {
+      if (!str) return '';
+      let text = escapeHtml(str);
+
+      // Fenced code blocks
+      const codeBlocks = [];
+      text = text.replace(/\`\`\`([a-zA-Z0-9_-]*)\\s*([\\s\\S]*?)\`\`\`/g, (match, lang, code) => {
+        const idx = codeBlocks.length;
+        codeBlocks.push('<pre class="md-code-block"><code class="lang-' + (lang || 'text') + '">' + code.trim() + '</code></pre>');
+        return '%%CODEBLOCK_' + idx + '%%';
+      });
+
+      // Inline code
+      text = text.replace(/\`([^\`]+)\`/g, '<code class="md-inline-code">$1</code>');
+
+      // Headers
+      text = text.replace(/^### (.*$)/gim, '<h3 class="md-h3">$1</h3>');
+      text = text.replace(/^## (.*$)/gim, '<h2 class="md-h2">$1</h2>');
+      text = text.replace(/^# (.*$)/gim, '<h1 class="md-h1">$1</h1>');
+
+      // Blockquotes
+      text = text.replace(/^(?:>|&gt;)\s*(.*$)/gim, '<blockquote class="md-blockquote">$1</blockquote>');
+
+      // Bold and italics
+      text = text.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
+      text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+      text = text.replace(/\\*([^*]+)\\*/g, '<em>$1</em>');
+      text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+      // Unordered lists
+      text = text.replace(/^\\s*[-*]\\s+(.*$)/gim, '<li class="md-li-ul">$1</li>');
+      text = text.replace(/(<li class="md-li-ul">[\\s\\S]*?<\\/li>)(?!\\s*<li class="md-li-ul">)/gim, '<ul class="md-ul">$1</ul>');
+
+      // Ordered lists
+      text = text.replace(/^\\s*\\d+\\.\\s+(.*$)/gim, '<li class="md-li-ol">$1</li>');
+      text = text.replace(/(<li class="md-li-ol">[\\s\\S]*?<\\/li>)(?!\\s*<li class="md-li-ol">)/gim, '<ol class="md-ol">$1</ol>');
+
+      // Paragraphs
+      const paragraphs = text.split(/\\n{2,}/);
+      text = paragraphs.map(p => {
+        p = p.trim();
+        if (!p) return '';
+        if (p.startsWith('<h1') || p.startsWith('<h2') || p.startsWith('<h3') || 
+            p.startsWith('<blockquote') || p.startsWith('<ul') || p.startsWith('<ol') || 
+            p.startsWith('%%CODEBLOCK_')) {
+          return p;
+        }
+        return '<p class="md-p">' + p.replace(/\\n/g, '<br>') + '</p>';
+      }).filter(Boolean).join('');
+
+      // Restore code blocks
+      text = text.replace(/%%CODEBLOCK_(\\d+)%%/g, (match, idx) => {
+        return codeBlocks[Number(idx)] || '';
+      });
+
+      return text;
     }
 
     // 1-Click Accept proof
@@ -1376,6 +1638,8 @@ export function renderSidecarHtml(daemonUrl) {
     function renderApprovals() {
       const list = document.getElementById('approvals-list');
       const search = (document.getElementById('approvals-search')?.value || '').toLowerCase().trim();
+      const rigFilter = document.getElementById('approvals-rig-filter')?.value || 'all';
+      const sortOrder = document.getElementById('approvals-sort')?.value || 'newest';
 
       const filtered = cachedApprovals.filter(item => {
         const isQueue = item.id.startsWith('queue:');
@@ -1383,11 +1647,22 @@ export function renderSidecarHtml(daemonUrl) {
         if (approvalsStatusFilter === 'action' && !isQueue && !isCritical) return false;
         if (approvalsStatusFilter === 'pending' && (isQueue || isCritical)) return false;
 
+        if (rigFilter !== 'all') {
+          const rText = ((item.scope || '') + ' ' + (item.recipient || '') + ' ' + (item.rig || '')).toLowerCase();
+          if (!rText.includes(rigFilter.toLowerCase())) return false;
+        }
+
         if (search) {
           const text = ((item.summary || '') + ' ' + (item.scope || '') + ' ' + (item.recipient || '') + ' ' + (item.kind || '') + ' ' + (item.unblocks || '')).toLowerCase();
           if (!text.includes(search)) return false;
         }
         return true;
+      });
+
+      filtered.sort((a, b) => {
+        const tA = a.at ? new Date(a.at).getTime() : 0;
+        const tB = b.at ? new Date(b.at).getTime() : 0;
+        return sortOrder === 'newest' ? tB - tA : tA - tB;
       });
 
       document.getElementById('approvals-count').textContent = filtered.length;
@@ -1405,35 +1680,27 @@ export function renderSidecarHtml(daemonUrl) {
         const recipient = item.recipient || 'operator@human';
         const at = item.at ? new Date(item.at).toLocaleTimeString() : '';
 
-        html += \`
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">\${escapeHtml(item.summary || 'Attention Item')}</div>
-                <div class="card-meta">
-                  <span class="badge \${urgencyBadge}">\${escapeHtml(item.urgency || item.kind)}</span>
-                  <span>To: \${escapeHtml(recipient)}</span>
-                  \${item.scope ? \`<span>• \${escapeHtml(item.scope)}</span>\` : ''}
-                  <span>• \${at}</span>
-                </div>
-              </div>
-            </div>
-            \${item.unblocks ? \`<div class="card-meta"><span>Unblocks: \${escapeHtml(item.unblocks)}</span></div>\` : ''}
-            <div class="card-actions">
-              \${isQueue ? \`
-                <button class="btn btn-success" onclick="approveItem('\${qitemId}', '\${escapeJs(item.summary)}')">
-                  ✓ Approve
-                </button>
-                <button class="btn btn-danger" onclick="openRejectModal('\${qitemId}', '\${escapeJs(item.summary)}')">
-                  ✕ Reject
-                </button>
-              \` : ''}
-              <button class="btn btn-primary" onclick="openReplyModal('\${escapeJs(recipient)}')">
-                ↩ Reply
-              </button>
-            </div>
-          </div>
-        \`;
+        html += '<div class="card">' +
+          '<div class="card-header">' +
+            '<div>' +
+              '<div class="card-title">' + renderMarkdown(item.summary || 'Attention Item') + '</div>' +
+              '<div class="card-meta">' +
+                '<span class="badge ' + urgencyBadge + '">' + escapeHtml(item.urgency || item.kind) + '</span>' +
+                '<span>To: ' + escapeHtml(recipient) + '</span>' +
+                (item.scope ? ('<span>• ' + escapeHtml(item.scope) + '</span>') : '') +
+                '<span>• ' + at + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          (item.unblocks ? ('<div class="card-meta"><span>Unblocks: ' + renderMarkdown(item.unblocks) + '</span></div>') : '') +
+          '<div class="card-actions">' +
+            (isQueue ? (
+              '<button class="btn btn-success" onclick="approveItem(\'' + qitemId + '\', \'' + escapeJs(item.summary) + '\')">✓ Approve</button>' +
+              '<button class="btn btn-danger" onclick="openRejectModal(\'' + qitemId + '\', \'' + escapeJs(item.summary) + '\')">✕ Reject</button>'
+            ) : '') +
+            '<button class="btn btn-primary" onclick="openReplyModal(\'' + escapeJs(recipient) + '\')">↩ Reply</button>' +
+          '</div>' +
+        '</div>';
       }
       list.innerHTML = html;
     }
@@ -1566,6 +1833,164 @@ export function renderSidecarHtml(daemonUrl) {
       }
     }
 
+    // Tab 2 View Switcher & SVG Visual Graph
+    let topologyViewMode = 'grid';
+
+    function toggleTopologyView(mode) {
+      topologyViewMode = mode;
+      const gridBtn = document.getElementById('view-toggle-grid');
+      const graphBtn = document.getElementById('view-toggle-graph');
+      const listEl = document.getElementById('topology-list');
+      const graphEl = document.getElementById('topology-graph-container');
+
+      if (mode === 'graph') {
+        if (gridBtn) gridBtn.classList.remove('active');
+        if (graphBtn) graphBtn.classList.add('active');
+        if (listEl) listEl.style.display = 'none';
+        if (graphEl) {
+          graphEl.style.display = 'block';
+          renderSvgGraph();
+        }
+      } else {
+        if (gridBtn) gridBtn.classList.add('active');
+        if (graphBtn) graphBtn.classList.remove('active');
+        if (listEl) listEl.style.display = 'block';
+        if (graphEl) graphEl.style.display = 'none';
+      }
+    }
+
+    function renderSvgGraph() {
+      const container = document.getElementById('topology-graph-container');
+      if (!container || !cachedTopology) return;
+
+      const { rigs } = cachedTopology;
+      const rigFilter = document.getElementById('topology-rig-filter')?.value || 'all';
+      const search = (document.getElementById('topology-search')?.value || '').toLowerCase().trim();
+
+      const filteredRigs = rigs.filter(r => {
+        const rig = r.rig || r;
+        if (rigFilter !== 'all' && rig.name !== rigFilter) return false;
+        return true;
+      });
+
+      if (filteredRigs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No rigs match the current filter or search criteria.</div>';
+        return;
+      }
+
+      const cardWidth = 220;
+      const cardHeight = 68;
+      const colGap = 90;
+      const rowGap = 30;
+      const podPadding = 18;
+
+      let svgContent = '';
+      const defs = '<defs>' +
+        '<marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
+          '<path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#8ab4f8"/>' +
+        '</marker>' +
+      '</defs>';
+
+      let totalWidth = 960;
+      let currentY = 20;
+
+      for (const r of filteredRigs) {
+        const rig = r.rig || r;
+        const nodes = (rig.nodes || []).filter(node => {
+          if (!search) return true;
+          const s = (node.logicalId + ' ' + (node.canonicalSessionName || '') + ' ' + (node.runtime || '')).toLowerCase();
+          return s.includes(search);
+        });
+
+        if (nodes.length === 0) continue;
+
+        const pods = {};
+        for (const n of nodes) {
+          const podName = n.logicalId.split('.')[0] || 'default';
+          if (!pods[podName]) pods[podName] = [];
+          pods[podName].push(n);
+        }
+
+        svgContent += '<text x="24" y="' + (currentY + 16) + '" fill="#8ab4f8" font-size="14" font-weight="700" font-family="\'Inter\', sans-serif">' +
+          'RIG: ' + escapeHtml(rig.name) + ' (' + escapeHtml(rig.status || 'running') + ')' +
+        '</text>';
+        currentY += 34;
+
+        for (const [podName, podNodes] of Object.entries(pods)) {
+          const sortedPodNodes = [...podNodes].sort((a, b) => {
+            const getRank = (id) => {
+              if (id.includes('lead') || id.includes('operator')) return 1;
+              if (id.includes('builder') || id.includes('dev')) return 2;
+              if (id.includes('reviewer') || id.includes('qa')) return 3;
+              return 4;
+            };
+            return getRank(a.logicalId) - getRank(b.logicalId);
+          });
+
+          const nodeCount = sortedPodNodes.length;
+          const podWidth = Math.max(340, nodeCount * cardWidth + (nodeCount - 1) * colGap + podPadding * 2);
+          if (podWidth + 48 > totalWidth) totalWidth = podWidth + 48;
+          const podHeight = cardHeight + podPadding * 2 + 28;
+
+          svgContent += '<rect x="24" y="' + currentY + '" width="' + podWidth + '" height="' + podHeight + '" rx="10" fill="#181818" stroke="#2d2d2d" stroke-width="1"/>' +
+            '<text x="40" y="' + (currentY + 22) + '" fill="#9e9e9e" font-size="12" font-weight="600" font-family="\'Inter\', sans-serif">' +
+              'POD: ' + escapeHtml(podName) + ' (' + nodeCount + ' seats)' +
+            '</text>';
+
+          const nodePositions = [];
+          for (let i = 0; i < sortedPodNodes.length; i++) {
+            const node = sortedPodNodes[i];
+            const nodeX = 24 + podPadding + i * (cardWidth + colGap);
+            const nodeY = currentY + 34;
+            nodePositions.push({ node, x: nodeX, y: nodeY });
+
+            const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
+            const runtime = node.runtime || 'antigravity';
+            const disp = (node.activityState && node.activityState.display) || node.sessionStatus || 'idle';
+            const state = disp === 'working' ? '#81c995' : (disp === 'needs_input' || disp === 'attention_required') ? '#fdd663' : '#8ab4f8';
+
+            svgContent += '<g class="graph-node" style="cursor:pointer;" onclick="openCaptureModal(\'' + escapeJs(sessionName) + '\', \'' + escapeJs(node.logicalId) + '\')">' +
+              '<rect x="' + nodeX + '" y="' + nodeY + '" width="' + cardWidth + '" height="' + cardHeight + '" rx="6" fill="#1e1e1e" stroke="#2d2d2d" stroke-width="1"/>' +
+              '<circle cx="' + (nodeX + 16) + '" cy="' + (nodeY + 22) + '" r="5" fill="' + state + '"/>' +
+              '<text x="' + (nodeX + 30) + '" y="' + (nodeY + 26) + '" fill="#ffffff" font-size="12" font-weight="600" font-family="\'Inter\', sans-serif">' +
+                escapeHtml(node.logicalId) +
+              '</text>' +
+              '<text x="' + (nodeX + 30) + '" y="' + (nodeY + 44) + '" fill="#9e9e9e" font-size="10.5" font-family="\'JetBrains Mono\', monospace">' +
+                escapeHtml(runtime) + ' • ' + escapeHtml(disp) +
+              '</text>' +
+              '<text x="' + (nodeX + 30) + '" y="' + (nodeY + 58) + '" fill="#6b6b6b" font-size="9.5" font-family="\'Inter\', sans-serif">' +
+                'Click for Terminal Snapshot' +
+              '</text>' +
+            '</g>';
+          }
+
+          for (let i = 0; i < nodePositions.length - 1; i++) {
+            const nA = nodePositions[i];
+            const nB = nodePositions[i + 1];
+            const x1 = nA.x + cardWidth;
+            const y1 = nA.y + cardHeight / 2;
+            const x2 = nB.x;
+            const y2 = nB.y + cardHeight / 2;
+            const cx1 = x1 + colGap / 2;
+            const cy1 = y1;
+            const cx2 = x2 - colGap / 2;
+            const cy2 = y2;
+
+            svgContent += '<path d="M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + cy1 + ', ' + cx2 + ' ' + cy2 + ', ' + (x2 - 4) + ' ' + y2 + '" fill="none" stroke="#8ab4f8" stroke-width="1.75" marker-end="url(#arrowhead)"/>';
+          }
+
+          currentY += podHeight + rowGap;
+        }
+
+        currentY += 20;
+      }
+
+      const totalHeight = Math.max(420, currentY);
+      container.innerHTML = '<svg class="svg-graph" width="' + totalWidth + '" height="' + totalHeight + '" viewBox="0 0 ' + totalWidth + ' ' + totalHeight + '" xmlns="http://www.w3.org/2000/svg">' +
+        defs + svgContent +
+      '</svg>';
+    }
+
     // Tab 2 Filtering & Rendering
     function filterTopology() {
       if (cachedTopology) {
@@ -1578,8 +2003,14 @@ export function renderSidecarHtml(daemonUrl) {
       const { rigs, costData, topData, seatUsageMap } = cachedTopology;
 
       const search = (document.getElementById('topology-search')?.value || '').toLowerCase().trim();
+      const rigFilter = document.getElementById('topology-rig-filter')?.value || 'all';
       const runtimeFilter = document.getElementById('topology-runtime-filter')?.value || 'all';
       const statusFilter = document.getElementById('topology-status-filter')?.value || 'all';
+      const sortOrder = document.getElementById('topology-sort')?.value || 'newest';
+
+      if (topologyViewMode === 'graph') {
+        renderSvgGraph();
+      }
 
       let totalSeats = 0;
       let activeSeats = 0;
@@ -1588,6 +2019,7 @@ export function renderSidecarHtml(daemonUrl) {
 
       for (const r of rigs) {
         const rig = r.rig || r;
+        if (rigFilter !== 'all' && rig.name !== rigFilter) continue;
         const nodes = rig.nodes || [];
 
         // Filter nodes
@@ -1621,6 +2053,19 @@ export function renderSidecarHtml(daemonUrl) {
 
         if (filteredNodes.length === 0) continue;
 
+        // Sort filtered nodes
+        filteredNodes.sort((a, b) => {
+          if (sortOrder === 'newest') {
+            const isAWorking = ((a.activityState && a.activityState.display) || a.sessionStatus) === 'working';
+            const isBWorking = ((b.activityState && b.activityState.display) || b.sessionStatus) === 'working';
+            if (isAWorking && !isBWorking) return -1;
+            if (!isAWorking && isBWorking) return 1;
+            return (b.startedAt || 0) - (a.startedAt || 0);
+          } else {
+            return (a.startedAt || 0) - (b.startedAt || 0);
+          }
+        });
+
         totalSeats += filteredNodes.length;
 
         // Group filtered nodes by pod
@@ -1631,29 +2076,25 @@ export function renderSidecarHtml(daemonUrl) {
           pods[podName].push(node);
         }
 
-        html += \`
-          <div class="rig-container">
-            <div class="rig-header">
-              <div class="rig-title">
-                <span class="badge badge-blue">RIG</span>
-                <span>\${escapeHtml(rig.name)}</span>
-              </div>
-              <div class="card-meta">
-                <span>\${filteredNodes.length} matching seats</span>
-                <span>• Status: \${escapeHtml(rig.status || 'running')}</span>
-              </div>
-            </div>
-            <div class="pod-grid">
-        \`;
+        html += '<div class="rig-container">' +
+          '<div class="rig-header">' +
+            '<div class="rig-title">' +
+              '<span class="badge badge-blue">RIG</span>' +
+              '<span>' + escapeHtml(rig.name) + '</span>' +
+            '</div>' +
+            '<div class="card-meta">' +
+              '<span>' + filteredNodes.length + ' matching seats</span>' +
+              '<span>• Status: ' + escapeHtml(rig.status || 'running') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="pod-grid">';
 
         for (const [podName, podNodes] of Object.entries(pods)) {
-          html += \`
-            <div class="pod-card">
-              <div class="pod-header">
-                <span>POD: \${escapeHtml(podName)}</span>
-                <span class="badge badge-muted">\${podNodes.length} seats</span>
-              </div>
-          \`;
+          html += '<div class="pod-card">' +
+            '<div class="pod-header">' +
+              '<span>POD: ' + escapeHtml(podName) + '</span>' +
+              '<span class="badge badge-muted">' + podNodes.length + ' seats</span>' +
+            '</div>';
 
           for (const node of podNodes) {
             const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
@@ -1676,59 +2117,53 @@ export function renderSidecarHtml(daemonUrl) {
 
             const usageRecord = seatUsageMap[sessionName] || seatUsageMap[node.logicalId];
 
-            html += \`
-              <div class="seat-item">
-                <div class="seat-top">
-                  <div class="seat-name">
-                    <div class="live-dot \${state}"></div>
-                    <span>\${escapeHtml(node.logicalId)}</span>
-                  </div>
-                  <span class="badge \${isAgy ? 'badge-blue' : 'badge-muted'}">
-                    \${isAgy ? 'Google Antigravity' : escapeHtml(runtime)}
-                  </span>
-                </div>
-                <div class="seat-details">
-                  \${node.model ? \`<span class="badge badge-muted">Model: \${escapeHtml(node.model)}</span>\` : ''}
-                  \${node.effort ? \`<span class="badge badge-muted">Effort: \${escapeHtml(node.effort)}</span>\` : ''}
-                  \${hasCtx ? \`
-                    <span class="badge badge-blue">Context: \${usedPct}%</span>
-                    <span class="badge badge-muted">Tokens: \${formatTokens(seatTokens)}</span>
-                  \` : usageRecord ? \`
-                    <span class="badge badge-blue">Burn: \${formatTokens(usageRecord.tokens || 0)} tok</span>
-                  \` : \`
-                    <span class="badge badge-muted">Tokens: idle</span>
-                  \`}
-                </div>
-                \${hasCtx ? \`
-                  <div class="token-progress-container" title="Context Window Usage: \${usedPct}% (\${formatTokens(inTok)} in / \${formatTokens(outTok)} out)">
-                    <div class="token-progress-fill" style="width: \${usedPct}%"></div>
-                  </div>
-                \` : ''}
-                \${convId ? \`
-                  <div class="conv-box">
-                    <span>Conv: \${escapeHtml(convId.slice(0, 18))}...</span>
-                    <button class="conv-copy-btn" onclick="copyToClipboard('\${convId}')">Copy ID</button>
-                  </div>
-                \` : ''}
-                <div class="seat-actions">
-                  <button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="openCaptureModal('\${escapeJs(sessionName)}', '\${escapeJs(node.logicalId)}')">
-                    📺 Screen
-                  </button>
-                  <button class="btn btn-primary" style="padding:2px 8px; font-size:11px;" onclick="openReplyModal('\${escapeJs(sessionName)}')">
-                    ✉ Message
-                  </button>
-                </div>
-              </div>
-            \`;
+            html += '<div class="seat-item">' +
+              '<div class="seat-top">' +
+                '<div class="seat-name">' +
+                  '<div class="live-dot ' + state + '"></div>' +
+                  '<span>' + escapeHtml(node.logicalId) + '</span>' +
+                '</div>' +
+                '<span class="badge ' + (isAgy ? 'badge-blue' : 'badge-muted') + '">' +
+                  (isAgy ? 'Google Antigravity' : escapeHtml(runtime)) +
+                '</span>' +
+              '</div>' +
+              '<div class="seat-details">' +
+                (node.model ? ('<span class="badge badge-muted">Model: ' + escapeHtml(node.model) + '</span>') : '') +
+                (node.effort ? ('<span class="badge badge-muted">Effort: ' + escapeHtml(node.effort) + '</span>') : '') +
+                (hasCtx ? (
+                  '<span class="badge badge-blue">Context: ' + usedPct + '%</span>' +
+                  '<span class="badge badge-muted">Tokens: ' + formatTokens(seatTokens) + '</span>'
+                ) : usageRecord ? (
+                  '<span class="badge badge-blue">Burn: ' + formatTokens(usageRecord.tokens || 0) + ' tok</span>'
+                ) : (
+                  '<span class="badge badge-muted">Tokens: idle</span>'
+                )) +
+              '</div>' +
+              (hasCtx ? (
+                '<div class="token-progress-container" title="Context Window Usage: ' + usedPct + '% (' + formatTokens(inTok) + ' in / ' + formatTokens(outTok) + ' out)">' +
+                  '<div class="token-progress-fill" style="width: ' + usedPct + '%"></div>' +
+                '</div>'
+              ) : '') +
+              (convId ? (
+                '<div class="conv-box">' +
+                  '<span>Conv: ' + escapeHtml(convId.slice(0, 18)) + '...</span>' +
+                  '<div style="display:flex; align-items:center; gap:8px;">' +
+                    '<a href="conversation://' + escapeHtml(convId) + '" class="conv-link" target="_blank" rel="noopener noreferrer" title="Open Conversation in Antigravity Chat">🔗 Open Chat ↗</a>' +
+                    '<button class="conv-copy-btn" onclick="copyToClipboard(\'' + convId + '\')">Copy ID</button>' +
+                  '</div>' +
+                '</div>'
+              ) : '') +
+              '<div class="seat-actions">' +
+                '<button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="openCaptureModal(\'' + escapeJs(sessionName) + '\', \'' + escapeJs(node.logicalId) + '\')">📺 Screen</button>' +
+                '<button class="btn btn-primary" style="padding:2px 8px; font-size:11px;" onclick="openReplyModal(\'' + escapeJs(sessionName) + '\')">✉ Message</button>' +
+              '</div>' +
+            '</div>';
           }
 
-          html += \`</div>\`;
+          html += '</div>';
         }
 
-        html += \`
-            </div>
-          </div>
-        \`;
+        html += '</div></div>';
       }
 
       document.getElementById('seats-count').textContent = totalSeats;
@@ -1803,6 +2238,12 @@ export function renderSidecarHtml(daemonUrl) {
         }
 
         cachedTopology = { rigs, costData, topData, seatUsageMap };
+
+        // Update fleet dropdowns and rig filters
+        const rigNames = Array.from(new Set(rigs.map(r => (r.rig || r).name).filter(Boolean)));
+        updateAllRigFilters(rigNames);
+        populateAgentDropdown(rigs);
+
         renderTopology();
       } catch (err) {
         console.error("fetchTopology error:", err);
@@ -1825,6 +2266,8 @@ export function renderSidecarHtml(daemonUrl) {
     function renderDeliverables() {
       const list = document.getElementById('deliverables-list');
       const search = (document.getElementById('deliverables-search')?.value || '').toLowerCase().trim();
+      const rigFilter = document.getElementById('deliverables-rig-filter')?.value || 'all';
+      const sortOrder = document.getElementById('deliverables-sort')?.value || 'newest';
 
       const filtered = cachedDeliverables.filter(item => {
         const j = item.judgment;
@@ -1836,11 +2279,22 @@ export function renderSidecarHtml(daemonUrl) {
         if (deliverablesVerdictFilter === 'rejected' && !isRejected) return false;
         if (deliverablesVerdictFilter === 'pending' && !isPending) return false;
 
+        if (rigFilter !== 'all') {
+          const sText = ((item.scope || '') + ' ' + (item.rig || '')).toLowerCase();
+          if (!sText.includes(rigFilter.toLowerCase())) return false;
+        }
+
         if (search) {
           const text = ((item.text || '') + ' ' + (item.id || '') + ' ' + (item.scope || '') + ' ' + (item.revision || '')).toLowerCase();
           if (!text.includes(search)) return false;
         }
         return true;
+      });
+
+      filtered.sort((a, b) => {
+        const tA = (a.judgment && a.judgment.at) ? new Date(a.judgment.at).getTime() : (a.revision ? parseInt(a.revision, 16) || 0 : 0);
+        const tB = (b.judgment && b.judgment.at) ? new Date(b.judgment.at).getTime() : (b.revision ? parseInt(b.revision, 16) || 0 : 0);
+        return sortOrder === 'newest' ? tB - tA : tA - tB;
       });
 
       document.getElementById('proofs-count').textContent = filtered.length;
@@ -1861,44 +2315,37 @@ export function renderSidecarHtml(daemonUrl) {
         const scope = item.scope || 'default';
         const origIndex = cachedDeliverables.indexOf(item);
 
-        html += \`
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">\${escapeHtml(item.text || item.id)}</div>
-                <div class="card-meta">
-                  <span class="badge \${statusBadge}">\${statusText}</span>
-                  <span>Scope: \${escapeHtml(scope)}</span>
-                  <span>Item: #\${escapeHtml(item.id)}</span>
-                  \${item.revision ? \`<span>• rev \${escapeHtml(item.revision.slice(0, 8))}</span>\` : ''}
-                </div>
-              </div>
-            </div>
-            \${j ? \`
-              <div class="card-body">
-<strong>Verdict:</strong> \${j.verdict}
-<strong>Judged By:</strong> \${escapeHtml(j.actor || 'human')}
-<strong>At:</strong> \${j.at ? new Date(j.at).toLocaleString() : ''}
-<strong>Reason:</strong> \${escapeHtml(j.reason || 'None provided')}
-              </div>
-            \` : \`
-              <div class="card-meta">
-                <span>Proof contract defined. Awaiting verification evidence and outcome judgment.</span>
-              </div>
-            \`}
-            <div class="card-actions">
-              <button class="btn btn-secondary" onclick="openDeliverableDetail(\${origIndex})">
-                🔍 Details
-              </button>
-              <button class="btn btn-success" onclick="acceptProof('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}')">
-                ✓ Accept
-              </button>
-              <button class="btn btn-danger" onclick="openProofRejectModal('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.text)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}')">
-                ✕ Reject
-              </button>
-            </div>
-          </div>
-        \`;
+        html += '<div class="card">' +
+          '<div class="card-header">' +
+            '<div>' +
+              '<div class="card-title">' + renderMarkdown(item.text || item.id) + '</div>' +
+              '<div class="card-meta">' +
+                '<span class="badge ' + statusBadge + '">' + statusText + '</span>' +
+                '<span>Scope: ' + escapeHtml(scope) + '</span>' +
+                '<span>Item: #' + escapeHtml(item.id) + '</span>' +
+                (item.revision ? ('<span>• rev ' + escapeHtml(item.revision.slice(0, 8)) + '</span>') : '') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          (j ? (
+            '<div class="card-body">' +
+              '<div><strong>Verdict:</strong> ' + j.verdict + '</div>' +
+              '<div><strong>Judged By:</strong> ' + escapeHtml(j.actor || 'human') + '</div>' +
+              '<div><strong>At:</strong> ' + (j.at ? new Date(j.at).toLocaleString() : '') + '</div>' +
+              '<div style="margin-top:4px;"><strong>Reason:</strong></div>' +
+              renderMarkdown(j.reason || 'None provided') +
+            '</div>'
+          ) : (
+            '<div class="card-meta">' +
+              '<span>Proof contract defined. Awaiting verification evidence and outcome judgment.</span>' +
+            '</div>'
+          )) +
+          '<div class="card-actions">' +
+            '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">🔍 Details</button>' +
+            '<button class="btn btn-success" onclick="acceptProof(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\')">✓ Accept</button>' +
+            '<button class="btn btn-danger" onclick="openProofRejectModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\')">✕ Reject</button>' +
+          '</div>' +
+        '</div>';
       }
 
       list.innerHTML = html;
@@ -1921,13 +2368,13 @@ export function renderSidecarHtml(daemonUrl) {
 
       document.getElementById('detail-title').textContent = item.text || item.id;
       document.getElementById('detail-subtitle').textContent = 'Scope: ' + scope + ' · Item #' + item.id;
-      document.getElementById('detail-item-text').textContent = item.text || '(No explicit requirement description provided)';
+      document.getElementById('detail-item-text').innerHTML = renderMarkdown(item.text || '(No explicit requirement description provided)');
       document.getElementById('detail-scope-id').textContent = scope + ' #' + item.id;
       document.getElementById('detail-revision').textContent = (item.revision ? ('Revision: ' + item.revision) : 'Revision: uncommitted / initial') + (item.expectedPrevious ? ('\nPrevious: ' + item.expectedPrevious) : '');
 
       const judgmentBox = document.getElementById('detail-judgment');
       if (j) {
-        judgmentBox.innerHTML = '<strong>Verdict:</strong> ' + escapeHtml(j.verdict) + '<br><strong>Judged by:</strong> ' + escapeHtml(j.actor || 'human') + '<br><strong>Timestamp:</strong> ' + (j.at ? new Date(j.at).toLocaleString() : 'N/A') + '<br><strong>Reason:</strong> ' + escapeHtml(j.reason || 'None provided');
+        judgmentBox.innerHTML = '<strong>Verdict:</strong> ' + escapeHtml(j.verdict) + '<br><strong>Judged by:</strong> ' + escapeHtml(j.actor || 'human') + '<br><strong>Timestamp:</strong> ' + (j.at ? new Date(j.at).toLocaleString() : 'N/A') + '<div style="margin-top:6px;"><strong>Reason:</strong></div>' + renderMarkdown(j.reason || 'None provided');
       } else {
         judgmentBox.textContent = 'No judgment recorded yet. Pending empirical review or proof acceptance.';
       }
@@ -1943,14 +2390,8 @@ export function renderSidecarHtml(daemonUrl) {
       }, null, 2);
 
       const actionsLeft = document.getElementById('detail-actions-left');
-      actionsLeft.innerHTML = \`
-        <button class="btn btn-success" onclick="acceptProof('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}'); closeModal('deliverable-detail-modal');">
-          ✓ Accept Proof
-        </button>
-        <button class="btn btn-danger" onclick="closeModal('deliverable-detail-modal'); openProofRejectModal('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.text)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}');">
-          ✕ Reject Proof
-        </button>
-      \`;
+      actionsLeft.innerHTML = '<button class="btn btn-success" onclick="acceptProof(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\'); closeModal(\'deliverable-detail-modal\');">✓ Accept Proof</button>' +
+        '<button class="btn btn-danger" onclick="closeModal(\'deliverable-detail-modal\'); openProofRejectModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\');">✕ Reject Proof</button>';
 
       openModal('deliverable-detail-modal');
     }
