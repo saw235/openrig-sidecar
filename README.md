@@ -8,6 +8,7 @@ A standalone, lightweight, zero-dependency web companion and control plane for O
   - Live approval status for all running rigs and missions.
   - Approve, reject, or request revisions on mission slices with a single click.
   - View full context and execution proof logs directly in the browser.
+  - **Real-Time Search & Status Filtering**: Instant search by mission or slice with fast status pill filters (`All`, `Action Required`, `Pending`).
 
 - **Tab 2: Fleet Topology & Live Matrix**
   - Complete multi-rig topology map (Kernel, Antigravity Demo, OpenRig Dev, DnD World, etc.).
@@ -15,10 +16,13 @@ A standalone, lightweight, zero-dependency web companion and control plane for O
   - Pod membership, delegation edges, and active communication links.
   - **Live Terminal Screen Capture Modal**: Inspect live terminal screens for any active seat with clean ANSI stripping, configurable line depths (30/50/100/200), auto-refresh, and one-click clipboard copy.
   - **Fleet Telemetry Dashboard**: Real-time aggregated token metrics, estimated cost tracking, and per-seat context utilization indicators.
+  - **Search & Multi-Axis Filters**: Instant seat and session search, plus runtime (`Antigravity`, `Claude Code`, `Codex`, `OMP`) and status filters.
 
 - **Tab 3: Deliverables & Artifacts Showcase**
   - Rich preview of generated artifacts: Markdown documents, PR diffs, images, architecture diagrams, and release packets.
   - Fast search, filter by rig or type, and one-click artifact download/export.
+  - **Deliverable & Proof Detail Inspector Modal**: Deep inspect proof requirements, cryptographic revision fingerprints, historical verdicts, actor attributions, and evidence payloads in an Obsidian-styled drawer.
+  - **Search & Verdict Filtering**: Search items by text, scope, or item ID, with verdict pill filtering (`All`, `Accepted`, `Rejected`, `Pending`).
 
 ## Visual Tour
 
