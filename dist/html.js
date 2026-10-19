@@ -673,6 +673,106 @@ export function renderSidecarHtml(daemonUrl) {
       margin-top: 6px;
     }
 
+    /* Filter and Search Bar styles */
+    .filter-search-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 7px 12px 7px 32px;
+      font-size: 12.5px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 4px;
+      background-color: var(--bg-card);
+      padding: 2px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .filter-pill {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-pill:hover {
+      color: var(--text-primary);
+    }
+
+    .filter-pill.active {
+      background-color: var(--bg-elevated);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Detail Modal Styles */
+    .detail-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .detail-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    .detail-box {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
     /* Toast notification */
     #toast {
       position: fixed;
@@ -745,10 +845,18 @@ export function renderSidecarHtml(daemonUrl) {
           <span>Pending Approvals & Attention</span>
           <span class="badge badge-amber" id="approvals-header-badge">Live</span>
         </div>
-        <div style="display:flex; gap:8px;">
-          <button class="btn" id="filter-all-approvals">All</button>
-          <button class="btn btn-primary" id="open-new-send-btn">+ Send to Agent</button>
+      </div>
+      <div class="filter-search-bar">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="approvals-search" class="search-input" placeholder="Search approvals by mission, slice, reason, recipient..." oninput="filterApprovals()">
         </div>
+        <div class="filter-pills" id="approvals-filter-pills">
+          <button class="filter-pill active" data-filter="all" onclick="setApprovalsStatusFilter('all', this)">All</button>
+          <button class="filter-pill" data-filter="action" onclick="setApprovalsStatusFilter('action', this)">Action Required</button>
+          <button class="filter-pill" data-filter="pending" onclick="setApprovalsStatusFilter('pending', this)">Pending</button>
+        </div>
+        <button class="btn btn-primary" id="open-new-send-btn">+ Send to Agent</button>
       </div>
       <div id="approvals-list" class="card-grid">
         <div class="empty-state">Loading pending attention items...</div>
@@ -791,6 +899,28 @@ export function renderSidecarHtml(daemonUrl) {
         </div>
       </div>
 
+      <div class="filter-search-bar">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="topology-search" class="search-input" placeholder="Search seats by logical ID, session, pod, model, runtime..." oninput="filterTopology()">
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <select id="topology-runtime-filter" class="form-select" onchange="filterTopology()">
+            <option value="all">All Runtimes</option>
+            <option value="antigravity">Google Antigravity</option>
+            <option value="claude">Claude Code</option>
+            <option value="codex">Codex</option>
+            <option value="omp">OMP</option>
+          </select>
+          <select id="topology-status-filter" class="form-select" onchange="filterTopology()">
+            <option value="all">All Statuses</option>
+            <option value="working">Working</option>
+            <option value="idle">Idle</option>
+            <option value="needs_input">Needs Input</option>
+          </select>
+        </div>
+      </div>
+
       <div id="topology-list">
         <div class="empty-state">Loading agent topology...</div>
       </div>
@@ -804,6 +934,20 @@ export function renderSidecarHtml(daemonUrl) {
           <span class="badge badge-green" id="deliverables-header-badge">Proof System</span>
         </div>
       </div>
+
+      <div class="filter-search-bar">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="deliverables-search" class="search-input" placeholder="Search deliverables by scope, item text, revision, ID..." oninput="filterDeliverables()">
+        </div>
+        <div class="filter-pills" id="deliverables-filter-pills">
+          <button class="filter-pill active" data-filter="all" onclick="setDeliverablesVerdictFilter('all', this)">All</button>
+          <button class="filter-pill" data-filter="accepted" onclick="setDeliverablesVerdictFilter('accepted', this)">Accepted</button>
+          <button class="filter-pill" data-filter="rejected" onclick="setDeliverablesVerdictFilter('rejected', this)">Rejected</button>
+          <button class="filter-pill" data-filter="pending" onclick="setDeliverablesVerdictFilter('pending', this)">Pending</button>
+        </div>
+      </div>
+
       <div id="deliverables-list" class="card-grid">
         <div class="empty-state">Loading deliverables and proof contracts...</div>
       </div>
@@ -936,6 +1080,53 @@ export function renderSidecarHtml(daemonUrl) {
       <div class="modal-footer" style="justify-content: space-between;">
         <span class="card-meta" style="font-size:11px;">Direct socket via OpenRig /api/transport/capture (Obsidian Terminal View)</span>
         <button class="btn" onclick="closeCaptureModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELIVERABLE / PROOF DETAIL MODAL -->
+  <div class="modal-overlay" id="deliverable-detail-modal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="badge badge-green" id="detail-badge">PROOFS</div>
+          <div>
+            <div class="modal-title" id="detail-title">Deliverable & Proof Contract</div>
+            <div class="card-meta" id="detail-subtitle" style="margin-top:2px; font-size:11px;">Scope: —</div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeModal('deliverable-detail-modal')">&times;</button>
+      </div>
+      <div class="modal-body" style="gap:14px;">
+        <div class="detail-section">
+          <div class="detail-label">Item Specification & Requirement</div>
+          <div class="detail-box" id="detail-item-text" style="font-size:13px; font-weight:500;">—</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+          <div class="detail-section">
+            <div class="detail-label">Scope & Item ID</div>
+            <div class="detail-box" id="detail-scope-id" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">—</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Revision & Lineage</div>
+            <div class="detail-box" id="detail-revision" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">—</div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-label">Judgment & Verification Record</div>
+          <div class="detail-box" id="detail-judgment" style="font-size:12px;">—</div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-label">Contract Verification State & Scope Details</div>
+          <div class="detail-box" id="detail-contract-state" style="font-size:12px; font-family:'JetBrains Mono', monospace;">—</div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <div id="detail-actions-left" style="display:flex; gap:8px;"></div>
+        <button class="btn" onclick="closeModal('deliverable-detail-modal')">Close</button>
       </div>
     </div>
   </div>
@@ -1160,59 +1351,100 @@ export function renderSidecarHtml(daemonUrl) {
       openModal('proof-reject-modal');
     }
 
+    // State caches for reactive filtering
+    let cachedApprovals = [];
+    let approvalsStatusFilter = 'all';
+
+    let cachedTopology = null;
+
+    let cachedDeliverables = [];
+    let deliverablesVerdictFilter = 'all';
+
+    // Tab 1 Filtering & Rendering
+    function setApprovalsStatusFilter(filter, el) {
+      approvalsStatusFilter = filter;
+      const pills = document.querySelectorAll('#approvals-filter-pills .filter-pill');
+      pills.forEach(p => p.classList.remove('active'));
+      if (el) el.classList.add('active');
+      renderApprovals();
+    }
+
+    function filterApprovals() {
+      renderApprovals();
+    }
+
+    function renderApprovals() {
+      const list = document.getElementById('approvals-list');
+      const search = (document.getElementById('approvals-search')?.value || '').toLowerCase().trim();
+
+      const filtered = cachedApprovals.filter(item => {
+        const isQueue = item.id.startsWith('queue:');
+        const isCritical = item.urgency === 'high' || item.urgency === 'critical';
+        if (approvalsStatusFilter === 'action' && !isQueue && !isCritical) return false;
+        if (approvalsStatusFilter === 'pending' && (isQueue || isCritical)) return false;
+
+        if (search) {
+          const text = ((item.summary || '') + ' ' + (item.scope || '') + ' ' + (item.recipient || '') + ' ' + (item.kind || '') + ' ' + (item.unblocks || '')).toLowerCase();
+          if (!text.includes(search)) return false;
+        }
+        return true;
+      });
+
+      document.getElementById('approvals-count').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state">' + (cachedApprovals.length === 0 ? 'No pending approvals or attention required. All agents operating smoothly.' : 'No attention items match current filters.') + '</div>';
+        return;
+      }
+
+      let html = '';
+      for (const item of filtered) {
+        const qitemId = item.id.startsWith('queue:') ? item.id.slice(6) : item.id;
+        const isQueue = item.id.startsWith('queue:');
+        const urgencyBadge = item.urgency === 'high' || item.urgency === 'critical' ? 'badge-red' : item.urgency === 'outcome' ? 'badge-blue' : 'badge-amber';
+        const recipient = item.recipient || 'operator@human';
+        const at = item.at ? new Date(item.at).toLocaleTimeString() : '';
+
+        html += \`
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">\${escapeHtml(item.summary || 'Attention Item')}</div>
+                <div class="card-meta">
+                  <span class="badge \${urgencyBadge}">\${escapeHtml(item.urgency || item.kind)}</span>
+                  <span>To: \${escapeHtml(recipient)}</span>
+                  \${item.scope ? \`<span>• \${escapeHtml(item.scope)}</span>\` : ''}
+                  <span>• \${at}</span>
+                </div>
+              </div>
+            </div>
+            \${item.unblocks ? \`<div class="card-meta"><span>Unblocks: \${escapeHtml(item.unblocks)}</span></div>\` : ''}
+            <div class="card-actions">
+              \${isQueue ? \`
+                <button class="btn btn-success" onclick="approveItem('\${qitemId}', '\${escapeJs(item.summary)}')">
+                  ✓ Approve
+                </button>
+                <button class="btn btn-danger" onclick="openRejectModal('\${qitemId}', '\${escapeJs(item.summary)}')">
+                  ✕ Reject
+                </button>
+              \` : ''}
+              <button class="btn btn-primary" onclick="openReplyModal('\${escapeJs(recipient)}')">
+                ↩ Reply
+              </button>
+            </div>
+          </div>
+        \`;
+      }
+      list.innerHTML = html;
+    }
+
     // Fetch Approvals & Attention
     async function fetchApprovals() {
       try {
         const res = await fetch('/api/attention');
         const data = await res.json();
-        const items = data.items || [];
-        document.getElementById('approvals-count').textContent = items.length;
-
-        const list = document.getElementById('approvals-list');
-        if (items.length === 0) {
-          list.innerHTML = '<div class="empty-state">No pending approvals or attention required. All agents operating smoothly.</div>';
-          return;
-        }
-
-        let html = '';
-        for (const item of items) {
-          const qitemId = item.id.startsWith('queue:') ? item.id.slice(6) : item.id;
-          const isQueue = item.id.startsWith('queue:');
-          const urgencyBadge = item.urgency === 'high' || item.urgency === 'critical' ? 'badge-red' : item.urgency === 'outcome' ? 'badge-blue' : 'badge-amber';
-          const recipient = item.recipient || 'operator@human';
-          const at = item.at ? new Date(item.at).toLocaleTimeString() : '';
-
-          html += \`
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">\${escapeHtml(item.summary || 'Attention Item')}</div>
-                  <div class="card-meta">
-                    <span class="badge \${urgencyBadge}">\${escapeHtml(item.urgency || item.kind)}</span>
-                    <span>To: \${escapeHtml(recipient)}</span>
-                    \${item.scope ? \`<span>• \${escapeHtml(item.scope)}</span>\` : ''}
-                    <span>• \${at}</span>
-                  </div>
-                </div>
-              </div>
-              \${item.unblocks ? \`<div class="card-meta"><span>Unblocks: \${escapeHtml(item.unblocks)}</span></div>\` : ''}
-              <div class="card-actions">
-                \${isQueue ? \`
-                  <button class="btn btn-success" onclick="approveItem('\${qitemId}', '\${escapeJs(item.summary)}')">
-                    ✓ Approve
-                  </button>
-                  <button class="btn btn-danger" onclick="openRejectModal('\${qitemId}', '\${escapeJs(item.summary)}')">
-                    ✕ Reject
-                  </button>
-                \` : ''}
-                <button class="btn btn-primary" onclick="openReplyModal('\${escapeJs(recipient)}')">
-                  ↩ Reply
-                </button>
-              </div>
-            </div>
-          \`;
-        }
-        list.innerHTML = html;
+        cachedApprovals = data.items || [];
+        renderApprovals();
       } catch (err) {
         console.error("fetchApprovals error:", err);
       }
@@ -1334,6 +1566,200 @@ export function renderSidecarHtml(daemonUrl) {
       }
     }
 
+    // Tab 2 Filtering & Rendering
+    function filterTopology() {
+      if (cachedTopology) {
+        renderTopology();
+      }
+    }
+
+    function renderTopology() {
+      if (!cachedTopology) return;
+      const { rigs, costData, topData, seatUsageMap } = cachedTopology;
+
+      const search = (document.getElementById('topology-search')?.value || '').toLowerCase().trim();
+      const runtimeFilter = document.getElementById('topology-runtime-filter')?.value || 'all';
+      const statusFilter = document.getElementById('topology-status-filter')?.value || 'all';
+
+      let totalSeats = 0;
+      let activeSeats = 0;
+      let totalFleetTokens = 0;
+      let html = '';
+
+      for (const r of rigs) {
+        const rig = r.rig || r;
+        const nodes = rig.nodes || [];
+
+        // Filter nodes
+        const filteredNodes = nodes.filter(node => {
+          const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
+          const runtime = (node.runtime || 'antigravity').toLowerCase();
+          const disp = (node.activityState && node.activityState.display) || node.sessionStatus || 'idle';
+          const state = disp === 'working' ? 'working' : (disp === 'needs_input' || disp === 'attention_required') ? 'needs_input' : 'idle';
+
+          // Runtime filter
+          if (runtimeFilter !== 'all') {
+            if (runtimeFilter === 'antigravity' && !runtime.includes('antigravity')) return false;
+            if (runtimeFilter === 'claude' && !runtime.includes('claude')) return false;
+            if (runtimeFilter === 'codex' && !runtime.includes('codex')) return false;
+            if (runtimeFilter === 'omp' && !runtime.includes('omp')) return false;
+          }
+
+          // Status filter
+          if (statusFilter !== 'all') {
+            if (statusFilter !== state) return false;
+          }
+
+          // Search filter
+          if (search) {
+            const text = ((node.logicalId || '') + ' ' + sessionName + ' ' + (node.model || '') + ' ' + (node.podNamespace || '') + ' ' + runtime).toLowerCase();
+            if (!text.includes(search)) return false;
+          }
+
+          return true;
+        });
+
+        if (filteredNodes.length === 0) continue;
+
+        totalSeats += filteredNodes.length;
+
+        // Group filtered nodes by pod
+        const pods = {};
+        for (const node of filteredNodes) {
+          const podName = node.logicalId.split('.')[0] || 'default';
+          if (!pods[podName]) pods[podName] = [];
+          pods[podName].push(node);
+        }
+
+        html += \`
+          <div class="rig-container">
+            <div class="rig-header">
+              <div class="rig-title">
+                <span class="badge badge-blue">RIG</span>
+                <span>\${escapeHtml(rig.name)}</span>
+              </div>
+              <div class="card-meta">
+                <span>\${filteredNodes.length} matching seats</span>
+                <span>• Status: \${escapeHtml(rig.status || 'running')}</span>
+              </div>
+            </div>
+            <div class="pod-grid">
+        \`;
+
+        for (const [podName, podNodes] of Object.entries(pods)) {
+          html += \`
+            <div class="pod-card">
+              <div class="pod-header">
+                <span>POD: \${escapeHtml(podName)}</span>
+                <span class="badge badge-muted">\${podNodes.length} seats</span>
+              </div>
+          \`;
+
+          for (const node of podNodes) {
+            const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
+            const runtime = node.runtime || 'antigravity';
+            const isAgy = runtime.toLowerCase().includes('antigravity');
+            const disp = (node.activityState && node.activityState.display) || node.sessionStatus || 'idle';
+            const state = disp === 'working' ? 'working' : (disp === 'needs_input' || disp === 'attention_required') ? 'needs_input' : 'idle';
+            if (state === 'working') activeSeats++;
+
+            const convId = (node.resumeType === 'antigravity_id' ? node.resumeToken : null) || node.resumeToken;
+
+            // Context & Token Telemetry
+            const ctx = node.contextUsage;
+            const hasCtx = ctx && ctx.availability === 'available' && ctx.usedPercentage != null;
+            const usedPct = hasCtx ? Math.min(100, Math.round(ctx.usedPercentage)) : null;
+            const inTok = ctx && ctx.totalInputTokens != null ? ctx.totalInputTokens : 0;
+            const outTok = ctx && ctx.totalOutputTokens != null ? ctx.totalOutputTokens : 0;
+            const seatTokens = inTok + outTok;
+            totalFleetTokens += seatTokens;
+
+            const usageRecord = seatUsageMap[sessionName] || seatUsageMap[node.logicalId];
+
+            html += \`
+              <div class="seat-item">
+                <div class="seat-top">
+                  <div class="seat-name">
+                    <div class="live-dot \${state}"></div>
+                    <span>\${escapeHtml(node.logicalId)}</span>
+                  </div>
+                  <span class="badge \${isAgy ? 'badge-blue' : 'badge-muted'}">
+                    \${isAgy ? 'Google Antigravity' : escapeHtml(runtime)}
+                  </span>
+                </div>
+                <div class="seat-details">
+                  \${node.model ? \`<span class="badge badge-muted">Model: \${escapeHtml(node.model)}</span>\` : ''}
+                  \${node.effort ? \`<span class="badge badge-muted">Effort: \${escapeHtml(node.effort)}</span>\` : ''}
+                  \${hasCtx ? \`
+                    <span class="badge badge-blue">Context: \${usedPct}%</span>
+                    <span class="badge badge-muted">Tokens: \${formatTokens(seatTokens)}</span>
+                  \` : usageRecord ? \`
+                    <span class="badge badge-blue">Burn: \${formatTokens(usageRecord.tokens || 0)} tok</span>
+                  \` : \`
+                    <span class="badge badge-muted">Tokens: idle</span>
+                  \`}
+                </div>
+                \${hasCtx ? \`
+                  <div class="token-progress-container" title="Context Window Usage: \${usedPct}% (\${formatTokens(inTok)} in / \${formatTokens(outTok)} out)">
+                    <div class="token-progress-fill" style="width: \${usedPct}%"></div>
+                  </div>
+                \` : ''}
+                \${convId ? \`
+                  <div class="conv-box">
+                    <span>Conv: \${escapeHtml(convId.slice(0, 18))}...</span>
+                    <button class="conv-copy-btn" onclick="copyToClipboard('\${convId}')">Copy ID</button>
+                  </div>
+                \` : ''}
+                <div class="seat-actions">
+                  <button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="openCaptureModal('\${escapeJs(sessionName)}', '\${escapeJs(node.logicalId)}')">
+                    📺 Screen
+                  </button>
+                  <button class="btn btn-primary" style="padding:2px 8px; font-size:11px;" onclick="openReplyModal('\${escapeJs(sessionName)}')">
+                    ✉ Message
+                  </button>
+                </div>
+              </div>
+            \`;
+          }
+
+          html += \`</div>\`;
+        }
+
+        html += \`
+            </div>
+          </div>
+        \`;
+      }
+
+      document.getElementById('seats-count').textContent = totalSeats;
+      document.getElementById('topology-list').innerHTML = html || '<div class="empty-state">No agent seats match the selected filters or search query.</div>';
+
+      // Update Fleet Telemetry Dashboard Bar
+      const activeSeatsEl = document.getElementById('telem-active-seats');
+      if (activeSeatsEl) activeSeatsEl.textContent = activeSeats + ' / ' + totalSeats;
+
+      const burnRateEl = document.getElementById('telem-burn-rate');
+      if (burnRateEl) {
+        burnRateEl.textContent = totalFleetTokens > 0 ? (formatTokens(totalFleetTokens) + ' tok') : '0 tok/hr';
+      }
+
+      const costEl = document.getElementById('telem-cost');
+      if (costEl && costData && costData.totalCostFormatted) {
+        costEl.textContent = 'Est. Cost: ' + costData.totalCostFormatted;
+      }
+
+      const topSeatEl = document.getElementById('telem-top-seat');
+      const topDetailEl = document.getElementById('telem-top-detail');
+      if (topSeatEl && topData && Array.isArray(topData.ranked) && topData.ranked.length > 0) {
+        const topRanked = topData.ranked[0];
+        topSeatEl.textContent = topRanked.seat || 'top-seat';
+        if (topDetailEl) topDetailEl.textContent = (formatTokens(topRanked.burn || topRanked.tokens || 0)) + ' tok in window';
+      } else if (topSeatEl) {
+        topSeatEl.textContent = totalSeats > 0 ? (activeSeats > 0 ? 'Fleet Active' : 'Fleet Standby') : '—';
+        if (topDetailEl) topDetailEl.textContent = activeSeats > 0 ? (activeSeats + ' seats working') : 'All seats idle';
+      }
+    }
+
     // Fetch Topology & Telemetry
     async function fetchTopology() {
       try {
@@ -1365,162 +1791,170 @@ export function renderSidecarHtml(daemonUrl) {
           }
         }
 
-        let totalSeats = 0;
-        let activeSeats = 0;
-        let totalFleetTokens = 0;
-        let html = '';
-
         for (const r of rigs) {
           const rig = r.rig || r;
-          let nodes = rig.nodes || [];
-          if (nodes.length === 0 && rig.id) {
+          if ((!rig.nodes || rig.nodes.length === 0) && rig.id) {
             try {
               const resNodes = await fetch('/api/rigs/' + rig.id + '/nodes');
-              nodes = await resNodes.json();
+              rig.nodes = await resNodes.json();
             } catch (e) {}
           }
-          if (!Array.isArray(nodes)) nodes = [];
-          totalSeats += nodes.length;
-
-          // Group by pod
-          const pods = {};
-          for (const node of nodes) {
-            const podName = node.logicalId.split('.')[0] || 'default';
-            if (!pods[podName]) pods[podName] = [];
-            pods[podName].push(node);
-          }
-
-          html += \`
-            <div class="rig-container">
-              <div class="rig-header">
-                <div class="rig-title">
-                  <span class="badge badge-blue">RIG</span>
-                  <span>\${escapeHtml(rig.name)}</span>
-                </div>
-                <div class="card-meta">
-                  <span>\${nodes.length} seats</span>
-                  <span>• Status: \${escapeHtml(rig.status || 'running')}</span>
-                </div>
-              </div>
-              <div class="pod-grid">
-          \`;
-
-          for (const [podName, podNodes] of Object.entries(pods)) {
-            html += \`
-              <div class="pod-card">
-                <div class="pod-header">
-                  <span>POD: \${escapeHtml(podName)}</span>
-                  <span class="badge badge-muted">\${podNodes.length} seats</span>
-                </div>
-            \`;
-
-            for (const node of podNodes) {
-              const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
-              const runtime = node.runtime || 'antigravity';
-              const isAgy = runtime.toLowerCase().includes('antigravity');
-              const disp = (node.activityState && node.activityState.display) || node.sessionStatus || 'idle';
-              const state = disp === 'working' ? 'working' : (disp === 'needs_input' || disp === 'attention_required') ? 'needs_input' : 'idle';
-              if (state === 'working') activeSeats++;
-
-              const convId = (node.resumeType === 'antigravity_id' ? node.resumeToken : null) || node.resumeToken;
-
-              // Context & Token Telemetry
-              const ctx = node.contextUsage;
-              const hasCtx = ctx && ctx.availability === 'available' && ctx.usedPercentage != null;
-              const usedPct = hasCtx ? Math.min(100, Math.round(ctx.usedPercentage)) : null;
-              const inTok = ctx && ctx.totalInputTokens != null ? ctx.totalInputTokens : 0;
-              const outTok = ctx && ctx.totalOutputTokens != null ? ctx.totalOutputTokens : 0;
-              const seatTokens = inTok + outTok;
-              totalFleetTokens += seatTokens;
-
-              const usageRecord = seatUsageMap[sessionName] || seatUsageMap[node.logicalId];
-
-              html += \`
-                <div class="seat-item">
-                  <div class="seat-top">
-                    <div class="seat-name">
-                      <div class="live-dot \${state}"></div>
-                      <span>\${escapeHtml(node.logicalId)}</span>
-                    </div>
-                    <span class="badge \${isAgy ? 'badge-blue' : 'badge-muted'}">
-                      \${isAgy ? 'Google Antigravity' : escapeHtml(runtime)}
-                    </span>
-                  </div>
-                  <div class="seat-details">
-                    \${node.model ? \`<span class="badge badge-muted">Model: \${escapeHtml(node.model)}</span>\` : ''}
-                    \${node.effort ? \`<span class="badge badge-muted">Effort: \${escapeHtml(node.effort)}</span>\` : ''}
-                    \${hasCtx ? \`
-                      <span class="badge badge-blue">Context: \${usedPct}%</span>
-                      <span class="badge badge-muted">Tokens: \${formatTokens(seatTokens)}</span>
-                    \` : usageRecord ? \`
-                      <span class="badge badge-blue">Burn: \${formatTokens(usageRecord.tokens || 0)} tok</span>
-                    \` : \`
-                      <span class="badge badge-muted">Tokens: idle</span>
-                    \`}
-                  </div>
-                  \${hasCtx ? \`
-                    <div class="token-progress-container" title="Context Window Usage: \${usedPct}% (\${formatTokens(inTok)} in / \${formatTokens(outTok)} out)">
-                      <div class="token-progress-fill" style="width: \${usedPct}%"></div>
-                    </div>
-                  \` : ''}
-                  \${convId ? \`
-                    <div class="conv-box">
-                      <span>Conv: \${escapeHtml(convId.slice(0, 18))}...</span>
-                      <button class="conv-copy-btn" onclick="copyToClipboard('\${convId}')">Copy ID</button>
-                    </div>
-                  \` : ''}
-                  <div class="seat-actions">
-                    <button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="openCaptureModal('\${escapeJs(sessionName)}', '\${escapeJs(node.logicalId)}')">
-                      📺 Screen
-                    </button>
-                    <button class="btn btn-primary" style="padding:2px 8px; font-size:11px;" onclick="openReplyModal('\${escapeJs(sessionName)}')">
-                      ✉ Message
-                    </button>
-                  </div>
-                </div>
-              \`;
-            }
-
-            html += \`</div>\`;
-          }
-
-          html += \`
-              </div>
-            </div>
-          \`;
+          if (!Array.isArray(rig.nodes)) rig.nodes = [];
         }
 
-        document.getElementById('seats-count').textContent = totalSeats;
-        document.getElementById('topology-list').innerHTML = html || '<div class="empty-state">No rigs running. Launch a rig to populate topology.</div>';
-
-        // Update Fleet Telemetry Dashboard Bar
-        const activeSeatsEl = document.getElementById('telem-active-seats');
-        if (activeSeatsEl) activeSeatsEl.textContent = activeSeats + ' / ' + totalSeats;
-
-        const burnRateEl = document.getElementById('telem-burn-rate');
-        if (burnRateEl) {
-          burnRateEl.textContent = totalFleetTokens > 0 ? (formatTokens(totalFleetTokens) + ' tok') : '0 tok/hr';
-        }
-
-        const costEl = document.getElementById('telem-cost');
-        if (costEl && costData && costData.totalCostFormatted) {
-          costEl.textContent = 'Est. Cost: ' + costData.totalCostFormatted;
-        }
-
-        const topSeatEl = document.getElementById('telem-top-seat');
-        const topDetailEl = document.getElementById('telem-top-detail');
-        if (topSeatEl && topData && Array.isArray(topData.ranked) && topData.ranked.length > 0) {
-          const topRanked = topData.ranked[0];
-          topSeatEl.textContent = topRanked.seat || 'top-seat';
-          if (topDetailEl) topDetailEl.textContent = (formatTokens(topRanked.burn || topRanked.tokens || 0)) + ' tok in window';
-        } else if (topSeatEl) {
-          topSeatEl.textContent = totalSeats > 0 ? (activeSeats > 0 ? 'Fleet Active' : 'Fleet Standby') : '—';
-          if (topDetailEl) topDetailEl.textContent = activeSeats > 0 ? (activeSeats + ' seats working') : 'All seats idle';
-        }
+        cachedTopology = { rigs, costData, topData, seatUsageMap };
+        renderTopology();
       } catch (err) {
         console.error("fetchTopology error:", err);
       }
     }
+
+    // Tab 3 Filtering & Rendering
+    function setDeliverablesVerdictFilter(verdict, el) {
+      deliverablesVerdictFilter = verdict;
+      const pills = document.querySelectorAll('#deliverables-filter-pills .filter-pill');
+      pills.forEach(p => p.classList.remove('active'));
+      if (el) el.classList.add('active');
+      renderDeliverables();
+    }
+
+    function filterDeliverables() {
+      renderDeliverables();
+    }
+
+    function renderDeliverables() {
+      const list = document.getElementById('deliverables-list');
+      const search = (document.getElementById('deliverables-search')?.value || '').toLowerCase().trim();
+
+      const filtered = cachedDeliverables.filter(item => {
+        const j = item.judgment;
+        const isAccepted = (j && j.verdict === 'accept') || item.state === 'accepted';
+        const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
+        const isPending = !isAccepted && !isRejected;
+
+        if (deliverablesVerdictFilter === 'accepted' && !isAccepted) return false;
+        if (deliverablesVerdictFilter === 'rejected' && !isRejected) return false;
+        if (deliverablesVerdictFilter === 'pending' && !isPending) return false;
+
+        if (search) {
+          const text = ((item.text || '') + ' ' + (item.id || '') + ' ' + (item.scope || '') + ' ' + (item.revision || '')).toLowerCase();
+          if (!text.includes(search)) return false;
+        }
+        return true;
+      });
+
+      document.getElementById('proofs-count').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state">' + (cachedDeliverables.length === 0 ? 'No proof contracts found for current workspace. Deliverables and proofs will populate as contracts are executed.' : 'No deliverables match current search or verdict filter.') + '</div>';
+        return;
+      }
+
+      let html = '';
+      for (let i = 0; i < filtered.length; i++) {
+        const item = filtered[i];
+        const j = item.judgment;
+        const isAccepted = (j && j.verdict === 'accept') || item.state === 'accepted';
+        const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
+        const statusBadge = isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
+        const statusText = isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
+        const scope = item.scope || 'default';
+        const origIndex = cachedDeliverables.indexOf(item);
+
+        html += \`
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">\${escapeHtml(item.text || item.id)}</div>
+                <div class="card-meta">
+                  <span class="badge \${statusBadge}">\${statusText}</span>
+                  <span>Scope: \${escapeHtml(scope)}</span>
+                  <span>Item: #\${escapeHtml(item.id)}</span>
+                  \${item.revision ? \`<span>• rev \${escapeHtml(item.revision.slice(0, 8))}</span>\` : ''}
+                </div>
+              </div>
+            </div>
+            \${j ? \`
+              <div class="card-body">
+<strong>Verdict:</strong> \${j.verdict}
+<strong>Judged By:</strong> \${escapeHtml(j.actor || 'human')}
+<strong>At:</strong> \${j.at ? new Date(j.at).toLocaleString() : ''}
+<strong>Reason:</strong> \${escapeHtml(j.reason || 'None provided')}
+              </div>
+            \` : \`
+              <div class="card-meta">
+                <span>Proof contract defined. Awaiting verification evidence and outcome judgment.</span>
+              </div>
+            \`}
+            <div class="card-actions">
+              <button class="btn btn-secondary" onclick="openDeliverableDetail(\${origIndex})">
+                🔍 Details
+              </button>
+              <button class="btn btn-success" onclick="acceptProof('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}')">
+                ✓ Accept
+              </button>
+              <button class="btn btn-danger" onclick="openProofRejectModal('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.text)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}')">
+                ✕ Reject
+              </button>
+            </div>
+          </div>
+        \`;
+      }
+
+      list.innerHTML = html;
+    }
+
+    function openDeliverableDetail(index) {
+      const item = cachedDeliverables[index];
+      if (!item) return;
+
+      const j = item.judgment;
+      const isAccepted = (j && j.verdict === 'accept') || item.state === 'accepted';
+      const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
+      const statusBadge = isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
+      const statusText = isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
+      const scope = item.scope || 'default';
+
+      const badgeEl = document.getElementById('detail-badge');
+      badgeEl.className = 'badge ' + statusBadge;
+      badgeEl.textContent = statusText;
+
+      document.getElementById('detail-title').textContent = item.text || item.id;
+      document.getElementById('detail-subtitle').textContent = 'Scope: ' + scope + ' · Item #' + item.id;
+      document.getElementById('detail-item-text').textContent = item.text || '(No explicit requirement description provided)';
+      document.getElementById('detail-scope-id').textContent = scope + ' #' + item.id;
+      document.getElementById('detail-revision').textContent = (item.revision ? ('Revision: ' + item.revision) : 'Revision: uncommitted / initial') + (item.expectedPrevious ? ('\nPrevious: ' + item.expectedPrevious) : '');
+
+      const judgmentBox = document.getElementById('detail-judgment');
+      if (j) {
+        judgmentBox.innerHTML = '<strong>Verdict:</strong> ' + escapeHtml(j.verdict) + '<br><strong>Judged by:</strong> ' + escapeHtml(j.actor || 'human') + '<br><strong>Timestamp:</strong> ' + (j.at ? new Date(j.at).toLocaleString() : 'N/A') + '<br><strong>Reason:</strong> ' + escapeHtml(j.reason || 'None provided');
+      } else {
+        judgmentBox.textContent = 'No judgment recorded yet. Pending empirical review or proof acceptance.';
+      }
+
+      const contractBox = document.getElementById('detail-contract-state');
+      contractBox.textContent = JSON.stringify({
+        id: item.id,
+        scope: scope,
+        state: item.state || 'pending',
+        readiness: item.readiness || null,
+        evidence: item.evidence || null,
+        verifications: item.verifications || null
+      }, null, 2);
+
+      const actionsLeft = document.getElementById('detail-actions-left');
+      actionsLeft.innerHTML = \`
+        <button class="btn btn-success" onclick="acceptProof('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}'); closeModal('deliverable-detail-modal');">
+          ✓ Accept Proof
+        </button>
+        <button class="btn btn-danger" onclick="closeModal('deliverable-detail-modal'); openProofRejectModal('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.text)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}');">
+          ✕ Reject Proof
+        </button>
+      \`;
+
+      openModal('deliverable-detail-modal');
+    }
+    const openProofDetailModal = openDeliverableDetail;
 
     // Fetch Deliverables & Proofs
     async function fetchDeliverables() {
@@ -1541,61 +1975,8 @@ export function renderSidecarHtml(daemonUrl) {
             }
           }
         }
-        document.getElementById('proofs-count').textContent = items.length;
-
-        const list = document.getElementById('deliverables-list');
-        if (items.length === 0) {
-          list.innerHTML = '<div class="empty-state">No proof contracts found for current workspace. Deliverables and proofs will populate as contracts are executed.</div>';
-          return;
-        }
-
-        let html = '';
-        for (const item of items) {
-          const j = item.judgment;
-          const isAccepted = (j && j.verdict === 'accept') || item.state === 'accepted';
-          const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
-          const statusBadge = isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
-          const statusText = isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
-          const scope = item.scope || data.scope || 'default';
-
-          html += \`
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">\${escapeHtml(item.text || item.id)}</div>
-                  <div class="card-meta">
-                    <span class="badge \${statusBadge}">\${statusText}</span>
-                    <span>Scope: \${escapeHtml(scope)}</span>
-                    <span>Item: #\${escapeHtml(item.id)}</span>
-                    \${item.revision ? \`<span>• rev \${escapeHtml(item.revision.slice(0, 8))}</span>\` : ''}
-                  </div>
-                </div>
-              </div>
-              \${j ? \`
-                <div class="card-body">
-<strong>Verdict:</strong> \${j.verdict}
-<strong>Judged By:</strong> \${escapeHtml(j.actor || 'human')}
-<strong>At:</strong> \${j.at ? new Date(j.at).toLocaleString() : ''}
-<strong>Reason:</strong> \${escapeHtml(j.reason || 'None provided')}
-                </div>
-              \` : \`
-                <div class="card-meta">
-                  <span>Proof contract defined. Awaiting verification evidence and outcome judgment.</span>
-                </div>
-              \`}
-              <div class="card-actions">
-                <button class="btn btn-success" onclick="acceptProof('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}')">
-                  ✓ Accept Proof
-                </button>
-                <button class="btn btn-danger" onclick="openProofRejectModal('\${escapeJs(scope)}', '\${escapeJs(item.id)}', '\${escapeJs(item.text)}', '\${escapeJs(item.revision)}', '\${escapeJs(j ? j.id : '')}')">
-                  ✕ Reject Proof
-                </button>
-              </div>
-            </div>
-          \`;
-        }
-
-        list.innerHTML = html;
+        cachedDeliverables = items;
+        renderDeliverables();
       } catch (err) {
         console.error("fetchDeliverables error:", err);
       }
