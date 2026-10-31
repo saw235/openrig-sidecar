@@ -314,6 +314,7 @@ export function renderSidecarHtml(daemonUrl) {
       margin-top: auto;
       padding-top: 8px;
       border-top: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
     }
 
     /* Topology styles */
@@ -1220,6 +1221,336 @@ export function renderSidecarHtml(daemonUrl) {
       overflow-y: auto;
       padding-right: 4px;
     }
+
+    /* Filter Controls Group */
+    .filter-controls-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Modal Responsive Grid Systems */
+    .modal-grid-2col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+      gap: 12px;
+    }
+    .modal-grid-3col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+      gap: 10px;
+    }
+
+    /* ==========================================================================
+       Android & Mobile Viewport Compatibility (SDCR.0.6.01)
+       ========================================================================== */
+
+    /* Tablet & Small Laptop Breakpoint (<= 768px) */
+    @media (max-width: 768px) {
+      header {
+        height: auto;
+        padding: 10px 14px 8px 14px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .brand {
+        order: 1;
+        flex: 0 1 auto;
+      }
+
+      .header-actions {
+        order: 2;
+        flex: 0 1 auto;
+        gap: 8px;
+      }
+
+      .nav-tabs {
+        order: 3;
+        width: 100%;
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .tab-btn {
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 40px;
+        padding: 6px 8px;
+        justify-content: center;
+        font-size: 11.5px;
+        white-space: nowrap;
+      }
+    }
+
+    /* Mobile Phones & Coarse Pointers (<= 640px) */
+    @media (max-width: 640px) {
+      .brand-sub {
+        display: none;
+      }
+
+      main {
+        padding: 12px 10px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .rig-container {
+        padding: 12px;
+        margin-bottom: 16px;
+      }
+
+      .rig-header,
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .card-grid,
+      #approvals-list.card-grid,
+      #deliverables-list.card-grid,
+      .pod-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+      }
+
+      .telemetry-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .telemetry-stat-card {
+        padding: 10px 12px;
+      }
+
+      .telemetry-stat-value {
+        font-size: 16px;
+      }
+
+      .telemetry-stat-label {
+        font-size: 10px;
+      }
+
+      .telemetry-stat-sub {
+        font-size: 10px;
+        word-break: break-word;
+      }
+
+      .filter-search-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .search-input-wrapper {
+        width: 100%;
+        min-width: 0;
+        flex: 1 1 100%;
+      }
+
+      .filter-pills {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        white-space: nowrap;
+      }
+
+      .filter-controls-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .filter-controls-group .form-select {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 120px;
+      }
+
+      .filter-controls-group .btn,
+      .filter-controls-group .btn-group {
+        flex: 1 1 100%;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .view-toggle-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+        min-height: 36px;
+      }
+
+      .card {
+        padding: 14px;
+      }
+
+      .card-actions {
+        flex-wrap: wrap !important;
+        justify-content: stretch;
+        gap: 6px;
+      }
+
+      .card-actions .btn {
+        flex: 1 1 calc(50% - 6px);
+        min-height: 38px;
+        justify-content: center;
+      }
+
+      .seat-actions {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .seat-actions .btn {
+        min-height: 36px;
+        flex: 1 1 auto;
+        justify-content: center;
+      }
+
+      .graph-toolbar {
+        padding: 8px 10px;
+        gap: 8px;
+      }
+
+      .graph-toolbar-group {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 6px;
+      }
+
+      .graph-layer-btn,
+      .graph-zoom-btn {
+        min-height: 36px;
+        padding: 4px 10px;
+      }
+
+      #topology-seat-inspector {
+        padding: 10px 12px;
+      }
+
+      .inspector-header-row,
+      .inspector-title-group,
+      .inspector-rel-row {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .inspector-rel-chip {
+        min-height: 32px;
+        padding: 4px 10px;
+      }
+
+      /* Dynamic Viewport Modals (100dvh) */
+      .modal-overlay {
+        padding: 10px;
+      }
+
+      .modal,
+      .modal-wide,
+      #approval-detail-modal .modal,
+      #deliverable-detail-modal .modal,
+      #proof-accept-modal .modal,
+      #proof-reject-modal .modal,
+      #reject-modal .modal,
+      #reply-modal .modal,
+      #capture-modal .modal {
+        width: 100% !important;
+        max-width: calc(100vw - 20px) !important;
+        max-height: calc(88vh) !important;
+        max-height: calc(100dvh - 20px) !important;
+        padding: 16px 14px;
+        box-sizing: border-box;
+      }
+
+      .modal-body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: calc(100dvh - 120px);
+      }
+
+      .modal-footer {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .modal-footer .btn {
+        flex: 1 1 auto;
+        min-height: 38px;
+        justify-content: center;
+      }
+
+      .capture-toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      /* 16px font-size prevents mobile browser auto-zoom on focus */
+      .form-input,
+      .form-textarea,
+      .form-select,
+      .search-input {
+        font-size: 16px !important;
+      }
+
+      /* Mobile toast positioning */
+      #toast {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        max-width: none;
+        word-break: break-word;
+        justify-content: center;
+        text-align: center;
+      }
+    }
+
+    /* Small Phone Viewports (<= 480px) */
+    @media (max-width: 480px) {
+      #daemon-label {
+        display: none;
+      }
+
+      .brand {
+        font-size: 14px;
+      }
+
+      .tab-btn {
+        padding: 6px 6px;
+        font-size: 11px;
+      }
+
+      .filter-controls-group .form-select {
+        flex: 1 1 100%;
+      }
+    }
+
+    /* Touch-Ergonomics & Coarse Pointer Targets */
+    @media (max-width: 640px), (pointer: coarse) {
+      .btn,
+      .tab-btn,
+      .filter-pill,
+      .graph-zoom-btn,
+      .graph-layer-btn,
+      .view-toggle-btn {
+        min-height: 36px;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .card-actions .btn {
+        min-height: 38px;
+        -webkit-tap-highlight-color: transparent;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1276,7 +1607,7 @@ export function renderSidecarHtml(daemonUrl) {
           <button class="filter-pill" data-filter="action" onclick="setApprovalsStatusFilter('action', this)">Action Required</button>
           <button class="filter-pill" data-filter="pending" onclick="setApprovalsStatusFilter('pending', this)">Pending</button>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
+        <div class="filter-controls-group">
           <select id="approvals-rig-filter" class="form-select" onchange="filterApprovals()">
             <option value="all">All Rigs</option>
           </select>
@@ -1333,7 +1664,7 @@ export function renderSidecarHtml(daemonUrl) {
           <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input type="text" id="topology-search" class="search-input" placeholder="Search seats by logical ID, session, pod, model, runtime..." oninput="filterTopology()">
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
+        <div class="filter-controls-group">
           <select id="topology-rig-filter" class="form-select" onchange="filterTopology()">
             <option value="all">All Rigs</option>
           </select>
@@ -1435,7 +1766,7 @@ export function renderSidecarHtml(daemonUrl) {
           <button class="filter-pill" data-filter="rejected" onclick="setDeliverablesVerdictFilter('rejected', this)">Rejected</button>
           <button class="filter-pill" data-filter="pending" onclick="setDeliverablesVerdictFilter('pending', this)">Pending</button>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
+        <div class="filter-controls-group">
           <select id="deliverables-rig-filter" class="form-select" onchange="filterDeliverables()">
             <option value="all">All Rigs</option>
           </select>
@@ -1529,7 +1860,7 @@ export function renderSidecarHtml(daemonUrl) {
           <div class="detail-box" id="proof-accept-claim" style="font-size:13px; font-weight:500;">—</div>
         </div>
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+        <div class="modal-grid-2col">
           <div class="detail-section">
             <div class="detail-label">Contract Scope & Item ID</div>
             <div class="detail-box" id="proof-accept-scope-display" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">—</div>
@@ -1656,7 +1987,7 @@ export function renderSidecarHtml(daemonUrl) {
           <div class="detail-box" id="detail-item-text" style="font-size:13px; font-weight:500;">—</div>
         </div>
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+        <div class="modal-grid-2col">
           <div class="detail-section">
             <div class="detail-label">Scope & Item ID</div>
             <div class="detail-box" id="detail-scope-id" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">—</div>
@@ -1703,7 +2034,7 @@ export function renderSidecarHtml(daemonUrl) {
         <button class="modal-close" onclick="closeModal('approval-detail-modal')">&times;</button>
       </div>
       <div class="modal-body" style="gap:14px;">
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+        <div class="modal-grid-3col">
           <div class="detail-section">
             <div class="detail-label">From (Sender Seat)</div>
             <div class="detail-box" id="approval-detail-from" style="font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--accent-blue);">—</div>
@@ -1751,6 +2082,10 @@ export function renderSidecarHtml(daemonUrl) {
         btn.classList.add('active');
         const tabId = btn.getAttribute('data-tab');
         document.getElementById('tab-' + tabId).classList.add('active');
+        if (tabId === 'topology' && topologyViewMode === 'graph' && !initialGraphFitApplied && (typeof window !== 'undefined' && ((window.innerWidth && window.innerWidth < 768) || (document.documentElement && document.documentElement.clientWidth < 768)))) {
+          initialGraphFitApplied = true;
+          fitGraphZoom();
+        }
       });
     });
 
@@ -2793,6 +3128,7 @@ export function renderSidecarHtml(daemonUrl) {
     // Tab 2 View Switcher & Interactive SVG Topology Graph (Default View)
     let topologyViewMode = 'graph';
     let graphZoom = 1.0;
+    let initialGraphFitApplied = false;
     let lastGraphLogicalWidth = 1040;
     let lastGraphLogicalHeight = 480;
     let selectedGraphSeatKey = null;
@@ -2849,7 +3185,7 @@ export function renderSidecarHtml(daemonUrl) {
     }
 
     function adjustGraphZoom(delta) {
-      graphZoom = Math.max(0.45, Math.min(1.85, Math.round((graphZoom + delta) * 100) / 100));
+      graphZoom = Math.max(0.30, Math.min(1.85, Math.round((graphZoom + delta) * 100) / 100));
       applyGraphZoomToSvg();
     }
 
@@ -2861,8 +3197,8 @@ export function renderSidecarHtml(daemonUrl) {
     function fitGraphZoom() {
       const vp = document.getElementById('topology-graph-viewport');
       if (!vp || !lastGraphLogicalWidth) return;
-      const avail = Math.max(360, vp.clientWidth - 36);
-      graphZoom = Math.max(0.45, Math.min(1.35, Math.round((avail / lastGraphLogicalWidth) * 100) / 100));
+      const avail = Math.max(280, (vp.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 360)) - 24);
+      graphZoom = Math.max(0.30, Math.min(1.35, Math.round((avail / lastGraphLogicalWidth) * 100) / 100));
       applyGraphZoomToSvg();
     }
 
@@ -2943,6 +3279,68 @@ export function renderSidecarHtml(daemonUrl) {
           adjustGraphZoom(e.deltaY < 0 ? 0.1 : -0.1);
         }
       }, { passive: false });
+
+      // Touch drag/pan & pinch-to-zoom for mobile viewports
+      let isPanningTouch = false;
+      let isPinching = false;
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchScrollL = 0;
+      let touchScrollT = 0;
+      let initialPinchDist = 0;
+      let initialPinchZoom = 1.0;
+
+      vp.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          const t = e.touches[0];
+          touchStartX = t.pageX - vp.offsetLeft;
+          touchStartY = t.pageY - vp.offsetTop;
+          touchScrollL = vp.scrollLeft;
+          touchScrollT = vp.scrollTop;
+          isPanningTouch = true;
+          isPinching = false;
+        } else if (e.touches.length === 2) {
+          isPanningTouch = false;
+          isPinching = true;
+          const dx = e.touches[0].pageX - e.touches[1].pageX;
+          const dy = e.touches[0].pageY - e.touches[1].pageY;
+          initialPinchDist = Math.hypot(dx, dy);
+          initialPinchZoom = graphZoom;
+        }
+      }, { passive: true });
+
+      vp.addEventListener('touchmove', (e) => {
+        if (isPinching && e.touches.length === 2) {
+          if (e.cancelable) e.preventDefault();
+          const dx = e.touches[0].pageX - e.touches[1].pageX;
+          const dy = e.touches[0].pageY - e.touches[1].pageY;
+          const dist = Math.hypot(dx, dy);
+          if (initialPinchDist > 0) {
+            const scale = dist / initialPinchDist;
+            graphZoom = Math.max(0.30, Math.min(1.85, Math.round(initialPinchZoom * scale * 100) / 100));
+            applyGraphZoomToSvg();
+          }
+        } else if (isPanningTouch && e.touches.length === 1) {
+          const t = e.touches[0];
+          const x = t.pageX - vp.offsetLeft;
+          const y = t.pageY - vp.offsetTop;
+          const deltaX = x - touchStartX;
+          const deltaY = y - touchStartY;
+          if (Math.hypot(deltaX, deltaY) > 6) {
+            if (e.cancelable) e.preventDefault();
+            vp.scrollLeft = touchScrollL - deltaX;
+            vp.scrollTop = touchScrollT - deltaY;
+          }
+        }
+      }, { passive: false });
+
+      const endTouch = () => {
+        isPanningTouch = false;
+        isPinching = false;
+        initialPinchDist = 0;
+      };
+      vp.addEventListener('touchend', endTouch);
+      vp.addEventListener('touchcancel', endTouch);
     }
 
     function getNodeKeyId(node) {
@@ -3744,6 +4142,15 @@ export function renderSidecarHtml(daemonUrl) {
       '</svg>';
 
       updateGraphInspector(allRenderedEdges);
+
+      // Mobile Auto-Fit on initial graph render when viewport width < 768px
+      if (!initialGraphFitApplied && (typeof window !== 'undefined' && ((window.innerWidth && window.innerWidth < 768) || (document.documentElement && document.documentElement.clientWidth < 768)))) {
+        const vpEl = document.getElementById('topology-graph-viewport');
+        if (vpEl && vpEl.clientWidth > 0) {
+          initialGraphFitApplied = true;
+          fitGraphZoom();
+        }
+      }
     }
 
     // Tab 2 Filtering & Rendering
@@ -4241,6 +4648,15 @@ export function renderSidecarHtml(daemonUrl) {
       fetchDeliverables();
       showToast("Refreshed all views.");
     });
+
+    // Resize listener for mobile viewport orientation and width changes
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', () => {
+        if (topologyViewMode === 'graph' && ((window.innerWidth && window.innerWidth < 768) || (document.documentElement && document.documentElement.clientWidth < 768))) {
+          fitGraphZoom();
+        }
+      });
+    }
 
     // Initial load
     fetchApprovals();
