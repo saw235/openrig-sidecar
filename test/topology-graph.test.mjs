@@ -1,14 +1,22 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
+import { createRequire } from "node:module";
 import vm from "node:vm";
 import { renderSidecarHtml } from "../dist/html.js";
 import { startSidecarServer } from "../dist/server.js";
 
+const require = createRequire(import.meta.url);
+const dagre = require("dagre");
+
 test("Graph-First Agent Topology & Origin Proxy Verification Suite", async (t) => {
   const html = renderSidecarHtml("http://127.0.0.1:7433");
 
-  await t.test("1. Embedded Client JavaScript Compiles Cleanly Without Syntax or Escaping Errors", () => {
+  await t.test("1. Embedded Client JavaScript Compiles Cleanly & Loads Vendored Dagre Engine", () => {
+    assert.ok(
+      html.includes('<script src="/vendor/dagre.min.js"></script>'),
+      "HTML must load local vendored /vendor/dagre.min.js bundle"
+    );
     const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
     assert.ok(scriptMatch, "HTML must contain inline <script> block");
     assert.doesNotThrow(() => {
@@ -122,13 +130,23 @@ test("Graph-First Agent Topology & Origin Proxy Verification Suite", async (t) =
       const payload = await res.json();
       assert.equal(payload.edges.length, 2);
       assert.equal(payload.edges[0].kind, "delegates_to");
+
+      // Also verify /vendor/dagre.min.js is served locally with zero external CDN reliance
+      const dagreRes = await fetch(`${sidecar.url}/vendor/dagre.min.js`);
+      assert.equal(dagreRes.status, 200, "Sidecar must serve /vendor/dagre.min.js with HTTP 200");
+      assert.ok(
+        (dagreRes.headers.get("content-type") || "").includes("javascript"),
+        "/vendor/dagre.min.js must return application/javascript content-type"
+      );
+      const dagreCode = await dagreRes.text();
+      assert.ok(dagreCode.length > 50000, "Vendored dagre.min.js bundle must be non-empty");
     } finally {
       await new Promise((cb) => sidecar.server.close(cb));
       await new Promise((cb) => mockDaemon.close(cb));
     }
   });
 
-  await t.test("5. Runtime Execution of renderSvgGraph, selectGraphSeat, & selectGraphRig on Multi-Pod DAGs", () => {
+  await t.test("5. Dagre Top-Down (TB) Compound Layout Places Rig Hub at Top & Flows Seats Vertically", () => {
     const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
     const elements = new Map();
     const makeEl = (id, initialValue = "") => ({
@@ -167,12 +185,13 @@ test("Graph-First Agent Topology & Origin Proxy Verification Suite", async (t) =
 
     const sandbox = {
       console,
+      dagre,
       setTimeout: () => 1,
       clearTimeout: () => {},
       setInterval: () => 1,
       clearInterval: () => {},
       fetch: () => Promise.resolve({ ok: true, json: async () => ({ items: [] }) }),
-      window: { addEventListener() {}, open() {} },
+      window: { dagre, addEventListener() {}, open() {} },
       navigator: { clipboard: { writeText() {} } },
       document: {
         getElementById(id) {
@@ -185,7 +204,7 @@ test("Graph-First Agent Topology & Origin Proxy Verification Suite", async (t) =
 
     vm.createContext(sandbox);
     vm.runInContext(
-      scriptMatch[1] + "\n;globalThis.__testHooks = { setCached: (v) => { cachedTopology = v; }, renderSvgGraph, selectGraphSeat, selectGraphRig, toggleGraphEdgeLayer, adjustGraphZoom };",
+      scriptMatch[1] + "\n;globalThis.__testHooks = { setCached: (v) => { cachedTopology = v; }, getSeats: () => graphSeatRegistry, getHubs: () => graphRigHubRegistry, getDims: () => ({ w: lastGraphLogicalWidth, h: lastGraphLogicalHeight }), renderSvgGraph, selectGraphSeat, selectGraphRig, toggleGraphEdgeLayer, adjustGraphZoom };",
       sandbox
     );
 
@@ -235,6 +254,19 @@ test("Graph-First Agent Topology & Origin Proxy Verification Suite", async (t) =
     assert.ok(svgOut.includes('data-kind="escalates_to"'), "Must render escalates_to edges");
     assert.ok(svgOut.includes('data-kind="collaborates_with"'), "Must render collaborates_with edges");
     assert.ok(svgOut.includes("conversation://uuid-builder-5678"), "Must embed 1-click Antigravity Chat deep link on SVG seat card");
+
+    // Verify Dagre Top-Down (TB) vertical coordinates: Rig Hub at TOP, followed vertically by seats
+    const hubs = sandbox.__testHooks.getHubs();
+    const seats = sandbox.__testHooks.getSeats();
+    const dims = sandbox.__testHooks.getDims();
+
+    assert.ok(hubs["openrig-dev"].y < seats["openrig-dev::n1"].y, "Rig Hub must sit vertically ABOVE core.lead");
+    assert.ok(seats["openrig-dev::n1"].y < seats["openrig-dev::n2"].y, "core.lead must sit vertically ABOVE core.builder");
+    assert.ok(seats["openrig-dev::n2"].y < seats["openrig-dev::n3"].y, "core.builder must sit vertically ABOVE qa.reviewer");
+
+    assert.ok(hubs["kernel"].y < seats["kernel::k1"].y, "kernel Rig Hub must sit vertically ABOVE advisor.lead");
+    assert.ok(seats["kernel::k1"].y < seats["kernel::k2"].y, "advisor.lead must sit vertically ABOVE operator.agent");
+    assert.ok(dims.w <= 1140, `Top-down Dagre graph width (${dims.w}px) must stay compact and not scale excessively rightwards`);
 
     // Select core.builder seat and inspect causal relationships in inspector
     sandbox.__testHooks.selectGraphSeat("openrig-dev::n2");

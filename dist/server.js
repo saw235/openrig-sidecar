@@ -1,5 +1,22 @@
+import fs from "node:fs";
 import http from "node:http";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import { renderSidecarHtml } from "./html.js";
+let cachedDagreBundle = null;
+function getDagreBundle() {
+    if (cachedDagreBundle)
+        return cachedDagreBundle;
+    const bundledVendorPath = fileURLToPath(new URL("./vendor/dagre.min.js", import.meta.url));
+    if (fs.existsSync(bundledVendorPath)) {
+        cachedDagreBundle = fs.readFileSync(bundledVendorPath);
+        return cachedDagreBundle;
+    }
+    const req = createRequire(import.meta.url);
+    const resolved = req.resolve("dagre/dist/dagre.min.js");
+    cachedDagreBundle = fs.readFileSync(resolved);
+    return cachedDagreBundle;
+}
 export function startSidecarServer(opts) {
     const port = opts?.port ?? (process.env.OPENRIG_SIDECAR_PORT ? Number(process.env.OPENRIG_SIDECAR_PORT) : 7434);
     const host = opts?.host ?? "127.0.0.1";
@@ -19,6 +36,23 @@ export function startSidecarServer(opts) {
         if (url.pathname === "/healthz") {
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ status: "ok", sidecar: true, daemonUrl, version: "0.1.0" }));
+            return;
+        }
+        // Vendored open-source Dagre hierarchical graph layout engine
+        if (url.pathname === "/vendor/dagre.min.js" && req.method === "GET") {
+            try {
+                const bundle = getDagreBundle();
+                res.writeHead(200, {
+                    "Content-Type": "application/javascript; charset=utf-8",
+                    "Cache-Control": "public, max-age=86400",
+                    "Content-Length": bundle.byteLength,
+                });
+                res.end(bundle);
+            }
+            catch (err) {
+                res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+                res.end("Failed to load vendored dagre bundle");
+            }
             return;
         }
         // Convenience alias: GET /api/capture?session=...&lines=...
