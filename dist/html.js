@@ -1021,11 +1021,39 @@ export function renderSidecarHtml(daemonUrl) {
     }
 
     /* Zero-dependency Markdown styles */
-    .md-h1 { font-size: 16px; font-weight: 700; color: #fff; margin: 8px 0 4px; }
-    .md-h2 { font-size: 14px; font-weight: 600; color: #fff; margin: 6px 0 4px; }
-    .md-h3 { font-size: 13px; font-weight: 600; color: var(--accent-blue); margin: 4px 0 2px; }
-    .md-p { margin-bottom: 6px; line-height: 1.5; }
+    .md-h1 { font-size: 16px; font-weight: 700; color: #fff; margin: 10px 0 6px; }
+    .md-h1:first-child { margin-top: 0; }
+    .md-h2 { font-size: 14px; font-weight: 600; color: #fff; margin: 10px 0 5px; padding-bottom: 3px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+    .md-h3 { font-size: 13px; font-weight: 600; color: var(--accent-blue); margin: 8px 0 4px; }
+    .md-h4 { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin: 6px 0 3px; }
+    .md-p { margin-bottom: 6px; line-height: 1.55; }
     .md-p:last-child { margin-bottom: 0; }
+    .md-hr {
+      border: 0;
+      border-top: 1px solid var(--border-subtle);
+      margin: 10px 0;
+    }
+    .md-link {
+      color: var(--accent-blue);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      word-break: break-word;
+    }
+    .md-link:hover {
+      color: #aecbfa;
+    }
+    .md-file-ref {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: var(--accent-amber);
+    }
     .md-inline-code {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
@@ -1054,7 +1082,6 @@ export function renderSidecarHtml(daemonUrl) {
       margin: 6px 0;
       border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
       color: var(--text-secondary);
-      font-style: italic;
     }
     .md-ul, .md-ol {
       margin: 6px 0 6px 18px;
@@ -1062,6 +1089,136 @@ export function renderSidecarHtml(daemonUrl) {
     }
     .md-li-ul, .md-li-ol {
       margin-bottom: 3px;
+      line-height: 1.5;
+    }
+    .md-table-wrapper {
+      overflow: auto;
+      max-inline-size: 100%;
+      max-block-size: min(420px, 70vh);
+      container-type: inline-size;
+      margin: 8px 0;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background-color: #141414;
+    }
+    .md-table-wrapper:focus-visible {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 1px;
+    }
+    .md-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+    .md-table thead {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 1;
+    }
+    .md-table th {
+      background-color: var(--bg-elevated);
+      color: #ffffff;
+      font-weight: 600;
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-focus);
+      white-space: nowrap;
+    }
+    .md-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+      line-height: 1.45;
+    }
+    .md-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .md-table tbody tr:hover td {
+      background-color: rgba(255, 255, 255, 0.025);
+    }
+    @container (width < 420px) {
+      .md-table, .md-table thead, .md-table tbody, .md-table tr, .md-table th, .md-table td {
+        display: block;
+      }
+      .md-table thead {
+        display: none;
+      }
+      .md-table tbody tr {
+        border-bottom: 1px solid var(--border-focus);
+        padding: 4px 0;
+      }
+      .md-table td {
+        border-bottom: none;
+        padding: 4px 10px;
+      }
+      .md-table td[data-label]::before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+    }
+
+    /* Rich Approval Proposal Card & Inspector Styles */
+    #approvals-list.card-grid {
+      grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+    }
+    @media (max-width: 560px) {
+      #approvals-list.card-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .approval-from-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background-color: rgba(138, 180, 248, 0.12);
+      color: var(--accent-blue);
+      border: 1px solid rgba(138, 180, 248, 0.25);
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+    .approval-markdown-preview {
+      background-color: #141414;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 12.5px;
+      color: var(--text-primary);
+      max-height: 310px;
+      overflow-y: auto;
+      word-break: break-word;
+    }
+    .approval-evidence-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 10px;
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+    .approval-evidence-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent-amber);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #approval-detail-modal .modal {
+      max-width: 920px;
+      max-height: 88vh;
+    }
+    #approval-detail-modal .modal-body {
+      overflow-y: auto;
+      padding-right: 4px;
     }
   </style>
 </head>
@@ -1304,6 +1461,7 @@ export function renderSidecarHtml(daemonUrl) {
       </div>
       <div class="modal-body">
         <input type="hidden" id="reject-qitem-id">
+        <input type="hidden" id="reject-source-session">
         <div class="form-group">
           <label class="form-label">Item to Reject</label>
           <div id="reject-summary" style="font-weight:600; color:#fff;"></div>
@@ -1531,6 +1689,56 @@ export function renderSidecarHtml(daemonUrl) {
     </div>
   </div>
 
+  <!-- APPROVAL PROPOSAL DETAIL MODAL -->
+  <div class="modal-overlay" id="approval-detail-modal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+          <div class="badge badge-amber" id="approval-detail-badge">PROPOSAL</div>
+          <div style="min-width:0;">
+            <div class="modal-title" id="approval-detail-title" style="word-break:break-word;">Proposal &amp; Approval Gate</div>
+            <div class="card-meta" id="approval-detail-subtitle" style="margin-top:2px; font-size:11px;">Queue Item: —</div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeModal('approval-detail-modal')">&times;</button>
+      </div>
+      <div class="modal-body" style="gap:14px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+          <div class="detail-section">
+            <div class="detail-label">From (Sender Seat)</div>
+            <div class="detail-box" id="approval-detail-from" style="font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--accent-blue);">—</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">To (Approval Gate)</div>
+            <div class="detail-box" id="approval-detail-to" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">—</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Priority &amp; Tags</div>
+            <div class="detail-box" id="approval-detail-tags" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">—</div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-label">Proposal Specification &amp; Action Details (Markdown)</div>
+          <div class="detail-box md-rendered" id="approval-detail-body" style="font-size:13px; line-height:1.55; background-color:#141414;">—</div>
+        </div>
+
+        <div class="detail-section" id="approval-detail-evidence-section" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <div class="detail-label">Linked Evidence Artifact (<span id="approval-detail-evidence-name">file</span>)</div>
+            <button class="btn" id="approval-detail-copy-path-btn" style="padding:3px 8px; font-size:11px;">📋 Copy Path</button>
+          </div>
+          <div class="detail-box" id="approval-detail-evidence-path" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--accent-amber); word-break:break-all;">—</div>
+          <div class="detail-box md-rendered" id="approval-detail-evidence-body" style="display:none; font-size:12.5px; line-height:1.55; background-color:#141414; margin-top:4px;"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between; flex-wrap: wrap;">
+        <div id="approval-detail-actions-left" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+        <button class="btn" onclick="closeModal('approval-detail-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script src="/vendor/dagre.min.js"></script>
@@ -1592,9 +1800,41 @@ export function renderSidecarHtml(daemonUrl) {
       }
     });
 
+    function isAgentSeatSession(session) {
+      if (!session || typeof session !== 'string') return false;
+      const s = session.trim();
+      if (!s.includes('@')) return false;
+      if (s === 'operator@human' || s.endsWith('@human') || s.endsWith('@external')) return false;
+      if (/^human(?:-[A-Za-z0-9._-]+)?@(kernel|host)$/i.test(s)) return false;
+      return true;
+    }
+
+    // Best-effort wake notification back to the originating agent seat on human Approve/Reject
+    async function notifyApprovalDecision(targetSession, qitemId, decision, summary, reason) {
+      if (!isAgentSeatSession(targetSession)) return;
+      const text = decision === 'approved'
+        ? '[Sidecar Approval] APPROVED ' + qitemId + (summary ? (' (' + summary + ')') : '') + '. Human approval granted via OpenRig Sidecar; proceed with approved execution.'
+        : '[Sidecar Approval] REJECTED ' + qitemId + (summary ? (' (' + summary + ')') : '') + '. Reason: ' + (reason || 'Rejected by operator') + '. Do NOT execute this item.';
+      try {
+        await fetch('/api/transport/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session: targetSession.trim(),
+            text,
+            actorSession: 'operator@human'
+          })
+        });
+      } catch (err) {
+        // Non-fatal if sender seat is offline or unroutable
+      }
+    }
+
     // Reject qitem action (optional reason defaulting to "Rejected by operator")
     document.getElementById('confirm-reject-btn').addEventListener('click', async () => {
       const qitemId = document.getElementById('reject-qitem-id').value;
+      const sourceSession = document.getElementById('reject-source-session')?.value || '';
+      const summaryText = document.getElementById('reject-summary')?.textContent || qitemId;
       const rawReason = document.getElementById('reject-reason').value.trim();
       const reason = rawReason || 'Rejected by operator';
       try {
@@ -1612,6 +1852,8 @@ export function renderSidecarHtml(daemonUrl) {
         if (res.ok) {
           showToast("Request rejected: " + reason);
           closeModal('reject-modal');
+          closeModal('approval-detail-modal');
+          notifyApprovalDecision(sourceSession, qitemId, 'rejected', summaryText, reason);
           fetchApprovals();
         } else {
           showToast(data.message || data.error || "Failed to reject", true);
@@ -1622,7 +1864,7 @@ export function renderSidecarHtml(daemonUrl) {
     });
 
     // 1-Click Quick Reject qitem (no modal, default reason)
-    async function quickRejectItem(qitemId, summary) {
+    async function quickRejectItem(qitemId, summary, sourceSession) {
       try {
         const res = await fetch('/api/mission-control/action', {
           method: 'POST',
@@ -1637,6 +1879,8 @@ export function renderSidecarHtml(daemonUrl) {
         const data = await res.json();
         if (res.ok) {
           showToast("Quick rejected: " + (summary || qitemId));
+          closeModal('approval-detail-modal');
+          notifyApprovalDecision(sourceSession, qitemId, 'rejected', summary || qitemId, 'Rejected by operator');
           fetchApprovals();
         } else {
           showToast(data.message || data.error || "Failed to reject", true);
@@ -1762,7 +2006,7 @@ export function renderSidecarHtml(daemonUrl) {
     }
 
     // 1-Click Approve qitem
-    async function approveItem(qitemId, summary) {
+    async function approveItem(qitemId, summary, sourceSession) {
       try {
         const res = await fetch('/api/mission-control/action', {
           method: 'POST',
@@ -1777,6 +2021,8 @@ export function renderSidecarHtml(daemonUrl) {
         const data = await res.json();
         if (res.ok) {
           showToast("Approved: " + (summary || qitemId));
+          closeModal('approval-detail-modal');
+          notifyApprovalDecision(sourceSession, qitemId, 'approved', summary || qitemId, '');
           fetchApprovals();
         } else {
           showToast(data.message || data.error || "Approval failed", true);
@@ -1787,8 +2033,10 @@ export function renderSidecarHtml(daemonUrl) {
     }
 
     // Open reject modal for qitem
-    function openRejectModal(qitemId, summary) {
+    function openRejectModal(qitemId, summary, sourceSession) {
       document.getElementById('reject-qitem-id').value = qitemId;
+      const srcInput = document.getElementById('reject-source-session');
+      if (srcInput) srcInput.value = sourceSession || '';
       document.getElementById('reject-summary').textContent = summary || qitemId;
       document.getElementById('reject-reason').value = '';
       openModal('reject-modal');
@@ -1856,63 +2104,220 @@ export function renderSidecarHtml(daemonUrl) {
       }
     }
 
-    // Zero-dependency client-side markdown rendering
+    // Zero-dependency GFM client-side markdown renderer (tables, safe links, dividers, code, lists, quotes)
+    function splitMarkdownTableRow(line) {
+      let trimmed = line.trim();
+      if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+      if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+      return trimmed.split('|').map(c => c.trim());
+    }
+
+    function isMarkdownTableSeparator(line) {
+      if (!line || !line.includes('-') || !line.includes('|')) return false;
+      const cells = splitMarkdownTableRow(line);
+      if (cells.length === 0) return false;
+      return cells.every(c => /^:?-{3,}:?$/.test(c));
+    }
+
     function renderMarkdown(str) {
       if (!str) return '';
-      let text = escapeHtml(str);
+      let text = escapeHtml(String(str).replace(/\\r\\n/g, '\\n'));
 
-      // Fenced code blocks
+      // 1. Extract fenced code blocks first so inner syntax is untouched
       const codeBlocks = [];
-      text = text.replace(/\`\`\`([a-zA-Z0-9_-]*)\\s*([\\s\\S]*?)\`\`\`/g, (match, lang, code) => {
+      text = text.replace(/\`\`\`([a-zA-Z0-9_+-]*)[ \\t]*\\n?([\\s\\S]*?)\`\`\`/g, (match, lang, code) => {
         const idx = codeBlocks.length;
         codeBlocks.push('<pre class="md-code-block"><code class="lang-' + (lang || 'text') + '">' + code.trim() + '</code></pre>');
-        return '%%CODEBLOCK_' + idx + '%%';
+        return '\\n%%CODEBLOCK_' + idx + '%%\\n';
       });
 
-      // Inline code
-      text = text.replace(/\`([^\`]+)\`/g, '<code class="md-inline-code">$1</code>');
+      // 2. Extract inline code spans before tables/links/emphasis so pipes & underscores inside backticks stay intact
+      const inlineCodes = [];
+      const rawInlineCodes = [];
+      text = text.replace(/\`([^\`\\n]+)\`/g, (match, code) => {
+        const idx = inlineCodes.length;
+        rawInlineCodes.push(code);
+        inlineCodes.push('<code class="md-inline-code">' + code + '</code>');
+        return '%%INLINECODE_' + idx + '%%';
+      });
 
-      // Headers
-      text = text.replace(/^### (.*$)/gim, '<h3 class="md-h3">$1</h3>');
-      text = text.replace(/^## (.*$)/gim, '<h2 class="md-h2">$1</h2>');
-      text = text.replace(/^# (.*$)/gim, '<h1 class="md-h1">$1</h1>');
+      const mdLinks = [];
+      function formatInline(segment) {
+        let s = segment;
+        // Safe Markdown links [label](url) with strict protocol allowlisting
+        s = s.replace(/\\[([^\\]]+)\\]\\(([^)\\s]+)\\)/g, (match, label, rawUrl) => {
+          const decodedUrl = rawUrl.replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
+          const lower = decodedUrl.toLowerCase();
+          const idx = mdLinks.length;
+          if (lower.startsWith('https://') || lower.startsWith('http://')) {
+            mdLinks.push('<a class="md-link" href="' + escapeHtml(decodedUrl) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>');
+          } else if (lower.startsWith('mailto:') || lower.startsWith('conversation://')) {
+            mdLinks.push('<a class="md-link" href="' + escapeHtml(decodedUrl) + '">' + label + '</a>');
+          } else if (lower.startsWith('file://')) {
+            const cleanPath = decodedUrl.slice(7);
+            mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '">📄 ' + label + '</span>');
+          } else {
+            mdLinks.push(label);
+          }
+          return '%%MDLINK_' + idx + '%%';
+        });
 
-      // Blockquotes
-      text = text.replace(/^(?:>|&gt;)\\s*(.*$)/gim, '<blockquote class="md-blockquote">$1</blockquote>');
+        // Bold and italics (word-bounded underscores preserve snake_case identifiers)
+        s = s.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
+        s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+        s = s.replace(/\\*([^*\\n]+)\\*/g, '<em>$1</em>');
+        s = s.replace(/(^|[\\s(])_([^_\\n]+)_(?=[\\s.,;:!?)]|$)/g, '$1<em>$2</em>');
+        return s;
+      }
 
-      // Bold and italics
-      text = text.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
-      text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-      text = text.replace(/\\*([^*]+)\\*/g, '<em>$1</em>');
-      text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
+      function stripInlineForLabel(segment) {
+        return segment
+          .replace(/%%INLINECODE_(\\d+)%%/g, (m, idx) => rawInlineCodes[Number(idx)] || '')
+          .replace(/\\[([^\\]]+)\\]\\([^)\\s]+\\)/g, '$1')
+          .replace(/\\*\\*([^*]+)\\*\\*/g, '$1')
+          .replace(/__([^_]+)__/g, '$1')
+          .replace(/\\*([^*\\n]+)\\*/g, '$1');
+      }
 
-      // Unordered lists
-      text = text.replace(/^\\s*[-*]\\s+(.*$)/gim, '<li class="md-li-ul">$1</li>');
-      text = text.replace(/(<li class="md-li-ul">[\\s\\S]*?<\\/li>)(?!\\s*<li class="md-li-ul">)/gim, '<ul class="md-ul">$1</ul>');
+      // 3. Block-level single-pass parser (GFM tables, dividers, headings, blockquotes, lists, paragraphs)
+      const lines = text.split('\\n');
+      const blocks = [];
+      let i = 0;
 
-      // Ordered lists
-      text = text.replace(/^\\s*\\d+\\.\\s+(.*$)/gim, '<li class="md-li-ol">$1</li>');
-      text = text.replace(/(<li class="md-li-ol">[\\s\\S]*?<\\/li>)(?!\\s*<li class="md-li-ol">)/gim, '<ol class="md-ol">$1</ol>');
+      while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
 
-      // Paragraphs
-      const paragraphs = text.split(/\\n{2,}/);
-      text = paragraphs.map(p => {
-        p = p.trim();
-        if (!p) return '';
-        if (p.startsWith('<h1') || p.startsWith('<h2') || p.startsWith('<h3') || 
-            p.startsWith('<blockquote') || p.startsWith('<ul') || p.startsWith('<ol') || 
-            p.startsWith('%%CODEBLOCK_')) {
-          return p;
+        if (!trimmed) {
+          i++;
+          continue;
         }
-        return '<p class="md-p">' + p.replace(/\\n/g, '<br>') + '</p>';
-      }).filter(Boolean).join('');
 
-      // Restore code blocks
-      text = text.replace(/%%CODEBLOCK_(\\d+)%%/g, (match, idx) => {
-        return codeBlocks[Number(idx)] || '';
-      });
+        // Fenced code block token
+        if (/^%%CODEBLOCK_\\d+%%$/.test(trimmed)) {
+          blocks.push(trimmed);
+          i++;
+          continue;
+        }
 
-      return text;
+        // Horizontal rule
+        if (/^(?:---+|___+|\\*\\*\\*+)$/.test(trimmed)) {
+          blocks.push('<hr class="md-hr">');
+          i++;
+          continue;
+        }
+
+        // GFM Table: header row containing '|' followed by alignment separator row
+        if (line.includes('|') && i + 1 < lines.length && isMarkdownTableSeparator(lines[i + 1])) {
+          const headerCells = splitMarkdownTableRow(line);
+          const sepCells = splitMarkdownTableRow(lines[i + 1]);
+          const aligns = headerCells.map((_, colIdx) => {
+            const sep = sepCells[colIdx] || '';
+            if (sep.startsWith(':') && sep.endsWith(':')) return 'center';
+            if (sep.endsWith(':')) return 'right';
+            return 'left';
+          });
+          const plainHeaders = headerCells.map(h => stripInlineForLabel(h));
+
+          let tableHtml = '<div tabindex="0" role="region" aria-label="Proposal data table" class="md-table-wrapper"><table class="md-table"><thead><tr>';
+          for (let c = 0; c < headerCells.length; c++) {
+            const alignStyle = aligns[c] !== 'left' ? (' style="text-align:' + aligns[c] + ';"') : '';
+            tableHtml += '<th' + alignStyle + '>' + formatInline(headerCells[c]) + '</th>';
+          }
+          tableHtml += '</tr></thead><tbody>';
+
+          i += 2;
+          while (i < lines.length && lines[i].trim() && lines[i].includes('|') && !/^%%CODEBLOCK_\\d+%%$/.test(lines[i].trim())) {
+            const rowCells = splitMarkdownTableRow(lines[i]);
+            tableHtml += '<tr>';
+            for (let c = 0; c < headerCells.length; c++) {
+              const cellVal = rowCells[c] !== undefined ? rowCells[c] : '';
+              const alignStyle = aligns[c] !== 'left' ? (' style="text-align:' + aligns[c] + ';"') : '';
+              const dataLabelAttr = plainHeaders[c] ? (' data-label="' + plainHeaders[c] + '"') : '';
+              tableHtml += '<td' + dataLabelAttr + alignStyle + '>' + formatInline(cellVal) + '</td>';
+            }
+            tableHtml += '</tr>';
+            i++;
+          }
+          tableHtml += '</tbody></table></div>';
+          blocks.push(tableHtml);
+          continue;
+        }
+
+        // Headings (# to ####)
+        const headingMatch = line.match(/^(#{1,4})\\s+(.*)$/);
+        if (headingMatch) {
+          const level = headingMatch[1].length;
+          blocks.push('<h' + level + ' class="md-h' + level + '">' + formatInline(headingMatch[2].trim()) + '</h' + level + '>');
+          i++;
+          continue;
+        }
+
+        // Blockquotes (merge consecutive > lines)
+        if (/^\\s*(?:>|&gt;)\\s?/.test(line)) {
+          const quoteLines = [];
+          while (i < lines.length && /^\\s*(?:>|&gt;)\\s?/.test(lines[i])) {
+            const qContent = lines[i].replace(/^\\s*(?:>|&gt;)\\s?/, '').trim();
+            if (qContent) quoteLines.push(formatInline(qContent));
+            i++;
+          }
+          blocks.push('<blockquote class="md-blockquote">' + quoteLines.join('<br>') + '</blockquote>');
+          continue;
+        }
+
+        // Unordered list
+        if (/^\\s*[-*]\\s+/.test(line)) {
+          const items = [];
+          while (i < lines.length && /^\\s*[-*]\\s+/.test(lines[i])) {
+            const liText = lines[i].replace(/^\\s*[-*]\\s+/, '');
+            items.push('<li class="md-li-ul">' + formatInline(liText) + '</li>');
+            i++;
+          }
+          blocks.push('<ul class="md-ul">' + items.join('') + '</ul>');
+          continue;
+        }
+
+        // Ordered list
+        if (/^\\s*\\d+\\.\\s+/.test(line)) {
+          const items = [];
+          while (i < lines.length && /^\\s*\\d+\\.\\s+/.test(lines[i])) {
+            const liText = lines[i].replace(/^\\s*\\d+\\.\\s+/, '');
+            items.push('<li class="md-li-ol">' + formatInline(liText) + '</li>');
+            i++;
+          }
+          blocks.push('<ol class="md-ol">' + items.join('') + '</ol>');
+          continue;
+        }
+
+        // Standard paragraph (collect consecutive non-block lines)
+        const paraLines = [];
+        while (
+          i < lines.length &&
+          lines[i].trim() &&
+          !/^%%CODEBLOCK_\\d+%%$/.test(lines[i].trim()) &&
+          !/^(?:---+|___+|\\*\\*\\*+)$/.test(lines[i].trim()) &&
+          !/^(#{1,4})\\s+/.test(lines[i]) &&
+          !/^\\s*(?:>|&gt;)\\s?/.test(lines[i]) &&
+          !/^\\s*[-*]\\s+/.test(lines[i]) &&
+          !/^\\s*\\d+\\.\\s+/.test(lines[i]) &&
+          !(lines[i].includes('|') && i + 1 < lines.length && isMarkdownTableSeparator(lines[i + 1]))
+        ) {
+          paraLines.push(formatInline(lines[i].trim()));
+          i++;
+        }
+        if (paraLines.length > 0) {
+          blocks.push('<p class="md-p">' + paraLines.join('<br>') + '</p>');
+        }
+      }
+
+      let out = blocks.join('');
+
+      // 4. Restore links, inline code, and fenced code blocks
+      out = out.replace(/%%MDLINK_(\\d+)%%/g, (m, idx) => mdLinks[Number(idx)] || '');
+      out = out.replace(/%%INLINECODE_(\\d+)%%/g, (m, idx) => inlineCodes[Number(idx)] || '');
+      out = out.replace(/%%CODEBLOCK_(\\d+)%%/g, (m, idx) => codeBlocks[Number(idx)] || '');
+
+      return out;
     }
 
     // 1-Click Accept proof
@@ -1961,11 +2366,23 @@ export function renderSidecarHtml(daemonUrl) {
     // State caches for reactive filtering
     let cachedApprovals = [];
     let approvalsStatusFilter = 'all';
+    const queueDetailCache = new Map();
 
     let cachedTopology = null;
 
     let cachedDeliverables = [];
     let deliverablesVerdictFilter = 'all';
+
+    function extractBasename(filePath) {
+      if (!filePath || typeof filePath !== 'string') return '';
+      const clean = filePath.replace(/\\/+$/, '');
+      const idx = clean.lastIndexOf('/');
+      return idx >= 0 ? clean.slice(idx + 1) : clean;
+    }
+
+    function isLikelyAbsoluteFilePath(ref) {
+      return typeof ref === 'string' && (ref.startsWith('/') || ref.startsWith('file:///'));
+    }
 
     // Tab 1 Filtering & Rendering
     function setApprovalsStatusFilter(filter, el) {
@@ -1993,12 +2410,28 @@ export function renderSidecarHtml(daemonUrl) {
         if (approvalsStatusFilter === 'pending' && (isQueue || isCritical)) return false;
 
         if (rigFilter !== 'all') {
-          const rText = ((item.scope || '') + ' ' + (item.recipient || '') + ' ' + (item.rig || '')).toLowerCase();
+          const rText = (
+            (item.scope || '') + ' ' +
+            (item.recipient || '') + ' ' +
+            (item.sourceSession || '') + ' ' +
+            (item.sourceRig || '') + ' ' +
+            (item.rig || '')
+          ).toLowerCase();
           if (!rText.includes(rigFilter.toLowerCase())) return false;
         }
 
         if (search) {
-          const text = ((item.summary || '') + ' ' + (item.scope || '') + ' ' + (item.recipient || '') + ' ' + (item.kind || '') + ' ' + (item.unblocks || '')).toLowerCase();
+          const text = (
+            (item.summary || '') + ' ' +
+            (item.body || '') + ' ' +
+            (item.sourceSession || '') + ' ' +
+            (item.evidenceRef || '') + ' ' +
+            (item.scope || '') + ' ' +
+            (item.recipient || '') + ' ' +
+            (item.kind || '') + ' ' +
+            (item.unblocks || '') + ' ' +
+            (Array.isArray(item.tags) ? item.tags.join(' ') : '')
+          ).toLowerCase();
           if (!text.includes(search)) return false;
         }
         return true;
@@ -2013,50 +2446,228 @@ export function renderSidecarHtml(daemonUrl) {
       document.getElementById('approvals-count').textContent = filtered.length;
 
       if (filtered.length === 0) {
-        list.innerHTML = '<div class="empty-state">' + (cachedApprovals.length === 0 ? 'No pending approvals or attention required. All agents operating smoothly.' : 'No attention items match current filters.') + '</div>';
+        const emptyHtml = '<div class="empty-state">' + (cachedApprovals.length === 0 ? 'No pending approvals or attention required. All agents operating smoothly.' : 'No attention items match current filters.') + '</div>';
+        const prevEmpty = list.dataset ? list.dataset.lastHtml : list._lastHtml;
+        if (prevEmpty !== emptyHtml) {
+          if (list.dataset) list.dataset.lastHtml = emptyHtml;
+          else list._lastHtml = emptyHtml;
+          list.innerHTML = emptyHtml;
+        }
         return;
       }
 
       let html = '';
       for (const item of filtered) {
+        const origIndex = cachedApprovals.indexOf(item);
         const qitemId = item.id.startsWith('queue:') ? item.id.slice(6) : item.id;
         const isQueue = item.id.startsWith('queue:');
         const urgencyBadge = item.urgency === 'high' || item.urgency === 'critical' ? 'badge-red' : item.urgency === 'outcome' ? 'badge-blue' : 'badge-amber';
-        const recipient = item.recipient || 'operator@human';
+        const recipient = item.recipient || item.destinationSession || 'operator@human';
+        const sourceSession = item.sourceSession || '';
+        const replyTarget = item.replyTo || sourceSession || recipient;
         const at = item.at ? new Date(item.at).toLocaleTimeString() : '';
+        const proposalMarkdown = (item.body || item.humanDetail || '').trim();
+        const hasGenericUnblocks = typeof item.unblocks === 'string' && item.unblocks.startsWith('No dependent task recorded');
+        const showUnblocks = Boolean(item.unblocks) && (!proposalMarkdown || !hasGenericUnblocks);
+        const evidenceRef = (item.evidenceRef || '').trim();
+        const evidenceName = isLikelyAbsoluteFilePath(evidenceRef) ? extractBasename(evidenceRef) : evidenceRef;
 
-        html += '<div class="card">' +
+        html += '<div class="card" data-approval-id="' + escapeHtml(item.id) + '">' +
           '<div class="card-header">' +
-            '<div>' +
+            '<div style="width:100%; min-width:0;">' +
               '<div class="card-title">' + renderMarkdown(item.summary || 'Attention Item') + '</div>' +
-              '<div class="card-meta">' +
-                '<span class="badge ' + urgencyBadge + '">' + escapeHtml(item.urgency || item.kind) + '</span>' +
+              '<div class="card-meta" style="margin-top:6px;">' +
+                '<span class="badge ' + urgencyBadge + '">' + escapeHtml(item.urgency || item.priority || item.kind || 'routine') + '</span>' +
+                (item.humanIntent ? ('<span class="badge badge-blue">' + escapeHtml(item.humanIntent) + '</span>') : '') +
+                (sourceSession ? ('<span class="approval-from-pill" title="Originating agent seat">From: ' + escapeHtml(sourceSession) + '</span>') : '') +
                 '<span>To: ' + escapeHtml(recipient) + '</span>' +
-                (item.scope ? ('<span>• ' + escapeHtml(item.scope) + '</span>') : '') +
-                '<span>• ' + at + '</span>' +
+                (item.scope && item.scope !== 'instance · project unknown' ? ('<span>• ' + escapeHtml(item.scope) + '</span>') : '') +
+                (at ? ('<span>• ' + at + '</span>') : '') +
               '</div>' +
             '</div>' +
           '</div>' +
-          (item.unblocks ? ('<div class="card-meta"><span>Unblocks: ' + renderMarkdown(item.unblocks) + '</span></div>') : '') +
-          '<div class="card-actions">' +
-            (isQueue ? (
-              '<button class="btn btn-success" onclick="approveItem(\\'' + qitemId + '\\', \\'' + escapeJs(item.summary) + '\\')">✓ Approve</button>' +
-              '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + qitemId + '\\', \\'' + escapeJs(item.summary) + '\\')">⚡ Quick Reject</button>' +
-              '<button class="btn btn-secondary" onclick="openRejectModal(\\'' + qitemId + '\\', \\'' + escapeJs(item.summary) + '\\')">✕ Reject...</button>'
+          (proposalMarkdown ? (
+            '<div class="approval-markdown-preview md-rendered" data-preview-id="' + escapeHtml(item.id) + '">' +
+              renderMarkdown(proposalMarkdown) +
+            '</div>'
+          ) : '') +
+          (evidenceRef ? (
+            '<div class="approval-evidence-bar">' +
+              '<span class="approval-evidence-path" title="' + escapeHtml(evidenceRef) + '">📎 Evidence: ' + escapeHtml(evidenceName) + '</span>' +
+              '<button class="btn" style="padding:3px 8px; font-size:11px; flex-shrink:0;" onclick="openApprovalDetailModal(' + origIndex + ')">Inspect</button>' +
+            '</div>'
+          ) : '') +
+          (showUnblocks ? ('<div class="card-meta"><span>Unblocks: ' + renderMarkdown(item.unblocks) + '</span></div>') : '') +
+          '<div class="card-actions" style="flex-wrap:wrap;">' +
+            ((proposalMarkdown || evidenceRef || isQueue) ? (
+              '<button class="btn btn-secondary" onclick="openApprovalDetailModal(' + origIndex + ')">📄 Full Proposal</button>'
             ) : '') +
-            '<button class="btn btn-primary" onclick="openReplyModal(\\'' + escapeJs(recipient) + '\\')">↩ Reply</button>' +
+            (isQueue ? (
+              '<button class="btn btn-success" onclick="approveItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">✓ Approve</button>' +
+              '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">⚡ Quick Reject</button>' +
+              '<button class="btn btn-secondary" onclick="openRejectModal(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">✕ Reject...</button>'
+            ) : '') +
+            '<button class="btn btn-primary" onclick="openReplyModal(\\'' + escapeJs(replyTarget) + '\\')">↩ Reply</button>' +
           '</div>' +
         '</div>';
       }
+
+      const prevRendered = list.dataset ? list.dataset.lastHtml : list._lastHtml;
+      if (prevRendered === html) {
+        return;
+      }
+
+      const savedScrolls = new Map();
+      if (typeof list.querySelectorAll === 'function') {
+        list.querySelectorAll('.approval-markdown-preview[data-preview-id]').forEach(el => {
+          savedScrolls.set(el.getAttribute('data-preview-id'), el.scrollTop);
+        });
+      }
+
+      if (list.dataset) list.dataset.lastHtml = html;
+      else list._lastHtml = html;
       list.innerHTML = html;
+
+      if (typeof list.querySelector === 'function' && typeof CSS !== 'undefined' && CSS.escape) {
+        savedScrolls.forEach((top, id) => {
+          const nextEl = list.querySelector('.approval-markdown-preview[data-preview-id="' + CSS.escape(id) + '"]');
+          if (nextEl) nextEl.scrollTop = top;
+        });
+      }
     }
 
-    // Fetch Approvals & Attention
+    async function openApprovalDetailModal(index) {
+      const item = cachedApprovals[index];
+      if (!item) return;
+
+      const isQueue = item.id.startsWith('queue:');
+      const qitemId = isQueue ? item.id.slice(6) : item.id;
+      const recipient = item.recipient || item.destinationSession || 'operator@human';
+      const sourceSession = item.sourceSession || '';
+      const replyTarget = item.replyTo || sourceSession || recipient;
+      const urgencyBadge = item.urgency === 'high' || item.urgency === 'critical' ? 'badge-red' : item.urgency === 'outcome' ? 'badge-blue' : 'badge-amber';
+
+      const badgeEl = document.getElementById('approval-detail-badge');
+      badgeEl.className = 'badge ' + urgencyBadge;
+      badgeEl.textContent = (item.humanIntent || item.urgency || item.priority || 'PROPOSAL').toUpperCase();
+
+      document.getElementById('approval-detail-title').textContent = item.summary || qitemId;
+      document.getElementById('approval-detail-subtitle').textContent =
+        'ID: ' + qitemId + (item.at ? (' · Created: ' + new Date(item.at).toLocaleString()) : '');
+      document.getElementById('approval-detail-from').textContent = sourceSession || '(system / unattributed)';
+      document.getElementById('approval-detail-to').textContent = recipient;
+
+      const tagList = Array.isArray(item.tags) && item.tags.length > 0 ? item.tags.join(', ') : 'none';
+      document.getElementById('approval-detail-tags').textContent =
+        (item.priority || item.urgency || 'routine') + ' · tags: ' + tagList;
+
+      const bodyEl = document.getElementById('approval-detail-body');
+      const primaryMarkdown = (item.body || item.humanDetail || '').trim();
+      if (primaryMarkdown) {
+        bodyEl.innerHTML = renderMarkdown(primaryMarkdown);
+      } else {
+        bodyEl.innerHTML = renderMarkdown(item.unblocks || item.summary || '*(No additional markdown body attached to this attention item.)*');
+      }
+
+      const evSection = document.getElementById('approval-detail-evidence-section');
+      const evNameEl = document.getElementById('approval-detail-evidence-name');
+      const evPathEl = document.getElementById('approval-detail-evidence-path');
+      const evBodyEl = document.getElementById('approval-detail-evidence-body');
+      const copyBtn = document.getElementById('approval-detail-copy-path-btn');
+      const evidenceRef = (item.evidenceRef || '').trim();
+
+      if (evidenceRef) {
+        evSection.style.display = 'flex';
+        evNameEl.textContent = isLikelyAbsoluteFilePath(evidenceRef) ? extractBasename(evidenceRef) : 'reference';
+        evPathEl.textContent = evidenceRef;
+        evBodyEl.style.display = 'none';
+        evBodyEl.innerHTML = '';
+        copyBtn.onclick = () => copyToClipboard(evidenceRef);
+
+        if (isLikelyAbsoluteFilePath(evidenceRef)) {
+          try {
+            const evRes = await fetch('/api/evidence?path=' + encodeURIComponent(evidenceRef));
+            if (evRes.ok) {
+              const evData = await evRes.json();
+              if (evData && evData.ok && typeof evData.content === 'string' && evData.content.trim()) {
+                // If primary body was empty, promote evidence markdown into primary body; otherwise show if distinct
+                if (!primaryMarkdown) {
+                  bodyEl.innerHTML = renderMarkdown(evData.content);
+                } else if (evData.content.trim() !== primaryMarkdown) {
+                  evBodyEl.style.display = 'block';
+                  evBodyEl.innerHTML = renderMarkdown(evData.content);
+                }
+              }
+            }
+          } catch (e) {
+            // Keep path reference visible even if file preview is unavailable
+          }
+        }
+      } else {
+        evSection.style.display = 'none';
+      }
+
+      const actionsLeft = document.getElementById('approval-detail-actions-left');
+      actionsLeft.innerHTML =
+        (isQueue ? (
+          '<button class="btn btn-success" onclick="approveItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">✓ Approve</button>' +
+          '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">⚡ Quick Reject</button>' +
+          '<button class="btn btn-secondary" onclick="closeModal(\\'approval-detail-modal\\'); openRejectModal(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">✕ Reject...</button>'
+        ) : '') +
+        '<button class="btn btn-primary" onclick="closeModal(\\'approval-detail-modal\\'); openReplyModal(\\'' + escapeJs(replyTarget) + '\\')">↩ Reply' + (sourceSession ? (' to ' + escapeHtml(sourceSession.split('@')[0])) : '') + '</button>';
+
+      openModal('approval-detail-modal');
+    }
+
+    // Fetch Approvals & Attention and hydrate full queue proposal details (/api/queue/:qitemId)
     async function fetchApprovals() {
       try {
         const res = await fetch('/api/attention');
         const data = await res.json();
-        cachedApprovals = data.items || [];
+        const items = Array.isArray(data.items) ? data.items : [];
+
+        // Hydrate queue items in parallel with smart cache keyed by qitemId + timestamp
+        const activeQitemIds = new Set();
+        await Promise.allSettled(items.map(async (item) => {
+          if (!item || typeof item.id !== 'string' || !item.id.startsWith('queue:')) return;
+          const qitemId = item.id.slice(6);
+          activeQitemIds.add(qitemId);
+
+          let detail = queueDetailCache.get(qitemId);
+          if (!detail || (item.at && detail._cachedAt !== item.at)) {
+            const qRes = await fetch('/api/queue/' + encodeURIComponent(qitemId));
+            if (qRes.ok) {
+              const qJson = await qRes.json();
+              detail = { ...qJson, _cachedAt: item.at || '' };
+              queueDetailCache.set(qitemId, detail);
+            }
+          }
+
+          if (detail) {
+            item.qitemId = qitemId;
+            item.body = detail.body || '';
+            item.sourceSession = detail.sourceSession || '';
+            item.destinationSession = detail.destinationSession || item.recipient || '';
+            item.evidenceRef = detail.evidenceRef || '';
+            item.tags = Array.isArray(detail.tags) ? detail.tags : [];
+            item.humanIntent = detail.humanIntent || '';
+            item.humanDetail = detail.humanDetail || '';
+            item.replyTo = detail.replyTo || '';
+            item.priority = detail.priority || item.urgency || 'routine';
+            if (item.sourceSession.includes('@')) {
+              item.sourceRig = item.sourceSession.split('@').slice(1).join('@');
+            }
+          }
+        }));
+
+        // Prune resolved queue items from cache
+        for (const cachedId of Array.from(queueDetailCache.keys())) {
+          if (!activeQitemIds.has(cachedId)) {
+            queueDetailCache.delete(cachedId);
+          }
+        }
+
+        cachedApprovals = items;
         renderApprovals();
       } catch (err) {
         console.error("fetchApprovals error:", err);
