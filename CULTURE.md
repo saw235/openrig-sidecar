@@ -38,3 +38,9 @@ All engineers and QA agents operating on `sidecar-dev` must strictly follow this
 - `core.lead` defines feature requirements and coordinates deliverables.
 - `core.builder` creates the isolated worktree, builds the feature, tests locally, and opens the PR.
 - `qa.reviewer` validates the PR branch in an isolated worktree, runs the verification suite, confirms UI behavior, and issues the approval.
+
+## 5. Surface Problems First, Radical Honesty & "Right Agent for the Right Work"
+- **Surface Problems First & Be Honest**: Never hide, paper over, or silently work around a blocker, broken test, auth/permission barrier, or unclear requirement. Report problems immediately and plainly with concrete evidence (what failed, why it failed, and what options exist).
+- **Motto — "Right Agent for the Right Work"**:
+  - Do not force an agent seat to improvise outside its domain, tools, or skills.
+  - If a seat is not equipped to handle a task cleanly, stop and escalate to `core.lead` (and `advisor-lead@kernel` / `human@kernel`): **propose adding a specific new skill** (`SKILL.md` / plugin) or **propose adding a new specialist seat/pod** to the rig.
