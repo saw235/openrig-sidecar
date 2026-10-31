@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import http from "node:http";
 import { createRequire } from "node:module";
+import os from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderSidecarHtml } from "./html.js";
 
@@ -24,7 +26,19 @@ export interface SidecarServerOptions {
   host?: string;
   daemonUrl?: string;
   bearerToken?: string;
+  allowedEvidenceRoots?: string[];
 }
+
+const ALLOWED_EVIDENCE_EXTENSIONS = new Set([
+  ".md",
+  ".markdown",
+  ".txt",
+  ".json",
+  ".yaml",
+  ".yml",
+  ".log",
+]);
+const MAX_EVIDENCE_BYTES = 256 * 1024;
 
 export interface RunningSidecar {
   server: http.Server;
@@ -36,6 +50,19 @@ export function startSidecarServer(opts?: SidecarServerOptions): Promise<Running
   const port = opts?.port ?? (process.env.OPENRIG_SIDECAR_PORT ? Number(process.env.OPENRIG_SIDECAR_PORT) : 7434);
   const host = opts?.host ?? "127.0.0.1";
   const daemonUrl = (opts?.daemonUrl ?? process.env.OPENRIG_URL ?? "http://127.0.0.1:7433").replace(/\/$/, "");
+  const home = os.homedir();
+  const allowedEvidenceRoots = (
+    opts?.allowedEvidenceRoots ?? [
+      path.join(home, "antigravity"),
+      path.join(home, ".openrig"),
+    ]
+  ).map((r) => {
+    try {
+      return fs.realpathSync(r);
+    } catch {
+      return path.resolve(r);
+    }
+  });
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url || "/", `http://${req.headers.host || "127.0.0.1"}`);
@@ -71,6 +98,65 @@ export function startSidecarServer(opts?: SidecarServerOptions): Promise<Running
       } catch (err) {
         res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
         res.end("Failed to load vendored dagre bundle");
+      }
+      return;
+    }
+
+    // Read-only local evidence artifact viewer (scoped to workspace & OpenRig roots)
+    if (url.pathname === "/api/evidence" && req.method === "GET") {
+      const rawParam = (url.searchParams.get("path") || "").trim();
+      const cleaned = rawParam.startsWith("file://")
+        ? decodeURIComponent(rawParam.slice("file://".length))
+        : rawParam;
+
+      if (!cleaned || !path.isAbsolute(cleaned)) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: "invalid_evidence_path", message: "Evidence path must be absolute." }));
+        return;
+      }
+
+      const ext = path.extname(cleaned).toLowerCase();
+      if (!ALLOWED_EVIDENCE_EXTENSIONS.has(ext)) {
+        res.writeHead(403, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: "unsupported_evidence_extension", ext }));
+        return;
+      }
+
+      let realPath: string;
+      try {
+        realPath = fs.realpathSync(cleaned);
+      } catch {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: "evidence_not_found", path: cleaned }));
+        return;
+      }
+
+      const withinAllowedRoot = allowedEvidenceRoots.some(
+        (root) => realPath === root || realPath.startsWith(root + path.sep)
+      );
+      if (!withinAllowedRoot) {
+        res.writeHead(403, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: "evidence_outside_allowed_roots" }));
+        return;
+      }
+
+      try {
+        const stat = fs.statSync(realPath);
+        if (!stat.isFile()) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: false, error: "evidence_not_a_file" }));
+          return;
+        }
+        const buf = fs.readFileSync(realPath);
+        const truncated = buf.byteLength > MAX_EVIDENCE_BYTES;
+        const content = truncated
+          ? buf.subarray(0, MAX_EVIDENCE_BYTES).toString("utf8") + "\n\n*(Evidence truncated at 256 KB)*"
+          : buf.toString("utf8");
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: true, path: realPath, basename: path.basename(realPath), truncated, content }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: "evidence_read_failed", message: err instanceof Error ? err.message : String(err) }));
       }
       return;
     }

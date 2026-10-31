@@ -4,6 +4,7 @@ export interface SidecarServerOptions {
     host?: string;
     daemonUrl?: string;
     bearerToken?: string;
+    allowedEvidenceRoots?: string[];
 }
 export interface RunningSidecar {
     server: http.Server;
