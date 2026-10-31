@@ -850,19 +850,175 @@ export function renderSidecarHtml(daemonUrl: string): string {
       font-weight: 600;
     }
 
-    /* Topology SVG Visual Graph */
-    #topology-graph-container {
+    /* Topology SVG Visual Graph (Default Primary View) */
+    #topology-list {
       display: none;
+    }
+    #topology-graph-container {
+      display: block;
       background-color: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 20px;
-      overflow-x: auto;
-      min-height: 440px;
+      overflow: hidden;
+      min-height: 480px;
+    }
+    .graph-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px 14px;
+      background-color: #151515;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .graph-toolbar-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .graph-toolbar-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-right: 2px;
+    }
+    .graph-layer-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .graph-layer-btn:hover {
+      border-color: var(--border-focus);
+      color: var(--text-primary);
+    }
+    .graph-layer-btn.active {
+      background-color: #1f2633;
+      border-color: #3b4d6b;
+      color: #ffffff;
+    }
+    .graph-layer-swatch {
+      width: 10px;
+      height: 2.5px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+    .graph-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-right: 6px;
+    }
+    .graph-zoom-btn {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-primary);
+      padding: 3px 8px;
+      font-size: 11.5px;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .graph-zoom-btn:hover {
+      background-color: var(--bg-elevated);
+      border-color: var(--border-focus);
+    }
+    #topology-seat-inspector {
+      padding: 10px 16px;
+      background-color: #171a21;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .inspector-hint {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+    .inspector-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .inspector-title-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .inspector-rel-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .inspector-rel-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .inspector-rel-chip:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+    #topology-graph-viewport {
+      overflow: auto;
+      max-height: 700px;
+      min-height: 430px;
+      padding: 16px;
+      cursor: grab;
+      background-color: #121212;
+      background-image: radial-gradient(#252525 1px, transparent 1px);
+      background-size: 20px 20px;
+      position: relative;
+    }
+    #topology-graph-viewport.dragging {
+      cursor: grabbing;
+      user-select: none;
     }
     .svg-graph {
       display: block;
       margin: 0 auto;
+    }
+    .svg-graph .graph-node:hover > rect.seat-card-bg,
+    .svg-graph .graph-rig-hub:hover > rect.rig-hub-bg {
+      stroke: var(--accent-blue);
+    }
+    .svg-graph .graph-action-pill:hover > rect {
+      fill: #2c3545;
+      stroke: var(--accent-blue);
     }
 
     /* Zero-dependency Markdown styles */
@@ -1043,22 +1199,63 @@ export function renderSidecarHtml(daemonUrl: string): string {
             <option value="oldest">Oldest</option>
           </select>
           <div class="btn-group" id="topology-view-toggle">
-            <button class="view-toggle-btn active" id="view-toggle-grid" onclick="toggleTopologyView('grid')">
-              ⊞ Matrix Grid
-            </button>
-            <button class="view-toggle-btn" id="view-toggle-graph" onclick="toggleTopologyView('graph')">
+            <button class="view-toggle-btn active" id="view-toggle-graph" onclick="toggleTopologyView('graph')">
               ☊ Visual Graph
             </button>
+            <button class="view-toggle-btn" id="view-toggle-grid" onclick="toggleTopologyView('grid')">
+              ⊞ Matrix Grid
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="topology-graph-container">
+        <div class="graph-toolbar" id="topology-graph-toolbar">
+          <div class="graph-toolbar-group">
+            <span class="graph-toolbar-label">Edges:</span>
+            <button class="graph-layer-btn active" id="layer-btn-ownership" onclick="toggleGraphEdgeLayer('ownership', this)" title="Toggle Rig → Pod → Seat structural ownership links">
+              <span class="graph-layer-swatch" style="background:#5c7cfa;"></span>
+              <span>Rig → Seat</span>
+            </button>
+            <button class="graph-layer-btn active" id="layer-btn-delegates_to" onclick="toggleGraphEdgeLayer('delegates_to', this)" title="Toggle delegates_to directed edges">
+              <span class="graph-layer-swatch" style="background:#8ab4f8;"></span>
+              <span>Delegates</span>
+            </button>
+            <button class="graph-layer-btn active" id="layer-btn-collaborates_with" onclick="toggleGraphEdgeLayer('collaborates_with', this)" title="Toggle collaborates_with edges">
+              <span class="graph-layer-swatch" style="background:#81c995;"></span>
+              <span>Collaborates</span>
+            </button>
+            <button class="graph-layer-btn active" id="layer-btn-escalates_to" onclick="toggleGraphEdgeLayer('escalates_to', this)" title="Toggle escalates_to feedback/escalation edges">
+              <span class="graph-layer-swatch" style="background:#fdd663;"></span>
+              <span>Escalates</span>
+            </button>
+          </div>
+          <div class="graph-toolbar-group">
+            <span class="graph-legend-item"><span class="live-dot working" style="display:inline-block;"></span>Working</span>
+            <span class="graph-legend-item"><span class="live-dot needs_input" style="display:inline-block;"></span>Needs Input</span>
+            <span class="graph-legend-item"><span class="live-dot idle" style="display:inline-block;"></span>Idle</span>
+            <div style="display:inline-flex; align-items:center; gap:4px; margin-left:6px;">
+              <button class="graph-zoom-btn" id="graph-zoom-out" onclick="adjustGraphZoom(-0.15)" title="Zoom Out">−</button>
+              <button class="graph-zoom-btn" id="graph-zoom-reset" onclick="resetGraphZoom()" title="Reset Zoom">100%</button>
+              <button class="graph-zoom-btn" id="graph-zoom-in" onclick="adjustGraphZoom(0.15)" title="Zoom In">+</button>
+              <button class="graph-zoom-btn" id="graph-zoom-fit" onclick="fitGraphZoom()" title="Fit Graph to Width">⊡ Fit</button>
+            </div>
+          </div>
+        </div>
+        <div id="topology-seat-inspector">
+          <div class="inspector-hint">
+            <span>☊ <strong>Interactive Fleet Graph:</strong> Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight its causal relationships, inspect upstream/downstream seats, or open Antigravity Chat &amp; Terminal Screen. Drag canvas to pan.</span>
+          </div>
+        </div>
+        <div id="topology-graph-viewport">
+          <div id="topology-graph-stage">
+            <div class="empty-state">Generating visual topology graph...</div>
           </div>
         </div>
       </div>
 
       <div id="topology-list">
         <div class="empty-state">Loading agent topology...</div>
-      </div>
-
-      <div id="topology-graph-container">
-        <div class="empty-state">Generating visual topology graph...</div>
       </div>
     </section>
 
@@ -1532,7 +1729,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
 
       const evEl = document.getElementById('proof-accept-evidence');
       if (Array.isArray(evidence) && evidence.length > 0) {
-        evEl.innerHTML = evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\'JetBrains Mono\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
+        evEl.innerHTML = evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
       } else if (evidence && typeof evidence === 'object') {
         evEl.innerHTML = '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(evidence, null, 2)) + '</code></pre>';
       } else if (evidence) {
@@ -1681,7 +1878,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
       text = text.replace(/^# (.*$)/gim, '<h1 class="md-h1">$1</h1>');
 
       // Blockquotes
-      text = text.replace(/^(?:>|&gt;)\s*(.*$)/gim, '<blockquote class="md-blockquote">$1</blockquote>');
+      text = text.replace(/^(?:>|&gt;)\\s*(.*$)/gim, '<blockquote class="md-blockquote">$1</blockquote>');
 
       // Bold and italics
       text = text.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
@@ -1843,11 +2040,11 @@ export function renderSidecarHtml(daemonUrl: string): string {
           (item.unblocks ? ('<div class="card-meta"><span>Unblocks: ' + renderMarkdown(item.unblocks) + '</span></div>') : '') +
           '<div class="card-actions">' +
             (isQueue ? (
-              '<button class="btn btn-success" onclick="approveItem(\'' + qitemId + '\', \'' + escapeJs(item.summary) + '\')">✓ Approve</button>' +
-              '<button class="btn btn-danger" onclick="quickRejectItem(\'' + qitemId + '\', \'' + escapeJs(item.summary) + '\')">⚡ Quick Reject</button>' +
-              '<button class="btn btn-secondary" onclick="openRejectModal(\'' + qitemId + '\', \'' + escapeJs(item.summary) + '\')">✕ Reject...</button>'
+              '<button class="btn btn-success" onclick="approveItem(\\'' + qitemId + '\\', \\'' + escapeJs(item.summary) + '\\')">✓ Approve</button>' +
+              '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + qitemId + '\\', \\'' + escapeJs(item.summary) + '\\')">⚡ Quick Reject</button>' +
+              '<button class="btn btn-secondary" onclick="openRejectModal(\\'' + qitemId + '\\', \\'' + escapeJs(item.summary) + '\\')">✕ Reject...</button>'
             ) : '') +
-            '<button class="btn btn-primary" onclick="openReplyModal(\'' + escapeJs(recipient) + '\')">↩ Reply</button>' +
+            '<button class="btn btn-primary" onclick="openReplyModal(\\'' + escapeJs(recipient) + '\\')">↩ Reply</button>' +
           '</div>' +
         '</div>';
       }
@@ -1982,8 +2179,21 @@ export function renderSidecarHtml(daemonUrl: string): string {
       }
     }
 
-    // Tab 2 View Switcher & SVG Visual Graph
-    let topologyViewMode = 'grid';
+    // Tab 2 View Switcher & Interactive SVG Topology Graph (Default View)
+    let topologyViewMode = 'graph';
+    let graphZoom = 1.0;
+    let lastGraphLogicalWidth = 1040;
+    let lastGraphLogicalHeight = 480;
+    let selectedGraphSeatKey = null;
+    let selectedGraphRigName = null;
+    let graphSeatRegistry = {};
+    let graphViewportInitialized = false;
+    const graphEdgeLayers = {
+      ownership: true,
+      delegates_to: true,
+      collaborates_with: true,
+      escalates_to: true
+    };
 
     function toggleTopologyView(mode) {
       topologyViewMode = mode;
@@ -2008,13 +2218,279 @@ export function renderSidecarHtml(daemonUrl: string): string {
       }
     }
 
+    function toggleGraphEdgeLayer(layerKey, btnEl) {
+      graphEdgeLayers[layerKey] = !graphEdgeLayers[layerKey];
+      if (btnEl) {
+        if (graphEdgeLayers[layerKey]) btnEl.classList.add('active');
+        else btnEl.classList.remove('active');
+      }
+      renderSvgGraph();
+    }
+
+    function applyGraphZoomToSvg() {
+      const svgEl = document.getElementById('topology-svg-canvas');
+      const resetBtn = document.getElementById('graph-zoom-reset');
+      if (resetBtn) resetBtn.textContent = Math.round(graphZoom * 100) + '%';
+      if (svgEl) {
+        svgEl.setAttribute('width', String(Math.round(lastGraphLogicalWidth * graphZoom)));
+        svgEl.setAttribute('height', String(Math.round(lastGraphLogicalHeight * graphZoom)));
+      }
+    }
+
+    function adjustGraphZoom(delta) {
+      graphZoom = Math.max(0.45, Math.min(1.85, Math.round((graphZoom + delta) * 100) / 100));
+      applyGraphZoomToSvg();
+    }
+
+    function resetGraphZoom() {
+      graphZoom = 1.0;
+      applyGraphZoomToSvg();
+    }
+
+    function fitGraphZoom() {
+      const vp = document.getElementById('topology-graph-viewport');
+      if (!vp || !lastGraphLogicalWidth) return;
+      const avail = Math.max(360, vp.clientWidth - 36);
+      graphZoom = Math.max(0.45, Math.min(1.35, Math.round((avail / lastGraphLogicalWidth) * 100) / 100));
+      applyGraphZoomToSvg();
+    }
+
+    function selectGraphSeat(seatKey) {
+      if (selectedGraphSeatKey === seatKey) {
+        selectedGraphSeatKey = null;
+      } else {
+        selectedGraphSeatKey = seatKey;
+        selectedGraphRigName = null;
+      }
+      renderSvgGraph();
+    }
+
+    function selectGraphRig(rigName) {
+      if (selectedGraphRigName === rigName) {
+        selectedGraphRigName = null;
+      } else {
+        selectedGraphRigName = rigName;
+        selectedGraphSeatKey = null;
+      }
+      renderSvgGraph();
+    }
+
+    function clearGraphSelection() {
+      selectedGraphSeatKey = null;
+      selectedGraphRigName = null;
+      renderSvgGraph();
+    }
+
+    function openExternalHref(href) {
+      window.open(href, '_blank', 'noopener,noreferrer');
+    }
+
+    function initGraphViewportPanZoom() {
+      if (graphViewportInitialized) return;
+      const vp = document.getElementById('topology-graph-viewport');
+      if (!vp) return;
+      graphViewportInitialized = true;
+
+      let isDown = false;
+      let startX = 0;
+      let startY = 0;
+      let scrollL = 0;
+      let scrollT = 0;
+
+      vp.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        if (e.target && e.target.closest && e.target.closest('.graph-node, .graph-rig-hub, .graph-action-pill, button, a')) {
+          return;
+        }
+        isDown = true;
+        vp.classList.add('dragging');
+        startX = e.pageX - vp.offsetLeft;
+        startY = e.pageY - vp.offsetTop;
+        scrollL = vp.scrollLeft;
+        scrollT = vp.scrollTop;
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isDown) {
+          isDown = false;
+          vp.classList.remove('dragging');
+        }
+      });
+
+      vp.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - vp.offsetLeft;
+        const y = e.pageY - vp.offsetTop;
+        vp.scrollLeft = scrollL - (x - startX);
+        vp.scrollTop = scrollT - (y - startY);
+      });
+
+      vp.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          adjustGraphZoom(e.deltaY < 0 ? 0.1 : -0.1);
+        }
+      }, { passive: false });
+    }
+
+    function getNodeKeyId(node) {
+      return node._id || node.nodeId || node.id || node.logicalId;
+    }
+
+    function getNodeRoleRank(logicalId) {
+      const id = (logicalId || '').toLowerCase();
+      if (id.includes('lead') || id.includes('architect') || id.includes('strategist') || id.includes('director')) return 1;
+      if (id.includes('dramatist') || id.includes('table-read') || id.includes('storyboarder') || id.includes('hook')) return 2;
+      if (id.includes('builder') || id.includes('build') || id.includes('dev') || id.includes('agent') || id.includes('animator') || id.includes('writer') || id.includes('ghostwriter') || id.includes('ensemble') || id.includes('worker')) return 3;
+      if (id.includes('reviewer') || id.includes('review') || id.includes('qa') || id.includes('critic') || id.includes('canon') || id.includes('human')) return 4;
+      return 5;
+    }
+
+    function matchesTopologyNodeFilters(node, rig, filters) {
+      const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
+      const runtime = (node.runtime || 'antigravity').toLowerCase();
+      const disp = (node.activityState && node.activityState.display) || node.sessionStatus || 'idle';
+      const state = disp === 'working' ? 'working' : (disp === 'needs_input' || disp === 'attention_required') ? 'needs_input' : 'idle';
+
+      if (filters.runtimeFilter !== 'all') {
+        if (filters.runtimeFilter === 'antigravity' && !runtime.includes('antigravity')) return false;
+        if (filters.runtimeFilter === 'claude' && !runtime.includes('claude')) return false;
+        if (filters.runtimeFilter === 'codex' && !runtime.includes('codex')) return false;
+        if (filters.runtimeFilter === 'omp' && !runtime.includes('omp')) return false;
+      }
+
+      if (filters.statusFilter !== 'all') {
+        if (filters.statusFilter !== state) return false;
+      }
+
+      if (filters.search) {
+        const text = ((node.logicalId || '') + ' ' + sessionName + ' ' + (node.model || '') + ' ' + (node.podNamespace || '') + ' ' + runtime + ' ' + (rig.name || '')).toLowerCase();
+        if (!text.includes(filters.search)) return false;
+      }
+
+      return true;
+    }
+
+    function updateGraphInspector(allRenderedEdges) {
+      const inspector = document.getElementById('topology-seat-inspector');
+      if (!inspector) return;
+
+      if (selectedGraphSeatKey && graphSeatRegistry[selectedGraphSeatKey]) {
+        const info = graphSeatRegistry[selectedGraphSeatKey];
+        const node = info.node;
+        const rig = info.rig;
+        const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
+        const runtime = node.runtime || 'antigravity';
+        const isAgy = runtime.toLowerCase().includes('antigravity');
+        const disp = (node.activityState && node.activityState.display) || node.sessionStatus || 'idle';
+        const stateClass = disp === 'working' ? 'working' : (disp === 'needs_input' || disp === 'attention_required') ? 'needs_input' : 'idle';
+        const convId = (node.resumeType === 'antigravity_id' ? node.resumeToken : null) || node.resumeToken;
+
+        const incoming = allRenderedEdges.filter(e => e.targetKey === selectedGraphSeatKey);
+        const outgoing = allRenderedEdges.filter(e => e.sourceKey === selectedGraphSeatKey);
+
+        let relHtml = '<span class="graph-toolbar-label">Relationships:</span>' +
+          '<button class="inspector-rel-chip" onclick="selectGraphRig(\\'' + escapeJs(rig.name) + '\\')" title="Focus owning rig">' +
+            '<span style="color:#5c7cfa;">⌂ Rig:</span> <strong>' + escapeHtml(rig.name) + '</strong> <span style="color:var(--text-muted);">/ ' + escapeHtml(info.podName) + '</span>' +
+          '</button>';
+
+        for (const inc of incoming) {
+          const srcInfo = graphSeatRegistry[inc.sourceKey];
+          if (!srcInfo) continue;
+          const color = inc.kind === 'escalates_to' ? '#fdd663' : inc.kind === 'collaborates_with' ? '#81c995' : '#8ab4f8';
+          relHtml += '<button class="inspector-rel-chip" onclick="selectGraphSeat(\\'' + escapeJs(inc.sourceKey) + '\\')" title="Jump to upstream seat">' +
+            '<span style="color:' + color + ';">← ' + escapeHtml(srcInfo.node.logicalId) + '</span>' +
+            '<span style="color:var(--text-muted);">(' + escapeHtml(inc.kind) + ')</span>' +
+          '</button>';
+        }
+
+        for (const out of outgoing) {
+          const dstInfo = graphSeatRegistry[out.targetKey];
+          if (!dstInfo) continue;
+          const color = out.kind === 'escalates_to' ? '#fdd663' : out.kind === 'collaborates_with' ? '#81c995' : '#8ab4f8';
+          relHtml += '<button class="inspector-rel-chip" onclick="selectGraphSeat(\\'' + escapeJs(out.targetKey) + '\\')" title="Jump to downstream seat">' +
+            '<span style="color:' + color + ';">→ ' + escapeHtml(dstInfo.node.logicalId) + '</span>' +
+            '<span style="color:var(--text-muted);">(' + escapeHtml(out.kind) + ')</span>' +
+          '</button>';
+        }
+
+        if (incoming.length === 0 && outgoing.length === 0) {
+          relHtml += '<span style="font-size:11px; color:var(--text-muted);">Standalone seat inside pod ' + escapeHtml(info.podName) + '</span>';
+        }
+
+        inspector.innerHTML =
+          '<div class="inspector-header-row">' +
+            '<div class="inspector-title-group">' +
+              '<span class="live-dot ' + stateClass + '"></span>' +
+              '<strong style="color:#fff; font-size:13px;">' + escapeHtml(node.logicalId) + '</strong>' +
+              '<span class="badge badge-blue">' + escapeHtml(rig.name) + '</span>' +
+              '<span class="badge badge-muted">Pod: ' + escapeHtml(info.podName) + '</span>' +
+              '<span class="badge ' + (isAgy ? 'badge-blue' : 'badge-muted') + '">' + (isAgy ? 'Google Antigravity' : escapeHtml(runtime)) + '</span>' +
+              (node.model ? '<span class="badge badge-muted">' + escapeHtml(node.model) + '</span>' : '') +
+              '<span class="badge badge-muted">Status: ' + escapeHtml(disp) + '</span>' +
+            '</div>' +
+            '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
+              (convId ? (
+                '<a href="conversation://' + escapeHtml(convId) + '" class="btn btn-secondary" style="padding:3px 9px; font-size:11px; text-decoration:none;" target="_blank" rel="noopener noreferrer">🔗 Open Chat ↗</a>' +
+                '<button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="copyToClipboard(\\'' + escapeJs(convId) + '\\')">Copy ID</button>'
+              ) : '') +
+              '<button class="btn btn-secondary" style="padding:3px 9px; font-size:11px;" onclick="openCaptureModal(\\'' + escapeJs(sessionName) + '\\', \\'' + escapeJs(node.logicalId) + '\\')">📺 Screen</button>' +
+              '<button class="btn btn-primary" style="padding:3px 9px; font-size:11px;" onclick="openReplyModal(\\'' + escapeJs(sessionName) + '\\')">✉ Message</button>' +
+              '<button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="clearGraphSelection()">✕ Clear</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="inspector-rel-row">' + relHtml + '</div>';
+        return;
+      }
+
+      if (selectedGraphRigName) {
+        const rigSeats = Object.values(graphSeatRegistry).filter(s => s.rig.name === selectedGraphRigName);
+        const rigEdges = allRenderedEdges.filter(e => e.rigName === selectedGraphRigName);
+        const workingCount = rigSeats.filter(s => (((s.node.activityState && s.node.activityState.display) || s.node.sessionStatus) === 'working')).length;
+
+        let seatChips = '';
+        for (const s of rigSeats) {
+          seatChips += '<button class="inspector-rel-chip" onclick="selectGraphSeat(\\'' + escapeJs(s.key) + '\\')">' +
+            '<span>' + escapeHtml(s.node.logicalId) + '</span>' +
+          '</button>';
+        }
+
+        inspector.innerHTML =
+          '<div class="inspector-header-row">' +
+            '<div class="inspector-title-group">' +
+              '<span class="badge badge-blue">RIG FOCUS</span>' +
+              '<strong style="color:#fff; font-size:13px;">' + escapeHtml(selectedGraphRigName) + '</strong>' +
+              '<span class="badge badge-muted">' + rigSeats.length + ' seats (' + workingCount + ' working)</span>' +
+              '<span class="badge badge-muted">' + rigEdges.length + ' relationship edges</span>' +
+            '</div>' +
+            '<div style="display:flex; align-items:center; gap:6px;">' +
+              '<button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="clearGraphSelection()">✕ Clear Focus</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="inspector-rel-row"><span class="graph-toolbar-label">Rig Seats:</span>' + seatChips + '</div>';
+        return;
+      }
+
+      const totalSeatsCount = Object.keys(graphSeatRegistry).length;
+      inspector.innerHTML =
+        '<div class="inspector-hint">' +
+          '<span>☊ <strong>Interactive Fleet Graph:</strong> Showing <strong>' + totalSeatsCount + ' seats</strong> and <strong>' + allRenderedEdges.length + ' directed seat edges</strong>. Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight causal paths &amp; actions.</span>' +
+        '</div>';
+    }
+
     function renderSvgGraph() {
-      const container = document.getElementById('topology-graph-container');
-      if (!container || !cachedTopology) return;
+      initGraphViewportPanZoom();
+      const stage = document.getElementById('topology-graph-stage') || document.getElementById('topology-graph-container');
+      if (!stage || !cachedTopology) return;
 
       const { rigs } = cachedTopology;
       const rigFilter = document.getElementById('topology-rig-filter')?.value || 'all';
-      const search = (document.getElementById('topology-search')?.value || '').toLowerCase().trim();
+      const filters = {
+        search: (document.getElementById('topology-search')?.value || '').toLowerCase().trim(),
+        runtimeFilter: document.getElementById('topology-runtime-filter')?.value || 'all',
+        statusFilter: document.getElementById('topology-status-filter')?.value || 'all'
+      };
 
       const filteredRigs = rigs.filter(r => {
         const rig = r.rig || r;
@@ -2023,121 +2499,568 @@ export function renderSidecarHtml(daemonUrl: string): string {
       });
 
       if (filteredRigs.length === 0) {
-        container.innerHTML = '<div class="empty-state">No rigs match the current filter or search criteria.</div>';
+        stage.innerHTML = '<div class="empty-state">No rigs match the current filter or search criteria.</div>';
+        graphSeatRegistry = {};
+        updateGraphInspector([]);
         return;
       }
 
-      const cardWidth = 220;
-      const cardHeight = 68;
-      const colGap = 90;
-      const rowGap = 30;
-      const podPadding = 18;
+      const rigHubX = 24;
+      const rigHubW = 204;
+      const rigHubH = 98;
+      const podsStartX = 288;
+      const cardW = 228;
+      const cardH = 84;
+      const seatColGap = 54;
+      const podPadX = 16;
+      const podPadTop = 32;
+      const podPadBottom = 14;
+      const podGapX = 56;
+      const podGapY = 34;
+      const rigSectionGap = 36;
 
-      let svgContent = '';
+      graphSeatRegistry = {};
+      const allRenderedEdges = [];
+
       const defs = '<defs>' +
-        '<marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
-          '<path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#8ab4f8"/>' +
+        '<marker id="arrowhead" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
+          '<path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#8ab4f8"/>' +
+        '</marker>' +
+        '<marker id="arrow-delegates" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
+          '<path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#8ab4f8"/>' +
+        '</marker>' +
+        '<marker id="arrow-escalates" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
+          '<path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#fdd663"/>' +
+        '</marker>' +
+        '<marker id="arrow-collaborates" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
+          '<path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#81c995"/>' +
+        '</marker>' +
+        '<marker id="arrow-ownership" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">' +
+          '<path d="M 0 2 L 8 5 L 0 8 z" fill="#5c7cfa"/>' +
         '</marker>' +
       '</defs>';
 
-      let totalWidth = 960;
+      // Pre-compute layout for all rigs so we know neighborhood highlights before emitting SVG
+      const rigLayouts = [];
+      let totalWidth = 1020;
       let currentY = 20;
 
       for (const r of filteredRigs) {
         const rig = r.rig || r;
-        const nodes = (rig.nodes || []).filter(node => {
-          if (!search) return true;
-          const s = (node.logicalId + ' ' + (node.canonicalSessionName || '') + ' ' + (node.runtime || '')).toLowerCase();
-          return s.includes(search);
-        });
-
+        const rawNodes = Array.isArray(rig.nodes) ? rig.nodes : [];
+        const nodes = rawNodes.filter(n => matchesTopologyNodeFilters(n, rig, filters));
         if (nodes.length === 0) continue;
 
-        const pods = {};
+        const rigEdgesRaw = Array.isArray(rig.edges) ? rig.edges : [];
+        const nodeById = {};
         for (const n of nodes) {
-          const podName = n.logicalId.split('.')[0] || 'default';
-          if (!pods[podName]) pods[podName] = [];
-          pods[podName].push(n);
+          const nid = getNodeKeyId(n);
+          nodeById[nid] = n;
+          if (n.id) nodeById[n.id] = n;
+          if (n.nodeId) nodeById[n.nodeId] = n;
+          if (n.logicalId) nodeById[n.logicalId] = n;
         }
 
-        svgContent += '<text x="24" y="' + (currentY + 16) + '" fill="#8ab4f8" font-size="14" font-weight="700" font-family="\'Inter\', sans-serif">' +
-          'RIG: ' + escapeHtml(rig.name) + ' (' + escapeHtml(rig.status || 'running') + ')' +
-        '</text>';
-        currentY += 34;
-
-        for (const [podName, podNodes] of Object.entries(pods)) {
-          const sortedPodNodes = [...podNodes].sort((a, b) => {
-            const getRank = (id) => {
-              if (id.includes('lead') || id.includes('operator')) return 1;
-              if (id.includes('builder') || id.includes('dev')) return 2;
-              if (id.includes('reviewer') || id.includes('qa')) return 3;
-              return 4;
-            };
-            return getRank(a.logicalId) - getRank(b.logicalId);
-          });
-
-          const nodeCount = sortedPodNodes.length;
-          const podWidth = Math.max(340, nodeCount * cardWidth + (nodeCount - 1) * colGap + podPadding * 2);
-          if (podWidth + 48 > totalWidth) totalWidth = podWidth + 48;
-          const podHeight = cardHeight + podPadding * 2 + 28;
-
-          svgContent += '<rect x="24" y="' + currentY + '" width="' + podWidth + '" height="' + podHeight + '" rx="10" fill="#181818" stroke="#2d2d2d" stroke-width="1"/>' +
-            '<text x="40" y="' + (currentY + 22) + '" fill="#9e9e9e" font-size="12" font-weight="600" font-family="\'Inter\', sans-serif">' +
-              'POD: ' + escapeHtml(podName) + ' (' + nodeCount + ' seats)' +
-            '</text>';
-
-          const nodePositions = [];
-          for (let i = 0; i < sortedPodNodes.length; i++) {
-            const node = sortedPodNodes[i];
-            const nodeX = 24 + podPadding + i * (cardWidth + colGap);
-            const nodeY = currentY + 34;
-            nodePositions.push({ node, x: nodeX, y: nodeY });
-
-            const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
-            const runtime = node.runtime || 'antigravity';
-            const disp = (node.activityState && node.activityState.display) || node.sessionStatus || 'idle';
-            const state = disp === 'working' ? '#81c995' : (disp === 'needs_input' || disp === 'attention_required') ? '#fdd663' : '#8ab4f8';
-
-            svgContent += '<g class="graph-node" style="cursor:pointer;" onclick="openCaptureModal(\'' + escapeJs(sessionName) + '\', \'' + escapeJs(node.logicalId) + '\')">' +
-              '<rect x="' + nodeX + '" y="' + nodeY + '" width="' + cardWidth + '" height="' + cardHeight + '" rx="6" fill="#1e1e1e" stroke="#2d2d2d" stroke-width="1"/>' +
-              '<circle cx="' + (nodeX + 16) + '" cy="' + (nodeY + 22) + '" r="5" fill="' + state + '"/>' +
-              '<text x="' + (nodeX + 30) + '" y="' + (nodeY + 26) + '" fill="#ffffff" font-size="12" font-weight="600" font-family="\'Inter\', sans-serif">' +
-                escapeHtml(node.logicalId) +
-              '</text>' +
-              '<text x="' + (nodeX + 30) + '" y="' + (nodeY + 44) + '" fill="#9e9e9e" font-size="10.5" font-family="\'JetBrains Mono\', monospace">' +
-                escapeHtml(runtime) + ' • ' + escapeHtml(disp) +
-              '</text>' +
-              '<text x="' + (nodeX + 30) + '" y="' + (nodeY + 58) + '" fill="#6b6b6b" font-size="9.5" font-family="\'Inter\', sans-serif">' +
-                'Click for Terminal Snapshot' +
-              '</text>' +
-            '</g>';
-          }
-
-          for (let i = 0; i < nodePositions.length - 1; i++) {
-            const nA = nodePositions[i];
-            const nB = nodePositions[i + 1];
-            const x1 = nA.x + cardWidth;
-            const y1 = nA.y + cardHeight / 2;
-            const x2 = nB.x;
-            const y2 = nB.y + cardHeight / 2;
-            const cx1 = x1 + colGap / 2;
-            const cy1 = y1;
-            const cx2 = x2 - colGap / 2;
-            const cy2 = y2;
-
-            svgContent += '<path d="M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + cy1 + ', ' + cx2 + ' ' + cy2 + ', ' + (x2 - 4) + ' ' + y2 + '" fill="none" stroke="#8ab4f8" stroke-width="1.75" marker-end="url(#arrowhead)"/>';
-          }
-
-          currentY += podHeight + rowGap;
+        // Group nodes into pods
+        const podMap = {};
+        for (const n of nodes) {
+          const podName = n.podNamespace || (n.logicalId ? n.logicalId.split('.')[0] : '') || 'default';
+          if (!podMap[podName]) podMap[podName] = [];
+          podMap[podName].push(n);
         }
 
-        currentY += 20;
+        // Sort nodes inside each pod topologically by intra-pod delegates_to edges, then role rank
+        const podEntries = [];
+        for (const [podName, pNodes] of Object.entries(podMap)) {
+          const pIds = new Set(pNodes.map(n => getNodeKeyId(n)));
+          const inDeg = {};
+          const adj = {};
+          for (const n of pNodes) {
+            const k = getNodeKeyId(n);
+            inDeg[k] = 0;
+            adj[k] = [];
+          }
+          for (const e of rigEdgesRaw) {
+            if (e.kind !== 'delegates_to') continue;
+            const sNode = nodeById[e.sourceId];
+            const tNode = nodeById[e.targetId];
+            if (!sNode || !tNode) continue;
+            const sk = getNodeKeyId(sNode);
+            const tk = getNodeKeyId(tNode);
+            if (sk !== tk && pIds.has(sk) && pIds.has(tk)) {
+              adj[sk].push(tk);
+              inDeg[tk] = (inDeg[tk] || 0) + 1;
+            }
+          }
+
+          const remaining = [...pNodes].sort((a, b) => getNodeRoleRank(a.logicalId) - getNodeRoleRank(b.logicalId));
+          const ordered = [];
+          const visited = new Set();
+          while (ordered.length < pNodes.length) {
+            let pickIdx = remaining.findIndex(n => !visited.has(getNodeKeyId(n)) && (inDeg[getNodeKeyId(n)] || 0) <= 0);
+            if (pickIdx === -1) {
+              pickIdx = remaining.findIndex(n => !visited.has(getNodeKeyId(n)));
+            }
+            const picked = remaining[pickIdx];
+            const pk = getNodeKeyId(picked);
+            visited.add(pk);
+            ordered.push(picked);
+            for (const nxt of (adj[pk] || [])) {
+              inDeg[nxt] = (inDeg[nxt] || 0) - 1;
+            }
+          }
+
+          const podW = ordered.length * cardW + Math.max(0, ordered.length - 1) * seatColGap + podPadX * 2;
+          const podH = cardH + podPadTop + podPadBottom;
+          podEntries.push({ podName, nodes: ordered, w: podW, h: podH, tier: 0, x: 0, y: 0 });
+        }
+
+        // Compute topological pod tiers using cross-pod delegates_to edges
+        const podByName = {};
+        const podInDeg = {};
+        const podAdj = {};
+        for (const p of podEntries) {
+          podByName[p.podName] = p;
+          podInDeg[p.podName] = 0;
+          podAdj[p.podName] = new Set();
+        }
+        for (const e of rigEdgesRaw) {
+          if (e.kind !== 'delegates_to') continue;
+          const sNode = nodeById[e.sourceId];
+          const tNode = nodeById[e.targetId];
+          if (!sNode || !tNode) continue;
+          const sp = sNode.podNamespace || (sNode.logicalId ? sNode.logicalId.split('.')[0] : '') || 'default';
+          const tp = tNode.podNamespace || (tNode.logicalId ? tNode.logicalId.split('.')[0] : '') || 'default';
+          if (sp !== tp && podByName[sp] && podByName[tp] && !podAdj[sp].has(tp)) {
+            podAdj[sp].add(tp);
+            podInDeg[tp] = (podInDeg[tp] || 0) + 1;
+          }
+        }
+
+        const topoPods = [];
+        const visitedPods = new Set();
+        while (topoPods.length < podEntries.length) {
+          let nextPod = podEntries.find(p => !visitedPods.has(p.podName) && (podInDeg[p.podName] || 0) <= 0);
+          if (!nextPod) {
+            nextPod = podEntries.find(p => !visitedPods.has(p.podName));
+          }
+          visitedPods.add(nextPod.podName);
+          topoPods.push(nextPod);
+          for (const targetPodName of podAdj[nextPod.podName]) {
+            const targetPod = podByName[targetPodName];
+            if (targetPod && !visitedPods.has(targetPodName)) {
+              targetPod.tier = Math.max(targetPod.tier, nextPod.tier + 1);
+            }
+            podInDeg[targetPodName] = (podInDeg[targetPodName] || 0) - 1;
+          }
+        }
+
+        // Decide horizontal tier columns vs packed topological rows
+        const tiersMap = {};
+        for (const p of topoPods) {
+          if (!tiersMap[p.tier]) tiersMap[p.tier] = [];
+          tiersMap[p.tier].push(p);
+        }
+        const tierKeys = Object.keys(tiersMap).map(Number).sort((a, b) => a - b);
+        let horizontalSeatsSum = 0;
+        for (const tk of tierKeys) {
+          horizontalSeatsSum += Math.max(...tiersMap[tk].map(p => p.nodes.length));
+        }
+
+        const rigContentTop = currentY + 18;
+        let rigContentBottom = rigContentTop;
+
+        if (horizontalSeatsSum <= 4) {
+          // Pure left-to-right DAG columns by Pod Tier (ideal for 2-5 seat rigs like openrig-dev, sidecar-dev, kernel)
+          let colX = podsStartX;
+          for (const tk of tierKeys) {
+            const tierPods = tiersMap[tk];
+            let tierY = rigContentTop;
+            let maxTierW = 0;
+            for (const p of tierPods) {
+              p.x = colX;
+              p.y = tierY;
+              tierY += p.h + podGapY;
+              if (p.w > maxTierW) maxTierW = p.w;
+              if (p.y + p.h > rigContentBottom) rigContentBottom = p.y + p.h;
+            }
+            colX += maxTierW + podGapX;
+            if (colX + 28 > totalWidth) totalWidth = colX + 28;
+          }
+        } else {
+          // Packed topological rows for large multi-pod rigs (e.g., 16-seat dnd-world)
+          const maxRowRight = podsStartX + 1060;
+          let rowX = podsStartX;
+          let rowY = rigContentTop;
+          let rowMaxH = 0;
+          for (const p of topoPods) {
+            if (rowX > podsStartX && rowX + p.w > maxRowRight) {
+              rowX = podsStartX;
+              rowY += rowMaxH + podGapY;
+              rowMaxH = 0;
+            }
+            p.x = rowX;
+            p.y = rowY;
+            rowX += p.w + podGapX;
+            if (p.h > rowMaxH) rowMaxH = p.h;
+            if (p.x + p.w + 28 > totalWidth) totalWidth = p.x + p.w + 28;
+            if (p.y + p.h > rigContentBottom) rigContentBottom = p.y + p.h;
+          }
+        }
+
+        const rigHeight = Math.max(rigHubH + 28, (rigContentBottom - currentY) + 18);
+        const rigHubY = currentY + Math.min(Math.max(14, (rigHeight - rigHubH) / 2), 160);
+
+        // Register seat coordinates
+        const rigSeatById = {};
+        for (const p of topoPods) {
+          p.seatBoxes = [];
+          for (let i = 0; i < p.nodes.length; i++) {
+            const node = p.nodes[i];
+            const sx = p.x + podPadX + i * (cardW + seatColGap);
+            const sy = p.y + podPadTop;
+            const nid = getNodeKeyId(node);
+            const seatKey = rig.name + '::' + nid;
+            const box = { key: seatKey, id: nid, node, rig, podName: p.podName, x: sx, y: sy, w: cardW, h: cardH };
+            p.seatBoxes.push(box);
+            graphSeatRegistry[seatKey] = box;
+            rigSeatById[nid] = box;
+            if (node.id) rigSeatById[node.id] = box;
+            if (node.nodeId) rigSeatById[node.nodeId] = box;
+            if (node.logicalId) rigSeatById[node.logicalId] = box;
+          }
+        }
+
+        // Resolve valid directed edges for this rig
+        const resolvedEdges = [];
+        const seenEdgeKeys = new Set();
+        for (const e of rigEdgesRaw) {
+          const srcBox = rigSeatById[e.sourceId];
+          const dstBox = rigSeatById[e.targetId];
+          if (!srcBox || !dstBox || srcBox.key === dstBox.key) continue;
+          const kind = e.kind || 'delegates_to';
+          const dedup = srcBox.key + '->' + dstBox.key + ':' + kind;
+          if (seenEdgeKeys.has(dedup)) continue;
+          seenEdgeKeys.add(dedup);
+          const edgeObj = {
+            rigName: rig.name,
+            sourceKey: srcBox.key,
+            targetKey: dstBox.key,
+            src: srcBox,
+            dst: dstBox,
+            kind
+          };
+          resolvedEdges.push(edgeObj);
+          allRenderedEdges.push(edgeObj);
+        }
+
+        // Fallback: if rig defines 0 explicit edges, infer intra-pod sequential pipeline edges so seats remain connected
+        if (rigEdgesRaw.length === 0) {
+          for (const p of topoPods) {
+            for (let i = 0; i < p.seatBoxes.length - 1; i++) {
+              const edgeObj = {
+                rigName: rig.name,
+                sourceKey: p.seatBoxes[i].key,
+                targetKey: p.seatBoxes[i + 1].key,
+                src: p.seatBoxes[i],
+                dst: p.seatBoxes[i + 1],
+                kind: 'delegates_to'
+              };
+              resolvedEdges.push(edgeObj);
+              allRenderedEdges.push(edgeObj);
+            }
+          }
+        }
+
+        rigLayouts.push({
+          rig,
+          nodes,
+          pods: topoPods,
+          edges: resolvedEdges,
+          topY: currentY,
+          height: rigHeight,
+          hubX: rigHubX,
+          hubY: rigHubY,
+          hubW: rigHubW,
+          hubH: rigHubH
+        });
+
+        currentY += rigHeight + rigSectionGap;
       }
 
-      const totalHeight = Math.max(420, currentY);
-      container.innerHTML = '<svg class="svg-graph" width="' + totalWidth + '" height="' + totalHeight + '" viewBox="0 0 ' + totalWidth + ' ' + totalHeight + '" xmlns="http://www.w3.org/2000/svg">' +
-        defs + svgContent +
+      if (rigLayouts.length === 0) {
+        stage.innerHTML = '<div class="empty-state">No agent seats match the selected filters or search query.</div>';
+        updateGraphInspector([]);
+        return;
+      }
+
+      // Clear stale selection if filtered out
+      if (selectedGraphSeatKey && !graphSeatRegistry[selectedGraphSeatKey]) {
+        selectedGraphSeatKey = null;
+      }
+      if (selectedGraphRigName && !rigLayouts.some(rl => rl.rig.name === selectedGraphRigName)) {
+        selectedGraphRigName = null;
+      }
+
+      // Compute active highlight neighborhood
+      const highlightedSeats = new Set();
+      let highlightedRig = selectedGraphRigName;
+      if (selectedGraphSeatKey && graphSeatRegistry[selectedGraphSeatKey]) {
+        highlightedSeats.add(selectedGraphSeatKey);
+        highlightedRig = graphSeatRegistry[selectedGraphSeatKey].rig.name;
+        for (const e of allRenderedEdges) {
+          if (e.sourceKey === selectedGraphSeatKey) highlightedSeats.add(e.targetKey);
+          if (e.targetKey === selectedGraphSeatKey) highlightedSeats.add(e.sourceKey);
+        }
+      } else if (selectedGraphRigName) {
+        for (const [k, v] of Object.entries(graphSeatRegistry)) {
+          if (v.rig.name === selectedGraphRigName) highlightedSeats.add(k);
+        }
+      }
+      const hasSelection = Boolean(selectedGraphSeatKey || selectedGraphRigName);
+
+      // Count relationship degrees per seat
+      const seatDegree = {};
+      for (const e of allRenderedEdges) {
+        seatDegree[e.sourceKey] = (seatDegree[e.sourceKey] || 0) + 1;
+        seatDegree[e.targetKey] = (seatDegree[e.targetKey] || 0) + 1;
+      }
+
+      let svgBg = '';
+      let svgOwnershipEdges = '';
+      let svgPodsAndHubs = '';
+      let svgRelEdges = '';
+      let svgRelLabels = '';
+      let svgNodes = '';
+
+      for (const rl of rigLayouts) {
+        const rig = rl.rig;
+        const isRigFocused = !hasSelection || highlightedRig === rig.name;
+        const rigDimOpacity = isRigFocused ? '1' : '0.28';
+        const workingInRig = rl.nodes.filter(n => (((n.activityState && n.activityState.display) || n.sessionStatus) === 'working')).length;
+
+        // Subtle Rig swimlane frame
+        svgBg += '<rect x="10" y="' + rl.topY + '" width="' + (totalWidth - 20) + '" height="' + rl.height + '" rx="12" fill="#15171c" fill-opacity="0.65" stroke="' + (selectedGraphRigName === rig.name ? '#5c7cfa' : '#23262e') + '" stroke-width="' + (selectedGraphRigName === rig.name ? '1.6' : '1') + '"/>';
+
+        // Rig Hub Node (Column 0)
+        const hubBorder = (selectedGraphRigName === rig.name || (selectedGraphSeatKey && highlightedRig === rig.name)) ? '#8ab4f8' : '#364fc7';
+        const hubStatusColor = workingInRig > 0 ? '#81c995' : '#8ab4f8';
+        svgPodsAndHubs += '<g class="graph-rig-hub" opacity="' + rigDimOpacity + '" style="cursor:pointer;" onclick="selectGraphRig(\\'' + escapeJs(rig.name) + '\\')">' +
+          '<rect class="rig-hub-bg" x="' + rl.hubX + '" y="' + rl.hubY + '" width="' + rl.hubW + '" height="' + rl.hubH + '" rx="10" fill="#181e2c" stroke="' + hubBorder + '" stroke-width="1.6"/>' +
+          '<rect x="' + (rl.hubX + 12) + '" y="' + (rl.hubY + 12) + '" width="36" height="16" rx="4" fill="#263859"/>' +
+          '<text x="' + (rl.hubX + 30) + '" y="' + (rl.hubY + 23) + '" text-anchor="middle" fill="#8ab4f8" font-size="9.5" font-weight="700" font-family="\\'Inter\\', sans-serif">RIG</text>' +
+          '<circle cx="' + (rl.hubX + rl.hubW - 16) + '" cy="' + (rl.hubY + 20) + '" r="4.5" fill="' + hubStatusColor + '"/>' +
+          '<text x="' + (rl.hubX + 14) + '" y="' + (rl.hubY + 46) + '" fill="#ffffff" font-size="13.5" font-weight="700" font-family="\\'Inter\\', sans-serif">' +
+            escapeHtml(rig.name.length > 20 ? (rig.name.slice(0, 19) + '…') : rig.name) +
+          '</text>' +
+          '<text x="' + (rl.hubX + 14) + '" y="' + (rl.hubY + 65) + '" fill="#9aa5b4" font-size="10.5" font-family="\\'JetBrains Mono\\', monospace">' +
+            rl.nodes.length + ' seats • ' + workingInRig + ' working' +
+          '</text>' +
+          '<text x="' + (rl.hubX + 14) + '" y="' + (rl.hubY + 82) + '" fill="#6f7d95" font-size="10" font-family="\\'Inter\\', sans-serif">' +
+            rl.pods.length + (rl.pods.length === 1 ? ' pod • ' : ' pods • ') + rl.edges.length + ' edges' +
+          '</text>' +
+          '<circle cx="' + (rl.hubX + rl.hubW) + '" cy="' + (rl.hubY + rl.hubH / 2) + '" r="4" fill="#5c7cfa" stroke="#121212" stroke-width="1.5"/>' +
+        '</g>';
+
+        // Pod Containers & Rig -> Pod Structural Ownership Curves
+        for (const p of rl.pods) {
+          const podHasHighlight = !hasSelection ? true : p.seatBoxes.some(sb => highlightedSeats.has(sb.key));
+          const podOpacity = podHasHighlight ? '1' : '0.26';
+
+          svgPodsAndHubs += '<g opacity="' + podOpacity + '">' +
+            '<rect x="' + p.x + '" y="' + p.y + '" width="' + p.w + '" height="' + p.h + '" rx="10" fill="#18191d" stroke="#2d3139" stroke-width="1.1"/>' +
+            '<text x="' + (p.x + 14) + '" y="' + (p.y + 20) + '" fill="#a3acb9" font-size="10.5" font-weight="600" font-family="\\'JetBrains Mono\\', monospace">' +
+              'POD: ' + escapeHtml(p.podName) + ' (' + p.nodes.length + ')' +
+            '</text>' +
+            '<circle cx="' + p.x + '" cy="' + (p.y + p.h / 2) + '" r="3.5" fill="#5c7cfa"/>' +
+          '</g>';
+
+          if (graphEdgeLayers.ownership) {
+            const ox1 = rl.hubX + rl.hubW;
+            const oy1 = rl.hubY + rl.hubH / 2;
+            const ox2 = p.x;
+            const oy2 = p.y + p.h / 2;
+            const dx = Math.max(36, (ox2 - ox1) * 0.55);
+            const ownActive = (selectedGraphRigName === rig.name) || (selectedGraphSeatKey && p.seatBoxes.some(sb => sb.key === selectedGraphSeatKey));
+            const ownOpacity = hasSelection ? (ownActive ? '0.88' : '0.12') : '0.45';
+            const ownWidth = ownActive ? '1.8' : '1.25';
+            svgOwnershipEdges += '<path class="graph-edge-ownership" d="M ' + ox1 + ' ' + oy1 + ' C ' + (ox1 + dx) + ' ' + oy1 + ', ' + (ox2 - dx) + ' ' + oy2 + ', ' + (ox2 - 3) + ' ' + oy2 + '" fill="none" stroke="#5c7cfa" stroke-width="' + ownWidth + '" stroke-dasharray="4 3" opacity="' + ownOpacity + '" marker-end="url(#arrow-ownership)"/>';
+          }
+        }
+
+        // Directed Seat-to-Seat Relationship Edges
+        const visibleRigEdges = rl.edges.filter(e => graphEdgeLayers[e.kind] !== false);
+        const edgePairSet = new Set(visibleRigEdges.map(e => e.sourceKey + '->' + e.targetKey));
+
+        for (const e of visibleRigEdges) {
+          const s = e.src;
+          const d = e.dst;
+          const hasReverse = edgePairSet.has(e.targetKey + '->' + e.sourceKey);
+          const isEdgeSelected = selectedGraphSeatKey
+            ? (e.sourceKey === selectedGraphSeatKey || e.targetKey === selectedGraphSeatKey)
+            : (selectedGraphRigName === rig.name);
+          const edgeOpacity = hasSelection ? (isEdgeSelected ? '1' : '0.12') : '0.82';
+          const strokeColor = e.kind === 'escalates_to' ? '#fdd663' : e.kind === 'collaborates_with' ? '#81c995' : '#8ab4f8';
+          const markerId = e.kind === 'escalates_to' ? 'arrow-escalates' : e.kind === 'collaborates_with' ? 'arrow-collaborates' : 'arrow-delegates';
+          const dashAttr = e.kind === 'escalates_to' ? ' stroke-dasharray="5 4"' : e.kind === 'collaborates_with' ? ' stroke-dasharray="3 2"' : '';
+          const strokeW = isEdgeSelected ? '2.25' : '1.65';
+
+          let pathD = '';
+          let labelX = 0;
+          let labelY = 0;
+
+          const sameRow = Math.abs(s.y - d.y) < 20;
+          if (sameRow && s.x < d.x) {
+            // Left-to-right on same row
+            const spanSteps = Math.round((d.x - s.x) / (cardW + seatColGap));
+            if (spanSteps <= 1) {
+              const x1 = s.x + s.w;
+              const y1 = s.y + (hasReverse ? s.h * 0.36 : s.h * 0.46);
+              const x2 = d.x - 4;
+              const y2 = d.y + (hasReverse ? d.h * 0.36 : d.h * 0.46);
+              const cGap = Math.max(22, (x2 - x1) * 0.45);
+              pathD = 'M ' + x1 + ' ' + y1 + ' C ' + (x1 + cGap) + ' ' + y1 + ', ' + (x2 - cGap) + ' ' + y2 + ', ' + x2 + ' ' + y2;
+              labelX = (x1 + x2) / 2;
+              labelY = y1 - 8;
+            } else {
+              // Arch cleanly above intermediate cards
+              const x1 = s.x + s.w * 0.72;
+              const y1 = s.y;
+              const x2 = d.x + d.w * 0.28;
+              const y2 = d.y - 3;
+              const archY = Math.min(y1, y2) - (22 + Math.min(26, spanSteps * 7));
+              pathD = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + archY + ', ' + x2 + ' ' + archY + ', ' + x2 + ' ' + y2;
+              labelX = (x1 + x2) / 2;
+              labelY = archY + 6;
+            }
+          } else if (sameRow && s.x > d.x) {
+            // Right-to-left feedback/escalation on same row: arch cleanly below cards
+            const spanSteps = Math.max(1, Math.round((s.x - d.x) / (cardW + seatColGap)));
+            const x1 = s.x + s.w * 0.35;
+            const y1 = s.y + s.h;
+            const x2 = d.x + d.w * 0.65;
+            const y2 = d.y + d.h + 3;
+            const archY = Math.max(y1, y2) + 18 + Math.min(28, (spanSteps - 1) * 9);
+            pathD = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + archY + ', ' + x2 + ' ' + archY + ', ' + x2 + ' ' + y2;
+            labelX = (x1 + x2) / 2;
+            labelY = archY - 4;
+          } else if (d.x >= s.x + s.w + 16) {
+            // Diagonal left-to-right across pods/tiers
+            const offset = hasReverse ? (e.kind === 'escalates_to' ? 12 : -10) : 0;
+            const x1 = s.x + s.w;
+            const y1 = s.y + s.h * 0.5 + offset;
+            const x2 = d.x - 4;
+            const y2 = d.y + d.h * 0.5 + offset;
+            const cx = Math.max(36, (x2 - x1) * 0.5);
+            pathD = 'M ' + x1 + ' ' + y1 + ' C ' + (x1 + cx) + ' ' + y1 + ', ' + (x2 - cx) + ' ' + y2 + ', ' + x2 + ' ' + y2;
+            labelX = (x1 + x2) / 2;
+            labelY = (y1 + y2) / 2 - 6;
+          } else if (s.x >= d.x + d.w + 16) {
+            // Diagonal right-to-left across pods/tiers
+            const offset = hasReverse ? 14 : 0;
+            const x1 = s.x;
+            const y1 = s.y + s.h * 0.62 + offset;
+            const x2 = d.x + d.w + 4;
+            const y2 = d.y + d.h * 0.62 + offset;
+            const cx = Math.max(36, (x1 - x2) * 0.5);
+            pathD = 'M ' + x1 + ' ' + y1 + ' C ' + (x1 - cx) + ' ' + y1 + ', ' + (x2 + cx) + ' ' + y2 + ', ' + x2 + ' ' + y2;
+            labelX = (x1 + x2) / 2;
+            labelY = (y1 + y2) / 2 + 10;
+          } else {
+            // Vertical cross-row connection
+            const goingDown = d.y > s.y;
+            const latOffset = hasReverse ? (goingDown ? -16 : 16) : 0;
+            const x1 = s.x + s.w * 0.5 + latOffset;
+            const y1 = goingDown ? (s.y + s.h) : s.y;
+            const x2 = d.x + d.w * 0.5 + latOffset;
+            const y2 = goingDown ? (d.y - 4) : (d.y + d.h + 4);
+            const cy = Math.max(26, Math.abs(y2 - y1) * 0.45);
+            pathD = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (goingDown ? y1 + cy : y1 - cy) + ', ' + x2 + ' ' + (goingDown ? y2 - cy : y2 + cy) + ', ' + x2 + ' ' + y2;
+            labelX = (x1 + x2) / 2 + latOffset * 0.4;
+            labelY = (y1 + y2) / 2;
+          }
+
+          svgRelEdges += '<path class="graph-edge-rel" data-kind="' + escapeHtml(e.kind) + '" d="' + pathD + '" fill="none" stroke="' + strokeColor + '" stroke-width="' + strokeW + '"' + dashAttr + ' opacity="' + edgeOpacity + '" marker-end="url(#' + markerId + ')"/>';
+
+          const showEdgeLabel = (selectedGraphSeatKey && isEdgeSelected) || (!hasSelection && visibleRigEdges.length <= 6);
+          if (showEdgeLabel) {
+            const shortKind = e.kind === 'delegates_to' ? 'delegates' : e.kind === 'escalates_to' ? 'escalates' : e.kind === 'collaborates_with' ? 'collaborates' : e.kind;
+            const pillW = shortKind.length * 5.6 + 12;
+            svgRelLabels += '<g opacity="' + (isEdgeSelected ? '1' : '0.88') + '">' +
+              '<rect x="' + (labelX - pillW / 2) + '" y="' + (labelY - 8) + '" width="' + pillW + '" height="14" rx="7" fill="#12141a" stroke="' + strokeColor + '" stroke-width="0.9"/>' +
+              '<text x="' + labelX + '" y="' + (labelY + 2) + '" text-anchor="middle" fill="' + strokeColor + '" font-size="8.5" font-family="\\'JetBrains Mono\\', monospace">' + escapeHtml(shortKind) + '</text>' +
+            '</g>';
+          }
+        }
+
+        // Seat Nodes
+        for (const p of rl.pods) {
+          for (const sb of p.seatBoxes) {
+            const node = sb.node;
+            const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
+            const runtime = node.runtime || 'antigravity';
+            const isHuman = node.nodeKind === 'human' || (node.logicalId || '').includes('human');
+            const runtimeShort = isHuman ? 'HUMAN' : runtime.toLowerCase().includes('antigravity') ? 'AGY' : runtime.toUpperCase().slice(0, 6);
+            const disp = (node.activityState && node.activityState.display) || node.sessionStatus || 'idle';
+            const stateColor = disp === 'working' ? '#81c995' : (disp === 'needs_input' || disp === 'attention_required') ? '#fdd663' : '#8ab4f8';
+            const convId = (node.resumeType === 'antigravity_id' ? node.resumeToken : null) || node.resumeToken;
+
+            const isPrimarySelected = selectedGraphSeatKey === sb.key;
+            const isNeighborHighlighted = !hasSelection || highlightedSeats.has(sb.key);
+            const nodeOpacity = isNeighborHighlighted ? '1' : '0.28';
+            const cardBorder = isPrimarySelected ? '#8ab4f8' : (hasSelection && isNeighborHighlighted ? '#4c6ef5' : '#2d323d');
+            const cardStrokeW = isPrimarySelected ? '2.2' : '1.2';
+            const cardFill = isPrimarySelected ? '#212838' : '#1e2026';
+
+            const modelLabel = node.model
+              ? (node.model.length > 26 ? node.model.slice(0, 25) + '…' : node.model)
+              : (runtime + ' • ' + disp);
+            const deg = seatDegree[sb.key] || 0;
+
+            svgNodes += '<g class="graph-node" opacity="' + nodeOpacity + '" style="cursor:pointer;" onclick="selectGraphSeat(\\'' + escapeJs(sb.key) + '\\')">' +
+              '<rect class="seat-card-bg" x="' + sb.x + '" y="' + sb.y + '" width="' + sb.w + '" height="' + sb.h + '" rx="8" fill="' + cardFill + '" stroke="' + cardBorder + '" stroke-width="' + cardStrokeW + '"/>' +
+              '<circle cx="' + (sb.x + 15) + '" cy="' + (sb.y + 19) + '" r="4.5" fill="' + stateColor + '"/>' +
+              '<text x="' + (sb.x + 27) + '" y="' + (sb.y + 23) + '" fill="#ffffff" font-size="12" font-weight="600" font-family="\\'Inter\\', sans-serif">' +
+                escapeHtml(node.logicalId.length > 20 ? (node.logicalId.slice(0, 19) + '…') : node.logicalId) +
+              '</text>' +
+              '<rect x="' + (sb.x + sb.w - 48) + '" y="' + (sb.y + 10) + '" width="38" height="16" rx="4" fill="#262b36"/>' +
+              '<text x="' + (sb.x + sb.w - 29) + '" y="' + (sb.y + 21) + '" text-anchor="middle" fill="#9fb4d9" font-size="9" font-weight="600" font-family="\\'JetBrains Mono\\', monospace">' + escapeHtml(runtimeShort) + '</text>' +
+              '<text x="' + (sb.x + 14) + '" y="' + (sb.y + 42) + '" fill="#9e9e9e" font-size="10" font-family="\\'JetBrains Mono\\', monospace">' +
+                escapeHtml(modelLabel) +
+              '</text>' +
+              '<text x="' + (sb.x + 14) + '" y="' + (sb.y + 70) + '" fill="' + stateColor + '" font-size="9.5" font-weight="500" font-family="\\'JetBrains Mono\\', monospace">' +
+                escapeHtml(disp) + (deg > 0 ? (' • ' + deg + ' rel') : '') +
+              '</text>' +
+              // Direct 1-click mini action pills inside the SVG seat card
+              (convId ? (
+                '<g class="graph-action-pill" onclick="event.stopPropagation(); openExternalHref(\\'conversation://' + escapeJs(convId) + '\\')">' +
+                  '<rect x="' + (sb.x + sb.w - 134) + '" y="' + (sb.y + 56) + '" width="40" height="19" rx="4" fill="#182030" stroke="#304261" stroke-width="0.9"/>' +
+                  '<text x="' + (sb.x + sb.w - 114) + '" y="' + (sb.y + 69) + '" text-anchor="middle" fill="#8ab4f8" font-size="9" font-family="\\'Inter\\', sans-serif">Chat↗</text>' +
+                '</g>'
+              ) : '') +
+              '<g class="graph-action-pill" onclick="event.stopPropagation(); openCaptureModal(\\'' + escapeJs(sessionName) + '\\', \\'' + escapeJs(node.logicalId) + '\\')">' +
+                '<rect x="' + (sb.x + sb.w - 90) + '" y="' + (sb.y + 56) + '" width="42" height="19" rx="4" fill="#1b1d24" stroke="#333845" stroke-width="0.9"/>' +
+                '<text x="' + (sb.x + sb.w - 69) + '" y="' + (sb.y + 69) + '" text-anchor="middle" fill="#d4d7dd" font-size="9" font-family="\\'Inter\\', sans-serif">Screen</text>' +
+              '</g>' +
+              '<g class="graph-action-pill" onclick="event.stopPropagation(); openReplyModal(\\'' + escapeJs(sessionName) + '\\')">' +
+                '<rect x="' + (sb.x + sb.w - 44) + '" y="' + (sb.y + 56) + '" width="34" height="19" rx="4" fill="#1d283a" stroke="#38527a" stroke-width="0.9"/>' +
+                '<text x="' + (sb.x + sb.w - 27) + '" y="' + (sb.y + 69) + '" text-anchor="middle" fill="#8ab4f8" font-size="9" font-family="\\'Inter\\', sans-serif">Msg</text>' +
+              '</g>' +
+            '</g>';
+          }
+        }
+      }
+
+      lastGraphLogicalWidth = totalWidth;
+      lastGraphLogicalHeight = Math.max(420, currentY + 8);
+      const scaledW = Math.round(lastGraphLogicalWidth * graphZoom);
+      const scaledH = Math.round(lastGraphLogicalHeight * graphZoom);
+
+      stage.innerHTML = '<svg id="topology-svg-canvas" class="svg-graph" width="' + scaledW + '" height="' + scaledH + '" viewBox="0 0 ' + lastGraphLogicalWidth + ' ' + lastGraphLogicalHeight + '" xmlns="http://www.w3.org/2000/svg">' +
+        defs + svgBg + svgOwnershipEdges + svgPodsAndHubs + svgRelEdges + svgNodes + svgRelLabels +
       '</svg>';
+
+      updateGraphInspector(allRenderedEdges);
     }
 
     // Tab 2 Filtering & Rendering
@@ -2172,33 +3095,11 @@ export function renderSidecarHtml(daemonUrl: string): string {
         const nodes = rig.nodes || [];
 
         // Filter nodes
-        const filteredNodes = nodes.filter(node => {
-          const sessionName = node.canonicalSessionName || (node.logicalId + '@' + rig.name);
-          const runtime = (node.runtime || 'antigravity').toLowerCase();
-          const disp = (node.activityState && node.activityState.display) || node.sessionStatus || 'idle';
-          const state = disp === 'working' ? 'working' : (disp === 'needs_input' || disp === 'attention_required') ? 'needs_input' : 'idle';
-
-          // Runtime filter
-          if (runtimeFilter !== 'all') {
-            if (runtimeFilter === 'antigravity' && !runtime.includes('antigravity')) return false;
-            if (runtimeFilter === 'claude' && !runtime.includes('claude')) return false;
-            if (runtimeFilter === 'codex' && !runtime.includes('codex')) return false;
-            if (runtimeFilter === 'omp' && !runtime.includes('omp')) return false;
-          }
-
-          // Status filter
-          if (statusFilter !== 'all') {
-            if (statusFilter !== state) return false;
-          }
-
-          // Search filter
-          if (search) {
-            const text = ((node.logicalId || '') + ' ' + sessionName + ' ' + (node.model || '') + ' ' + (node.podNamespace || '') + ' ' + runtime).toLowerCase();
-            if (!text.includes(search)) return false;
-          }
-
-          return true;
-        });
+        const filteredNodes = nodes.filter(node => matchesTopologyNodeFilters(node, rig, {
+          search,
+          runtimeFilter,
+          statusFilter
+        }));
 
         if (filteredNodes.length === 0) continue;
 
@@ -2220,7 +3121,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
         // Group filtered nodes by pod
         const pods = {};
         for (const node of filteredNodes) {
-          const podName = node.logicalId.split('.')[0] || 'default';
+          const podName = node.podNamespace || (node.logicalId ? node.logicalId.split('.')[0] : '') || 'default';
           if (!pods[podName]) pods[podName] = [];
           pods[podName].push(node);
         }
@@ -2233,6 +3134,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
             '</div>' +
             '<div class="card-meta">' +
               '<span>' + filteredNodes.length + ' matching seats</span>' +
+              '<span>• ' + ((rig.edges && rig.edges.length) || 0) + ' edges</span>' +
               '<span>• Status: ' + escapeHtml(rig.status || 'running') + '</span>' +
             '</div>' +
           '</div>' +
@@ -2298,13 +3200,13 @@ export function renderSidecarHtml(daemonUrl: string): string {
                   '<span>Conv: ' + escapeHtml(convId.slice(0, 18)) + '...</span>' +
                   '<div style="display:flex; align-items:center; gap:8px;">' +
                     '<a href="conversation://' + escapeHtml(convId) + '" class="conv-link" target="_blank" rel="noopener noreferrer" title="Open Conversation in Antigravity Chat">🔗 Open Chat ↗</a>' +
-                    '<button class="conv-copy-btn" onclick="copyToClipboard(\'' + convId + '\')">Copy ID</button>' +
+                    '<button class="conv-copy-btn" onclick="copyToClipboard(\\'' + convId + '\\')">Copy ID</button>' +
                   '</div>' +
                 '</div>'
               ) : '') +
               '<div class="seat-actions">' +
-                '<button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="openCaptureModal(\'' + escapeJs(sessionName) + '\', \'' + escapeJs(node.logicalId) + '\')">📺 Screen</button>' +
-                '<button class="btn btn-primary" style="padding:2px 8px; font-size:11px;" onclick="openReplyModal(\'' + escapeJs(sessionName) + '\')">✉ Message</button>' +
+                '<button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="openCaptureModal(\\'' + escapeJs(sessionName) + '\\', \\'' + escapeJs(node.logicalId) + '\\')">📺 Screen</button>' +
+                '<button class="btn btn-primary" style="padding:2px 8px; font-size:11px;" onclick="openReplyModal(\\'' + escapeJs(sessionName) + '\\')">✉ Message</button>' +
               '</div>' +
             '</div>';
           }
@@ -2344,7 +3246,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
       }
     }
 
-    // Fetch Topology & Telemetry
+    // Fetch Topology (Rigs, Live Seat Nodes, & Directed Topology Edges) & Telemetry
     async function fetchTopology() {
       try {
         const [resRigs, resTelemCost, resTelemTop] = await Promise.allSettled([
@@ -2375,16 +3277,55 @@ export function renderSidecarHtml(daemonUrl: string): string {
           }
         }
 
-        for (const r of rigs) {
+        await Promise.all(rigs.map(async (r) => {
           const rig = r.rig || r;
-          if ((!rig.nodes || rig.nodes.length === 0) && rig.id) {
-            try {
-              const resNodes = await fetch('/api/rigs/' + rig.id + '/nodes');
-              rig.nodes = await resNodes.json();
-            } catch (e) {}
+          if (!rig.id) {
+            if (!Array.isArray(rig.nodes)) rig.nodes = [];
+            if (!Array.isArray(rig.edges)) rig.edges = [];
+            return;
+          }
+          const [resDetail, resNodes] = await Promise.allSettled([
+            fetch('/api/rigs/' + rig.id),
+            (!rig.nodes || rig.nodes.length === 0) ? fetch('/api/rigs/' + rig.id + '/nodes') : Promise.resolve(null)
+          ]);
+
+          let detail = null;
+          if (resDetail.status === 'fulfilled' && resDetail.value && resDetail.value.ok) {
+            try { detail = await resDetail.value.json(); } catch (e) {}
+          }
+
+          if (resNodes.status === 'fulfilled' && resNodes.value && resNodes.value.ok) {
+            try { rig.nodes = await resNodes.value.json(); } catch (e) {}
+          }
+
+          if ((!Array.isArray(rig.nodes) || rig.nodes.length === 0) && detail && Array.isArray(detail.nodes)) {
+            rig.nodes = detail.nodes;
           }
           if (!Array.isArray(rig.nodes)) rig.nodes = [];
-        }
+
+          // Enrich live nodes with static node IDs from detail.nodes if needed
+          if (detail && Array.isArray(detail.nodes)) {
+            const detailByLogical = {};
+            for (const dn of detail.nodes) {
+              if (dn.logicalId) detailByLogical[dn.logicalId] = dn;
+            }
+            for (const ln of rig.nodes) {
+              const dn = detailByLogical[ln.logicalId];
+              if (dn && !ln.nodeId && !ln.id) {
+                ln.nodeId = dn.id;
+              }
+              ln._id = ln.nodeId || ln.id || (dn && dn.id) || ln.logicalId;
+            }
+          } else {
+            for (const ln of rig.nodes) {
+              ln._id = ln.nodeId || ln.id || ln.logicalId;
+            }
+          }
+
+          rig.edges = (detail && Array.isArray(detail.edges))
+            ? detail.edges
+            : (Array.isArray(rig.edges) ? rig.edges : []);
+        }));
 
         cachedTopology = { rigs, costData, topData, seatUsageMap };
 
@@ -2492,14 +3433,14 @@ export function renderSidecarHtml(daemonUrl: string): string {
           (item.evidence ? (
             '<div style="margin:8px 0; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); font-size:12px;">' +
               '<div style="color:var(--text-muted); font-size:11px; margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Verification Evidence</div>' +
-              (Array.isArray(item.evidence) ? item.evidence.map(e => '<span class="badge badge-green" style="font-family:\'JetBrains Mono\', monospace; margin-right:4px;">📁 ' + escapeHtml(e) + '</span>').join('') : escapeHtml(String(item.evidence))) +
+              (Array.isArray(item.evidence) ? item.evidence.map(e => '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace; margin-right:4px;">📁 ' + escapeHtml(e) + '</span>').join('') : escapeHtml(String(item.evidence))) +
             '</div>'
           ) : '') +
           '<div class="card-actions">' +
             '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">🔍 Details</button>' +
-            '<button class="btn btn-success" onclick="openProofAcceptModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">✓ Accept</button>' +
-            '<button class="btn btn-danger" onclick="quickRejectProof(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\')">⚡ Quick Reject</button>' +
-            '<button class="btn btn-secondary" onclick="openProofRejectModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\')">✕ Reject...</button>' +
+            '<button class="btn btn-success" onclick="openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">✓ Accept</button>' +
+            '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">⚡ Quick Reject</button>' +
+            '<button class="btn btn-secondary" onclick="openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">✕ Reject...</button>' +
           '</div>' +
         '</div>';
       }
@@ -2526,7 +3467,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
       document.getElementById('detail-subtitle').textContent = 'Scope: ' + scope + ' · Item #' + item.id;
       document.getElementById('detail-item-text').innerHTML = renderMarkdown(item.text || '(No explicit requirement description provided)');
       document.getElementById('detail-scope-id').textContent = scope + ' #' + item.id;
-      document.getElementById('detail-revision').textContent = (item.revision ? ('Revision: ' + item.revision) : 'Revision: uncommitted / initial') + (item.expectedPrevious ? ('\nPrevious: ' + item.expectedPrevious) : '');
+      document.getElementById('detail-revision').textContent = (item.revision ? ('Revision: ' + item.revision) : 'Revision: uncommitted / initial') + (item.expectedPrevious ? ('\\nPrevious: ' + item.expectedPrevious) : '');
 
       const judgmentBox = document.getElementById('detail-judgment');
       if (j) {
@@ -2538,7 +3479,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
       const evDetailEl = document.getElementById('detail-evidence');
       if (evDetailEl) {
         if (Array.isArray(item.evidence) && item.evidence.length > 0) {
-          evDetailEl.innerHTML = item.evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\'JetBrains Mono\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
+          evDetailEl.innerHTML = item.evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
         } else if (item.evidence && typeof item.evidence === 'object') {
           evDetailEl.innerHTML = '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(item.evidence, null, 2)) + '</code></pre>';
         } else if (item.evidence) {
@@ -2559,9 +3500,9 @@ export function renderSidecarHtml(daemonUrl: string): string {
       }, null, 2);
 
       const actionsLeft = document.getElementById('detail-actions-left');
-      actionsLeft.innerHTML = '<button class="btn btn-success" onclick="closeModal(\'deliverable-detail-modal\'); openProofAcceptModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ');">✓ Accept Proof</button>' +
-        '<button class="btn btn-danger" onclick="quickRejectProof(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\'); closeModal(\'deliverable-detail-modal\');">⚡ Quick Reject</button>' +
-        '<button class="btn btn-secondary" onclick="closeModal(\'deliverable-detail-modal\'); openProofRejectModal(\'' + escapeJs(scope) + '\', \'' + escapeJs(item.id) + '\', \'' + escapeJs(item.text) + '\', \'' + escapeJs(item.revision) + '\', \'' + escapeJs(j ? j.id : '') + '\');">✕ Reject Proof...</button>';
+      actionsLeft.innerHTML = '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ');">✓ Accept Proof</button>' +
+        '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\'); closeModal(\\'deliverable-detail-modal\\');">⚡ Quick Reject</button>' +
+        '<button class="btn btn-secondary" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">✕ Reject Proof...</button>';
 
       openModal('deliverable-detail-modal');
     }
