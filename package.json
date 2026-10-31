@@ -8,7 +8,7 @@
     "openrig-sidecar": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs=require('node:fs'),path=require('node:path');fs.mkdirSync('dist/vendor',{recursive:true});fs.copyFileSync(require.resolve('dagre/dist/dagre.min.js'),path.join('dist/vendor','dagre.min.js'));\"",
     "test": "node --test test/*.test.mjs",
     "start": "node dist/index.js",
     "dev": "node --watch src/index.ts"
@@ -23,7 +23,11 @@
   ],
   "author": "Antigravity & OpenRig Team",
   "license": "Apache-2.0",
+  "dependencies": {
+    "dagre": "^0.8.5"
+  },
   "devDependencies": {
+    "@types/dagre": "^0.7.54",
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0"
   },
