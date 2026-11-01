@@ -272,9 +272,19 @@ test("Graph-First Agent Topology & Origin Proxy Verification Suite", async (t) =
     sandbox.__testHooks.selectGraphSeat("openrig-dev::n2");
     const inspectorHtml = elements.get("topology-seat-inspector").innerHTML;
     assert.ok(inspectorHtml.includes("core.builder"), "Inspector must focus selected seat core.builder");
-    assert.ok(inspectorHtml.includes("← core.lead") && inspectorHtml.includes("(delegates_to)"), "Inspector must display upstream incoming delegates_to edge from core.lead");
-    assert.ok(inspectorHtml.includes("→ qa.reviewer") && inspectorHtml.includes("(delegates_to)"), "Inspector must display downstream outgoing delegates_to edge to qa.reviewer");
-    assert.ok(inspectorHtml.includes("← qa.reviewer") && inspectorHtml.includes("(escalates_to)"), "Inspector must display incoming escalates_to edge from qa.reviewer");
+    const relChips = inspectorHtml
+      .split('<button class="inspector-rel-chip"')
+      .slice(1)
+      .map((chunk) => chunk.split("</button>")[0]);
+    const findRelChip = (direction, logicalId, kind) =>
+      relChips.find((chip) =>
+        chip.includes(`data-direction="${direction}"`) &&
+        chip.includes(logicalId) &&
+        chip.includes(`(${kind})`)
+      );
+    assert.ok(findRelChip("upstream", "core.lead", "delegates_to"), "Inspector must display upstream incoming delegates_to edge from core.lead");
+    assert.ok(findRelChip("downstream", "qa.reviewer", "delegates_to"), "Inspector must display downstream outgoing delegates_to edge to qa.reviewer");
+    assert.ok(findRelChip("upstream", "qa.reviewer", "escalates_to"), "Inspector must display incoming escalates_to edge from qa.reviewer");
     assert.ok(inspectorHtml.includes("conversation://uuid-builder-5678"), "Inspector must expose Open Chat conversation:// link");
 
     // Select kernel rig hub

@@ -1324,6 +1324,11 @@ export function renderSidecarHtml(daemonUrl: string): string {
     #approvals-list.card-grid {
       grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
     }
+    /* Deliverables: exactly one full-width card per row at every viewport */
+    #deliverables-list.card-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+    }
     @media (max-width: 560px) {
       #approvals-list.card-grid {
         grid-template-columns: 1fr;
@@ -2259,7 +2264,15 @@ export function renderSidecarHtml(daemonUrl: string): string {
       restore: '<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
       search: '<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
       clock: '<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-      copy: '<svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+      copy: '<svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+      paperclip: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>',
+      reply: '<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>',
+      link: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+      external: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+      monitor: '<svg class="svg-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+      mail: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+      arrowLeft: '<svg class="svg-icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+      arrowRight: '<svg class="svg-icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'
     };
 
     // Tab switching
@@ -3250,21 +3263,21 @@ export function renderSidecarHtml(daemonUrl: string): string {
           ) : '') +
           (evidenceRef ? (
             '<div class="approval-evidence-bar">' +
-              '<span class="approval-evidence-path" title="' + escapeHtml(evidenceRef) + '">📎 Evidence: ' + escapeHtml(evidenceName) + '</span>' +
+              '<span class="approval-evidence-path" title="' + escapeHtml(evidenceRef) + '">' + ICONS.paperclip + 'Evidence: ' + escapeHtml(evidenceName) + '</span>' +
               '<button class="btn" style="padding:3px 8px; font-size:11px; flex-shrink:0;" onclick="openApprovalDetailModal(' + origIndex + ')">Inspect</button>' +
             '</div>'
           ) : '') +
           (showUnblocks ? ('<div class="card-meta"><span>Unblocks: ' + renderMarkdown(item.unblocks) + '</span></div>') : '') +
           '<div class="card-actions" style="flex-wrap:wrap;">' +
             ((proposalMarkdown || evidenceRef || isQueue) ? (
-              '<button class="btn btn-secondary" onclick="openApprovalDetailModal(' + origIndex + ')">📄 Full Proposal</button>'
+              '<button class="btn btn-secondary" onclick="openApprovalDetailModal(' + origIndex + ')">' + ICONS.doc + 'Full Proposal</button>'
             ) : '') +
             (isQueue ? (
-              '<button class="btn btn-success" onclick="approveItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">✓ Approve</button>' +
-              '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">⚡ Quick Reject</button>' +
-              '<button class="btn btn-secondary" onclick="openRejectModal(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">✕ Reject...</button>'
+              '<button class="btn btn-success" onclick="approveItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.check + 'Approve</button>' +
+              '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.bolt + 'Quick Reject</button>' +
+              '<button class="btn btn-secondary" onclick="openRejectModal(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.cross + 'Reject...</button>'
             ) : '') +
-            '<button class="btn btn-primary" onclick="openReplyModal(\\'' + escapeJs(replyTarget) + '\\')">↩ Reply</button>' +
+            '<button class="btn btn-primary" onclick="openReplyModal(\\'' + escapeJs(replyTarget) + '\\')">' + ICONS.reply + 'Reply</button>' +
           '</div>' +
         '</div>';
       }
@@ -3367,11 +3380,11 @@ export function renderSidecarHtml(daemonUrl: string): string {
       const actionsLeft = document.getElementById('approval-detail-actions-left');
       actionsLeft.innerHTML =
         (isQueue ? (
-          '<button class="btn btn-success" onclick="approveItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">✓ Approve</button>' +
-          '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">⚡ Quick Reject</button>' +
-          '<button class="btn btn-secondary" onclick="closeModal(\\'approval-detail-modal\\'); openRejectModal(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">✕ Reject...</button>'
+          '<button class="btn btn-success" onclick="approveItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.check + 'Approve</button>' +
+          '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.bolt + 'Quick Reject</button>' +
+          '<button class="btn btn-secondary" onclick="closeModal(\\'approval-detail-modal\\'); openRejectModal(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.cross + 'Reject...</button>'
         ) : '') +
-        '<button class="btn btn-primary" onclick="closeModal(\\'approval-detail-modal\\'); openReplyModal(\\'' + escapeJs(replyTarget) + '\\')">↩ Reply' + (sourceSession ? (' to ' + escapeHtml(sourceSession.split('@')[0])) : '') + '</button>';
+        '<button class="btn btn-primary" onclick="closeModal(\\'approval-detail-modal\\'); openReplyModal(\\'' + escapeJs(replyTarget) + '\\')">' + ICONS.reply + 'Reply' + (sourceSession ? (' to ' + escapeHtml(sourceSession.split('@')[0])) : '') + '</button>';
 
       openModal('approval-detail-modal');
     }
@@ -3534,7 +3547,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
         }
       } catch (err) {
         contentEl.textContent = 'Error connecting to daemon capture endpoint: ' + err.message;
-        statusEl.textContent = '✕ Connection error';
+        statusEl.textContent = 'Connection error';
         statusEl.style.color = 'var(--accent-red)';
         timeEl.textContent = new Date().toLocaleTimeString();
       }
@@ -3830,8 +3843,8 @@ export function renderSidecarHtml(daemonUrl: string): string {
           const srcInfo = graphSeatRegistry[inc.sourceKey];
           if (!srcInfo) continue;
           const color = inc.kind === 'escalates_to' ? '#fdd663' : inc.kind === 'collaborates_with' ? '#81c995' : '#8ab4f8';
-          relHtml += '<button class="inspector-rel-chip" onclick="selectGraphSeat(\\'' + escapeJs(inc.sourceKey) + '\\')" title="Jump to upstream seat">' +
-            '<span style="color:' + color + ';">← ' + escapeHtml(srcInfo.node.logicalId) + '</span>' +
+          relHtml += '<button class="inspector-rel-chip" data-direction="upstream" onclick="selectGraphSeat(\\'' + escapeJs(inc.sourceKey) + '\\')" title="Jump to upstream seat">' +
+            '<span style="color:' + color + ';">' + ICONS.arrowLeft + escapeHtml(srcInfo.node.logicalId) + '</span>' +
             '<span style="color:var(--text-muted);">(' + escapeHtml(inc.kind) + ')</span>' +
           '</button>';
         }
@@ -3840,8 +3853,8 @@ export function renderSidecarHtml(daemonUrl: string): string {
           const dstInfo = graphSeatRegistry[out.targetKey];
           if (!dstInfo) continue;
           const color = out.kind === 'escalates_to' ? '#fdd663' : out.kind === 'collaborates_with' ? '#81c995' : '#8ab4f8';
-          relHtml += '<button class="inspector-rel-chip" onclick="selectGraphSeat(\\'' + escapeJs(out.targetKey) + '\\')" title="Jump to downstream seat">' +
-            '<span style="color:' + color + ';">→ ' + escapeHtml(dstInfo.node.logicalId) + '</span>' +
+          relHtml += '<button class="inspector-rel-chip" data-direction="downstream" onclick="selectGraphSeat(\\'' + escapeJs(out.targetKey) + '\\')" title="Jump to downstream seat">' +
+            '<span style="color:' + color + ';">' + ICONS.arrowRight + escapeHtml(dstInfo.node.logicalId) + '</span>' +
             '<span style="color:var(--text-muted);">(' + escapeHtml(out.kind) + ')</span>' +
           '</button>';
         }
@@ -3863,12 +3876,12 @@ export function renderSidecarHtml(daemonUrl: string): string {
             '</div>' +
             '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
               (convId ? (
-                '<a href="conversation://' + escapeHtml(convId) + '" class="btn btn-secondary" style="padding:3px 9px; font-size:11px; text-decoration:none;" target="_blank" rel="noopener noreferrer">🔗 Open Chat ↗</a>' +
+                '<a href="conversation://' + escapeHtml(convId) + '" class="btn btn-secondary" style="padding:3px 9px; font-size:11px; text-decoration:none;" target="_blank" rel="noopener noreferrer">' + ICONS.link + 'Open Chat' + ICONS.external + '</a>' +
                 '<button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="copyToClipboard(\\'' + escapeJs(convId) + '\\')">Copy ID</button>'
               ) : '') +
-              '<button class="btn btn-secondary" style="padding:3px 9px; font-size:11px;" onclick="openCaptureModal(\\'' + escapeJs(sessionName) + '\\', \\'' + escapeJs(node.logicalId) + '\\')">📺 Screen</button>' +
-              '<button class="btn btn-primary" style="padding:3px 9px; font-size:11px;" onclick="openReplyModal(\\'' + escapeJs(sessionName) + '\\')">✉ Message</button>' +
-              '<button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="clearGraphSelection()">✕ Clear</button>' +
+              '<button class="btn btn-secondary" style="padding:3px 9px; font-size:11px;" onclick="openCaptureModal(\\'' + escapeJs(sessionName) + '\\', \\'' + escapeJs(node.logicalId) + '\\')">' + ICONS.monitor + 'Screen</button>' +
+              '<button class="btn btn-primary" style="padding:3px 9px; font-size:11px;" onclick="openReplyModal(\\'' + escapeJs(sessionName) + '\\')">' + ICONS.mail + 'Message</button>' +
+              '<button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="clearGraphSelection()">' + ICONS.cross + 'Clear</button>' +
             '</div>' +
           '</div>' +
           '<div class="inspector-rel-row">' + relHtml + '</div>';
@@ -3896,7 +3909,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
               '<span class="badge badge-muted">' + rigEdges.length + ' relationship edges</span>' +
             '</div>' +
             '<div style="display:flex; align-items:center; gap:6px;">' +
-              '<button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="clearGraphSelection()">✕ Clear Focus</button>' +
+              '<button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="clearGraphSelection()">' + ICONS.cross + 'Clear Focus</button>' +
             '</div>' +
           '</div>' +
           '<div class="inspector-rel-row"><span class="graph-toolbar-label">Rig Seats:</span>' + seatChips + '</div>';
@@ -4497,7 +4510,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
           }
         }
 
-        // Rich Interactive Seat Cards with Inline Chat↗ / Screen / Msg Buttons
+        // Rich Interactive Seat Cards with Inline Chat / Screen / Msg Buttons
         for (const p of rl.pods) {
           for (const sb of p.seatBoxes) {
             const node = sb.node;
@@ -4538,7 +4551,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
               (convId ? (
                 '<g class="graph-action-pill" onclick="event.stopPropagation(); openExternalHref(\\'conversation://' + escapeJs(convId) + '\\')">' +
                   '<rect x="' + (sb.x + sb.w - 134) + '" y="' + (sb.y + 56) + '" width="40" height="19" rx="4" fill="#182030" stroke="#304261" stroke-width="0.9"/>' +
-                  '<text x="' + (sb.x + sb.w - 114) + '" y="' + (sb.y + 69) + '" text-anchor="middle" fill="#8ab4f8" font-size="9" font-family="\\'Inter\\', sans-serif">Chat↗</text>' +
+                  '<text x="' + (sb.x + sb.w - 114) + '" y="' + (sb.y + 69) + '" text-anchor="middle" fill="#8ab4f8" font-size="9" font-family="\\'Inter\\', sans-serif">Chat</text>' +
                 '</g>'
               ) : '') +
               '<g class="graph-action-pill" onclick="event.stopPropagation(); openCaptureModal(\\'' + escapeJs(sessionName) + '\\', \\'' + escapeJs(node.logicalId) + '\\')">' +
@@ -4711,14 +4724,14 @@ export function renderSidecarHtml(daemonUrl: string): string {
                 '<div class="conv-box">' +
                   '<span>Conv: ' + escapeHtml(convId.slice(0, 18)) + '...</span>' +
                   '<div style="display:flex; align-items:center; gap:8px;">' +
-                    '<a href="conversation://' + escapeHtml(convId) + '" class="conv-link" target="_blank" rel="noopener noreferrer" title="Open Conversation in Antigravity Chat">🔗 Open Chat ↗</a>' +
+                    '<a href="conversation://' + escapeHtml(convId) + '" class="conv-link" target="_blank" rel="noopener noreferrer" title="Open Conversation in Antigravity Chat">' + ICONS.link + 'Open Chat' + ICONS.external + '</a>' +
                     '<button class="conv-copy-btn" onclick="copyToClipboard(\\'' + convId + '\\')">Copy ID</button>' +
                   '</div>' +
                 '</div>'
               ) : '') +
               '<div class="seat-actions">' +
-                '<button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="openCaptureModal(\\'' + escapeJs(sessionName) + '\\', \\'' + escapeJs(node.logicalId) + '\\')">📺 Screen</button>' +
-                '<button class="btn btn-primary" style="padding:2px 8px; font-size:11px;" onclick="openReplyModal(\\'' + escapeJs(sessionName) + '\\')">✉ Message</button>' +
+                '<button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="openCaptureModal(\\'' + escapeJs(sessionName) + '\\', \\'' + escapeJs(node.logicalId) + '\\')">' + ICONS.monitor + 'Screen</button>' +
+                '<button class="btn btn-primary" style="padding:2px 8px; font-size:11px;" onclick="openReplyModal(\\'' + escapeJs(sessionName) + '\\')">' + ICONS.mail + 'Message</button>' +
               '</div>' +
             '</div>';
           }

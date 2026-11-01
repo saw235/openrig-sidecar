@@ -24,7 +24,7 @@ test("Proof Usability & Quick Reject Workflow Test Suite", async (t) => {
 
   await t.test("Deliverable Cards Usability & Verification Evidence", () => {
     // Deliverables cards must show verification evidence preview
-    assert.ok(html.includes("Verification Evidence") || html.includes("📁 Evidence:"), "Card must display verification evidence badge/preview");
+    assert.ok(html.includes("Verification Evidence") || html.includes("ICONS.paperclip"), "Card must display verification evidence badge/preview");
     // Deliverables detail modal must include dedicated evidence section
     assert.ok(html.includes('id="detail-evidence"'), "Deliverable detail modal must include detail-evidence section");
     // Cards must wire accept action to openProofAcceptModal / openProofAcceptModalByIndex
@@ -35,7 +35,7 @@ test("Proof Usability & Quick Reject Workflow Test Suite", async (t) => {
     // Quick reject function for queue items
     assert.ok(html.includes("quickRejectItem"), "Must implement quickRejectItem for 1-click denial");
     // Action buttons in renderApprovals must render Quick Reject
-    assert.ok(html.includes("⚡ Quick Reject"), "Approvals cards must render ⚡ Quick Reject button");
+    assert.ok(html.includes("ICONS.bolt + 'Quick Reject"), "Approvals cards must render bolt-icon Quick Reject button");
     // Rejection reason default value
     assert.ok(html.includes("Rejected by operator"), "Default rejection reason must be 'Rejected by operator'");
     // Reject modal textarea placeholder and label must indicate optionality
