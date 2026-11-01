@@ -3,6 +3,7 @@ import http from "node:http";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
 import { renderSidecarHtml } from "./html.js";
 let cachedDagreBundle = null;
@@ -62,7 +63,82 @@ function getMimeType(ext) {
             return "text/plain; charset=utf-8";
     }
 }
-function resolveEvidenceFile(rawParam, roots) {
+/** Working directories of every non-archived rig, read from the OpenRig database. */
+function getActiveRigCwds() {
+    const dbPath = path.join(os.homedir(), ".openrig", "openrig.sqlite");
+    if (!fs.existsSync(dbPath))
+        return [];
+    let db = null;
+    try {
+        db = new DatabaseSync(dbPath, { readOnly: true });
+        const rows = db
+            .prepare("SELECT DISTINCT n.cwd AS cwd FROM nodes n JOIN rigs r ON n.rig_id = r.id WHERE r.archived_at IS NULL AND n.cwd IS NOT NULL")
+            .all();
+        return rows
+            .map((row) => row.cwd)
+            .filter((cwd) => typeof cwd === "string" && cwd.length > 0);
+    }
+    catch {
+        return [];
+    }
+    finally {
+        try {
+            db?.close();
+        }
+        catch {
+            /* ignore close failures */
+        }
+    }
+}
+/** Resolve a rig name/id (or `<seat>@<rig>` session name) to its working directory. */
+function resolveRigOrSessionCwd(rigOrSession) {
+    if (!rigOrSession)
+        return null;
+    const trimmed = rigOrSession.trim();
+    if (!trimmed)
+        return null;
+    const rigName = trimmed.includes("@") ? trimmed.split("@")[1] : trimmed;
+    const dbPath = path.join(os.homedir(), ".openrig", "openrig.sqlite");
+    if (!fs.existsSync(dbPath))
+        return null;
+    let db = null;
+    try {
+        db = new DatabaseSync(dbPath, { readOnly: true });
+        const rigRow = db
+            .prepare("SELECT n.cwd AS cwd FROM nodes n JOIN rigs r ON n.rig_id = r.id WHERE (r.name = ? OR r.id = ?) AND n.cwd IS NOT NULL LIMIT 1")
+            .get(rigName, rigName);
+        if (rigRow?.cwd)
+            return rigRow.cwd;
+        if (trimmed.includes("@")) {
+            const sessionRow = db
+                .prepare("SELECT n.cwd AS cwd FROM sessions s JOIN nodes n ON s.node_id = n.id WHERE s.session_name = ? AND n.cwd IS NOT NULL LIMIT 1")
+                .get(trimmed);
+            if (sessionRow?.cwd)
+                return sessionRow.cwd;
+        }
+    }
+    catch {
+        return null;
+    }
+    finally {
+        try {
+            db?.close();
+        }
+        catch {
+            /* ignore close failures */
+        }
+    }
+    return null;
+}
+function toRealOrResolved(target) {
+    try {
+        return fs.realpathSync(target);
+    }
+    catch {
+        return path.resolve(target);
+    }
+}
+function resolveEvidenceFile(rawParam, roots, rigOrSession) {
     const trimmed = (rawParam || "").trim();
     if (!trimmed) {
         return { error: "invalid_evidence_path", status: 400, details: { message: "Evidence path cannot be empty." } };
@@ -75,12 +151,30 @@ function resolveEvidenceFile(rawParam, roots) {
         candidatePath = cleaned;
     }
     else {
-        // Relative path: search roots for existing matching file
-        for (const root of roots) {
-            const testPath = path.resolve(root, cleaned);
-            if (fs.existsSync(testPath)) {
+        // Relative path: prefer the originating rig/session cwd, then allowed roots,
+        // then any other active rig cwd recorded by the daemon.
+        const rigCwd = resolveRigOrSessionCwd(rigOrSession);
+        if (rigCwd) {
+            const testPath = path.resolve(rigCwd, cleaned);
+            if (fs.existsSync(testPath))
                 candidatePath = testPath;
-                break;
+        }
+        if (!candidatePath) {
+            for (const root of roots) {
+                const testPath = path.resolve(root, cleaned);
+                if (fs.existsSync(testPath)) {
+                    candidatePath = testPath;
+                    break;
+                }
+            }
+        }
+        if (!candidatePath) {
+            for (const cwd of getActiveRigCwds()) {
+                const testPath = path.resolve(cwd, cleaned);
+                if (fs.existsSync(testPath)) {
+                    candidatePath = testPath;
+                    break;
+                }
             }
         }
     }
@@ -126,18 +220,16 @@ export function startSidecarServer(opts) {
     const host = opts?.host ?? "127.0.0.1";
     const daemonUrl = (opts?.daemonUrl ?? process.env.OPENRIG_URL ?? "http://127.0.0.1:7433").replace(/\/$/, "");
     const home = os.homedir();
-    const allowedEvidenceRoots = (opts?.allowedEvidenceRoots ?? [
+    const configuredRoots = opts?.allowedEvidenceRoots ?? [
         path.join(home, "antigravity"),
+        path.join(home, "research"),
         path.join(home, ".openrig", "workspace"),
         path.join(home, ".openrig"),
-    ]).map((r) => {
-        try {
-            return fs.realpathSync(r);
-        }
-        catch {
-            return path.resolve(r);
-        }
-    });
+    ];
+    const rootCandidates = opts?.allowedEvidenceRoots
+        ? configuredRoots
+        : [...configuredRoots, ...getActiveRigCwds()];
+    const allowedEvidenceRoots = [...new Set(rootCandidates.map(toRealOrResolved))];
     const server = http.createServer(async (req, res) => {
         const url = new URL(req.url || "/", `http://${req.headers.host || "127.0.0.1"}`);
         // CORS headers for all requests
@@ -175,7 +267,8 @@ export function startSidecarServer(opts) {
         // Read-only local evidence artifact viewer (scoped to workspace & OpenRig roots)
         if (url.pathname === "/api/evidence" && req.method === "GET") {
             const rawParam = url.searchParams.get("path") || "";
-            const resolved = resolveEvidenceFile(rawParam, allowedEvidenceRoots);
+            const rigOrSession = url.searchParams.get("session") || url.searchParams.get("rig") || "";
+            const resolved = resolveEvidenceFile(rawParam, allowedEvidenceRoots, rigOrSession);
             if ("error" in resolved) {
                 res.writeHead(resolved.status, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({ ok: false, error: resolved.error, ...resolved.details }));
@@ -213,7 +306,8 @@ export function startSidecarServer(opts) {
         // Binary / raw evidence artifact streaming endpoint (images, markdown, documents)
         if (url.pathname === "/api/evidence/raw" && req.method === "GET") {
             const rawParam = url.searchParams.get("path") || "";
-            const resolved = resolveEvidenceFile(rawParam, allowedEvidenceRoots);
+            const rigOrSession = url.searchParams.get("session") || url.searchParams.get("rig") || "";
+            const resolved = resolveEvidenceFile(rawParam, allowedEvidenceRoots, rigOrSession);
             if ("error" in resolved) {
                 res.writeHead(resolved.status, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({ ok: false, error: resolved.error, ...resolved.details }));
