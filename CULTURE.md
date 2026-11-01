@@ -50,3 +50,13 @@ All engineers and QA agents operating on `sidecar-dev` must strictly follow this
   - Unicode emojis render inconsistently across OSes, often turn into `□` tofu boxes on Linux/WSL, and violate the Antigravity 2.0 Obsidian design system.
   - Always use crisp **inline `<svg>` icons** or clean typographic/CSS indicators instead of Unicode emojis.
   - `qa.reviewer` must reject (`NEEDS_REVISION`) any UI changes that introduce Unicode emojis.
+
+## 7. Local Runtime Deployment & Tailscale Binding
+- `rig sidecar` serves compiled assets from `~/.openrig/runtime/openrig-sidecar/dist/`, not directly from this repository checkout.
+- After a PR is merged to `main` and verified (`npm run build && npm test`), sync and restart bound to `0.0.0.0` so both localhost and Tailscale (`http://xsaw-wsl:7434/`) stay live:
+  ```bash
+  cp -r dist/* ~/.openrig/runtime/openrig-sidecar/dist/
+  cp package.json ~/.openrig/runtime/openrig-sidecar/package.json
+  rig sidecar stop || true
+  rig sidecar -h 0.0.0.0 --no-open
+  ```
