@@ -44,3 +44,9 @@ All engineers and QA agents operating on `sidecar-dev` must strictly follow this
 - **Motto — "Right Agent for the Right Work"**:
   - Do not force an agent seat to improvise outside its domain, tools, or skills.
   - If a seat is not equipped to handle a task cleanly, stop and escalate to `core.lead` (and `advisor-lead@kernel` / `human@kernel`): **propose adding a specific new skill** (`SKILL.md` / plugin) or **propose adding a new specialist seat/pod** to the rig.
+
+## 6. Web Development Standard: Strictly No Emojis in Web UI
+- **Never use Unicode emojis in the Sidecar web application UI (`src/html.ts`)**:
+  - Unicode emojis render inconsistently across OSes, often turn into `□` tofu boxes on Linux/WSL, and violate the Antigravity 2.0 Obsidian design system.
+  - Always use crisp **inline `<svg>` icons** or clean typographic/CSS indicators instead of Unicode emojis.
+  - `qa.reviewer` must reject (`NEEDS_REVISION`) any UI changes that introduce Unicode emojis.
