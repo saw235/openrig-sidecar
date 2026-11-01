@@ -1323,10 +1323,339 @@ export function renderSidecarHtml(daemonUrl) {
     #approvals-list.card-grid {
       grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
     }
-    /* Deliverables: exactly one full-width card per row at every viewport */
-    #deliverables-list.card-grid {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 16px;
+    /* Phase 2 Deliverables Master-Detail Studio */
+    .deliverables-studio {
+      display: grid;
+      grid-template-columns: minmax(320px, 38%) minmax(0, 1fr);
+      min-height: 640px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      overflow: hidden;
+    }
+    .deliverables-master-rail {
+      min-width: 0;
+      max-width: 460px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-subtle);
+    }
+    .master-rail-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .master-filter-controls {
+      display: flex;
+      gap: 6px;
+    }
+    .master-filter-controls .form-select {
+      flex: 1;
+      min-width: 0;
+    }
+    .master-rail-list {
+      flex: 1;
+      min-height: 0;
+      max-height: calc(100vh - 250px);
+      overflow-y: auto;
+    }
+    .deliverables-batch-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border: 1px solid rgba(138, 180, 248, 0.25);
+      border-radius: var(--radius-sm);
+      background: rgba(138, 180, 248, 0.06);
+    }
+    .batch-count-label {
+      flex: 1;
+      font-size: 11px;
+      color: var(--accent-blue);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .btn-sm {
+      padding: 3px 8px;
+      font-size: 11px;
+    }
+    .deliverables-group-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+    }
+    .deliverables-group-header .group-chevron {
+      flex-shrink: 0;
+      transition: transform 0.15s ease;
+    }
+    .deliverables-group-header.collapsed .group-chevron {
+      transform: rotate(-90deg);
+    }
+    .deliverables-group-header .group-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .deliverables-row {
+      height: 44px;
+      min-height: 44px;
+      max-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      border-left: 3px solid transparent;
+      cursor: pointer;
+    }
+    .deliverables-row:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .deliverables-row.active {
+      background: rgba(138, 180, 248, 0.08);
+      border-left-color: var(--accent-blue);
+      padding-left: 7px;
+    }
+    .deliverables-row .row-checkbox {
+      width: 14px;
+      height: 14px;
+      margin-right: 8px;
+      cursor: pointer;
+      accent-color: var(--accent-blue);
+      flex-shrink: 0;
+    }
+    .deliverables-row .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .deliverables-row .title-strip {
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .deliverables-row .meta-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+    .deliverables-row .revision-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+    }
+    .deliverables-row .time-pill {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .deliverables-stage-inspector {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+    }
+    .stage-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+    }
+    .stage-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .stage-breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stage-breadcrumbs strong {
+      color: var(--text-secondary);
+    }
+    .stage-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stage-title {
+      margin: 0;
+      padding: 12px 16px 0;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: #ffffff;
+    }
+    .stage-judgment-banner {
+      margin: 10px 16px 0;
+      padding: 9px 12px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.02);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .stage-judgment-banner.accepted {
+      border-color: rgba(129, 201, 149, 0.35);
+      background: rgba(129, 201, 149, 0.06);
+    }
+    .stage-judgment-banner.rejected {
+      border-color: rgba(242, 139, 130, 0.35);
+      background: rgba(242, 139, 130, 0.06);
+    }
+    .stage-judgment-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .stage-evidence-section {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px 16px 16px;
+    }
+    .stage-section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    .stage-evidence-gallery {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .stage-evidence-figure {
+      margin: 0;
+      min-width: 800px;
+    }
+    .stage-evidence-figure img {
+      display: block;
+      width: 100%;
+      max-height: 520px;
+      object-fit: contain;
+      background: #0d0d0d;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      cursor: zoom-in;
+    }
+    .stage-evidence-caption {
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .stage-evidence-caption code {
+      color: var(--accent-amber);
+    }
+    .stage-doc-previews {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .stage-doc-preview {
+      padding: 8px 10px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.015);
+    }
+    .stage-doc-heading {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .stage-doc-preview .md-rendered {
+      max-height: 420px;
+      overflow: auto;
+      margin-top: 6px;
+    }
+    .stage-evidence-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .stage-docked-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.18);
+    }
+    .stage-action-left,
+    .stage-action-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 900px) {
+      .deliverables-studio {
+        grid-template-columns: 1fr;
+        min-height: 0;
+      }
+      .deliverables-master-rail {
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .master-rail-list {
+        max-height: 320px;
+      }
+      .stage-evidence-figure {
+        min-width: 0;
+      }
     }
     @media (max-width: 560px) {
       #approvals-list.card-grid {
@@ -2028,31 +2357,42 @@ export function renderSidecarHtml(daemonUrl) {
         </div>
       </div>
 
-      <div class="filter-search-bar">
-        <div class="search-input-wrapper">
-          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" id="deliverables-search" class="search-input" placeholder="Search deliverables by scope, item text, revision, ID..." oninput="filterDeliverables()">
-        </div>
-        <div class="filter-pills" id="deliverables-filter-pills">
-          <button class="filter-pill active" data-filter="all" onclick="setDeliverablesVerdictFilter('all', this)">All</button>
-          <button class="filter-pill" data-filter="accepted" onclick="setDeliverablesVerdictFilter('accepted', this)">Accepted</button>
-          <button class="filter-pill" data-filter="rejected" onclick="setDeliverablesVerdictFilter('rejected', this)">Rejected</button>
-          <button class="filter-pill" data-filter="pending" onclick="setDeliverablesVerdictFilter('pending', this)">Pending</button>
-          <button class="filter-pill" id="pill-deliverables-dropped" data-filter="dropped" onclick="setDeliverablesVerdictFilter('dropped', this)">Sunset / Dropped <span class="pill-badge" id="dropped-proofs-count">0</span></button>
-        </div>
-        <div class="filter-controls-group">
-          <select id="deliverables-rig-filter" class="form-select" onchange="filterDeliverables()">
-            <option value="all">All Rigs</option>
-          </select>
-          <select id="deliverables-sort" class="form-select" onchange="filterDeliverables()">
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="deliverables-list" class="card-grid">
-        <div class="empty-state">Loading deliverables and proof contracts...</div>
+      <div class="deliverables-studio">
+        <aside class="deliverables-master-rail" id="deliverables-master-rail">
+          <div class="master-rail-header">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="deliverables-search" class="search-input" placeholder="Search deliverables..." oninput="filterDeliverables()">
+            </div>
+            <div class="filter-pills" id="deliverables-filter-pills">
+              <button class="filter-pill active" data-filter="all" onclick="setDeliverablesVerdictFilter('all', this)">All</button>
+              <button class="filter-pill" data-filter="accepted" onclick="setDeliverablesVerdictFilter('accepted', this)">Accepted</button>
+              <button class="filter-pill" data-filter="rejected" onclick="setDeliverablesVerdictFilter('rejected', this)">Rejected</button>
+              <button class="filter-pill" data-filter="pending" onclick="setDeliverablesVerdictFilter('pending', this)">Pending</button>
+              <button class="filter-pill" id="pill-deliverables-dropped" data-filter="dropped" onclick="setDeliverablesVerdictFilter('dropped', this)">Sunset / Dropped <span class="pill-badge" id="dropped-proofs-count">0</span></button>
+            </div>
+            <div class="filter-controls-group master-filter-controls">
+              <select id="deliverables-rig-filter" class="form-select" onchange="filterDeliverables()">
+                <option value="all">All Rigs</option>
+              </select>
+              <select id="deliverables-sort" class="form-select" onchange="filterDeliverables()">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+              </select>
+            </div>
+            <div class="deliverables-batch-bar" id="deliverables-batch-bar">
+              <span class="batch-count-label" id="deliverables-batch-count">0 selected</span>
+              <button class="btn btn-primary btn-sm" onclick="requestBatchAcceptConfirmation()">Batch Accept</button>
+              <button class="btn btn-secondary btn-sm" onclick="clearDeliverablesSelection()">Clear</button>
+            </div>
+          </div>
+          <div class="master-rail-list" id="deliverables-list" tabindex="0">
+            <div class="empty-state">Loading deliverables and proof contracts...</div>
+          </div>
+        </aside>
+        <main class="deliverables-stage-inspector" id="deliverables-stage-inspector">
+          <div class="empty-state">Select a deliverable to inspect proof evidence and contracts.</div>
+        </main>
       </div>
     </section>
   </main>
@@ -2462,17 +2802,10 @@ export function renderSidecarHtml(daemonUrl) {
       });
     }
 
-    function triageHotkeysAllowed() {
-      const el = document.activeElement;
-      if (!el) return true;
-      const tagName = String(el.tagName || '').toUpperCase();
-      return !(tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT' || el.isContentEditable);
-    }
-
     // Triage hotkeys operate only on a focused approval card and never while typing.
     if (typeof window !== 'undefined') {
       window.addEventListener('keydown', (e) => {
-        if (!triageHotkeysAllowed()) return;
+        if (isInputElementActive()) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
         const approvalsTab = document.getElementById('tab-approvals');
         if (!approvalsTab || !approvalsTab.classList || !approvalsTab.classList.contains('active')) return;
@@ -2493,6 +2826,33 @@ export function renderSidecarHtml(daemonUrl) {
         } else if (key === 'r') {
           e.preventDefault();
           openRejectModal(qitemId, item.summary || '', item.sourceSession || '');
+        }
+      });
+    }
+
+    // Deliverables studio hotkeys: J/K navigate, A accept, R request revision, Space select.
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', (e) => {
+        if (isInputElementActive()) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const deliverablesTab = document.getElementById('tab-deliverables');
+        if (!deliverablesTab || !deliverablesTab.classList || !deliverablesTab.classList.contains('active')) return;
+        const key = String(e.key || '').toLowerCase();
+        if (key === 'j') {
+          e.preventDefault();
+          selectNextDeliverable();
+        } else if (key === 'k') {
+          e.preventDefault();
+          selectPrevDeliverable();
+        } else if (key === 'a') {
+          e.preventDefault();
+          openActiveProofAcceptModal();
+        } else if (key === 'r') {
+          e.preventDefault();
+          openActiveProofRejectModal();
+        } else if (key === ' ' || key === 'spacebar') {
+          e.preventDefault();
+          toggleDeliverableSelection(activeDeliverableIndex);
         }
       });
     }
@@ -2690,6 +3050,10 @@ export function renderSidecarHtml(daemonUrl) {
       if (!pending) return;
       pendingTriageConfirmation = null;
       closeModal('triage-confirm-modal');
+      if (pending.kind === 'batch-accept') {
+        await executeBatchAccept();
+        return;
+      }
       if (pending.kind === 'approve') {
         await approveItem(pending.qitemId, pending.summary, pending.sourceSession);
       } else {
@@ -3610,9 +3974,13 @@ export function renderSidecarHtml(daemonUrl) {
           const pendingLabel = scopeTag
             ? '<span>• ' + pendingCount + ' pending deliverable' + (pendingCount === 1 ? '' : 's') + ' awaiting sign-off</span>'
             : '';
+          const jumpHtml = scopeTag
+            ? '<button class="btn btn-secondary btn-sm" style="margin-top:6px;" onclick="navigateToDeliverable(\\'' + escapeJs(scopeTag.id) + '\\')">' + ICONS.search + 'Jump to Target Proof Contract</button>'
+            : '';
           unblocksHtml = '<div class="unblocks-context-card">' +
             '<div class="unblocks-title">' + ICONS.doc + 'What This Unblocks:</div>' +
             '<div class="unblocks-detail">' + scopeLabel + pendingLabel + '</div>' +
+            jumpHtml +
           '</div>';
         }
         const evidenceRef = (item.evidenceRef || '').trim();
@@ -5290,8 +5658,322 @@ export function renderSidecarHtml(daemonUrl) {
       renderDeliverables();
     }
 
+    // ---- Phase 2: Deliverables Master-Detail Studio (SDCR.0.8.02) ----
+    let activeDeliverableIndex = 0;
+    let selectedDeliverableKeys = new Set();
+    let collapsedDeliverablesGroups = new Set();
+    let lastFilteredDeliverables = [];
+
+    function isInputElementActive() {
+      const el = document.activeElement;
+      if (!el) return false;
+      const tagName = String(el.tagName || '').toUpperCase();
+      return tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT' || Boolean(el.isContentEditable);
+    }
+
+    function deliverableStatus(item) {
+      const j = item.judgment;
+      const isDropped = isDeliverableDropped(item);
+      const isAccepted = (j && j.verdict === 'accept') || item.state === 'accepted';
+      const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
+      if (isDropped) return { key: 'dropped', label: 'Sunset / Dropped', badge: 'badge-purple', dot: '#c58af9', icon: ICONS.box };
+      if (isAccepted) return { key: 'accepted', label: 'Accepted', badge: 'badge-green', dot: '#81c995', icon: ICONS.check };
+      if (isRejected) return { key: 'rejected', label: 'Rejected', badge: 'badge-red', dot: '#f28b82', icon: ICONS.cross };
+      return { key: 'pending', label: 'Pending / Unjudged', badge: 'badge-amber', dot: '#fdd663', icon: ICONS.clock };
+    }
+
+    function deliverableGroupLabel(group) {
+      const parts = String(group).split('/slices/');
+      return parts.length === 2 ? (parts[0] + ' / ' + parts[1]) : String(group);
+    }
+
+    function deliverableEvidenceList(item) {
+      const rawEv = item.evidence || (item.judgment && item.judgment.evidence) || (item.evidenceRef ? [item.evidenceRef] : []);
+      return (Array.isArray(rawEv) ? rawEv : [rawEv])
+        .map(e => (e && typeof e === 'object' && e.ref) ? e.ref : (typeof e === 'string' ? e : (e ? String(e) : '')))
+        .filter(Boolean);
+    }
+
+    function deliverableEvidenceKind(path) {
+      if (/\\.(png|jpg|jpeg|webp|gif|svg)$/i.test(path)) return 'image';
+      if (/\\.(md|markdown|txt|log)$/i.test(path)) return 'text';
+      if (/\\.(json|yaml|yml)$/i.test(path)) return 'data';
+      if (/^https?:\\/\\//i.test(path)) return 'url';
+      return 'file';
+    }
+
+    function updateDeliverablesBatchBar() {
+      const bar = document.getElementById('deliverables-batch-bar');
+      const label = document.getElementById('deliverables-batch-count');
+      const count = selectedDeliverableKeys.size;
+      if (label) label.textContent = count + ' selected';
+      if (bar) bar.style.display = count > 0 ? 'flex' : 'none';
+    }
+
+    function toggleDeliverableSelection(index, event) {
+      if (event && event.stopPropagation) event.stopPropagation();
+      const item = lastFilteredDeliverables[index];
+      if (!item) return;
+      const key = getDeliverableKey(item);
+      if (selectedDeliverableKeys.has(key)) selectedDeliverableKeys.delete(key);
+      else selectedDeliverableKeys.add(key);
+      renderDeliverables();
+    }
+
+    function clearDeliverablesSelection() {
+      selectedDeliverableKeys = new Set();
+      renderDeliverables();
+    }
+
+    function toggleDeliverablesGroup(group) {
+      if (collapsedDeliverablesGroups.has(group)) collapsedDeliverablesGroups.delete(group);
+      else collapsedDeliverablesGroups.add(group);
+      renderDeliverables();
+    }
+
+    function selectDeliverable(index) {
+      if (index < 0 || index >= lastFilteredDeliverables.length) return;
+      activeDeliverableIndex = index;
+      renderDeliverables();
+      const row = document.querySelector('.deliverables-row[data-deliv-index="' + index + '"]');
+      if (row && row.scrollIntoView) row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function selectNextDeliverable() {
+      selectDeliverable(Math.min(activeDeliverableIndex + 1, lastFilteredDeliverables.length - 1));
+    }
+
+    function selectPrevDeliverable() {
+      selectDeliverable(Math.max(activeDeliverableIndex - 1, 0));
+    }
+
+    function activeDeliverable() {
+      return lastFilteredDeliverables[activeDeliverableIndex] || null;
+    }
+
+    function openActiveProofAcceptModal() {
+      const item = activeDeliverable();
+      if (!item) return;
+      const j = item.judgment;
+      openProofAcceptModal(item.scope || 'default', item.id, item.text || item.id, item.revision || '', j ? j.id : '', item.evidence);
+    }
+
+    function openActiveProofRejectModal() {
+      const item = activeDeliverable();
+      if (!item) return;
+      const j = item.judgment;
+      openProofRejectModal(item.scope || 'default', item.id, item.text || item.id, item.revision || '', j ? j.id : '');
+    }
+
+    function toggleActiveDeliverableDropped() {
+      const item = activeDeliverable();
+      if (!item) return;
+      const index = cachedDeliverables.indexOf(item);
+      if (index < 0) return;
+      if (isDeliverableDropped(item)) restoreDeliverable(index);
+      else dropDeliverable(index);
+    }
+
+    function requestBatchAcceptConfirmation() {
+      if (selectedDeliverableKeys.size === 0) return;
+      pendingTriageConfirmation = { kind: 'batch-accept' };
+      document.getElementById('triage-confirm-title').textContent = 'Confirm Batch Accept';
+      document.getElementById('triage-confirm-summary').textContent = selectedDeliverableKeys.size + ' deliverables selected';
+      document.getElementById('triage-confirm-detail').textContent = 'Batch accepting records an accept judgment for each selected deliverable. This cannot be undone from the Sidecar.';
+      const confirmBtn = document.getElementById('triage-confirm-btn');
+      confirmBtn.className = 'btn btn-success';
+      confirmBtn.innerHTML = ICONS.check + 'Accept Selected';
+      openModal('triage-confirm-modal');
+    }
+
+    async function executeBatchAccept() {
+      const selected = cachedDeliverables.filter(item => selectedDeliverableKeys.has(getDeliverableKey(item)));
+      for (const item of selected) {
+        const j = item.judgment;
+        try {
+          await fetch('/api/proof/judge', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-OpenRig-Session': 'human'
+            },
+            body: JSON.stringify({
+              scope: item.scope || 'default',
+              item: item.id,
+              verdict: 'accept',
+              reason: 'Batch accepted via Deliverables Studio',
+              evidence: deliverableEvidenceList(item),
+              expectedRevision: item.revision || '',
+              expectedPrevious: j ? j.id : null,
+              actorSession: 'human'
+            })
+          });
+        } catch (e) {
+          // Continue with the remaining selections; failures surface on refresh.
+        }
+      }
+      const count = selected.length;
+      selectedDeliverableKeys = new Set();
+      showToast('Batch accepted ' + count + ' deliverable' + (count === 1 ? '' : 's'));
+      fetchDeliverables();
+    }
+
+    function renderDeliverableRow(item, index) {
+      const status = deliverableStatus(item);
+      const key = getDeliverableKey(item);
+      const checked = selectedDeliverableKeys.has(key) ? ' checked' : '';
+      const revision = item.revision ? ('rev #' + String(item.revision).slice(0, 7)) : 'rev #initial';
+      const at = item.judgment && item.judgment.at ? (owedDuration(item.judgment.at) + ' ago') : '';
+      const title = item.text || item.id || '(untitled contract)';
+      return '<div class="deliverables-row' + (index === activeDeliverableIndex ? ' active' : '') + '" data-deliv-index="' + index + '" data-deliv-key="' + escapeHtml(key) + '" onclick="selectDeliverable(' + index + ')">' +
+        '<input type="checkbox" class="row-checkbox" aria-label="Select deliverable" onclick="event.stopPropagation(); toggleDeliverableSelection(' + index + ', event)"' + checked + '>' +
+        '<span class="status-dot" style="background:' + status.dot + ';" title="' + escapeHtml(status.label) + '"></span>' +
+        '<span class="title-strip" title="' + escapeHtml(title) + '">' + escapeHtml(title) + '</span>' +
+        '<span class="meta-strip">' +
+          (at ? '<span class="time-pill">' + escapeHtml(at) + '</span>' : '') +
+          '<span class="revision-pill">' + escapeHtml(revision) + '</span>' +
+        '</span>' +
+      '</div>';
+    }
+
+    async function loadStageDoc(path, domId) {
+      const target = document.getElementById(domId);
+      if (!target) return;
+      target.innerHTML = '<div class="empty-state" style="padding:8px;">Loading document...</div>';
+      try {
+        const res = await fetch('/api/evidence?path=' + encodeURIComponent(path));
+        const data = await res.json();
+        if (data && data.ok && typeof data.content === 'string') {
+          target.innerHTML = renderMarkdown(data.content);
+        } else {
+          target.innerHTML = '<div class="empty-state" style="padding:8px;">' + escapeHtml((data && (data.error || data.message)) || 'Unable to load document') + '</div>';
+        }
+      } catch (e) {
+        target.innerHTML = '<div class="empty-state" style="padding:8px;">Error loading document.</div>';
+      }
+    }
+
+    function renderDeliverablesStage(item) {
+      const stage = document.getElementById('deliverables-stage-inspector');
+      if (!stage) return;
+      if (!item) {
+        stage.innerHTML = '<div class="empty-state">Select a deliverable to inspect proof evidence and contracts.</div>';
+        return;
+      }
+      const index = cachedDeliverables.indexOf(item);
+      const status = deliverableStatus(item);
+      const scope = item.scope || 'default';
+      const parts = String(scope).split('/slices/');
+      const rigLabel = item.rig || (parts.length === 2 ? parts[0] : 'workspace');
+      const scopeLabel = parts.length === 2 ? parts[1] : scope;
+      const j = item.judgment;
+      const evidence = deliverableEvidenceList(item);
+      const images = evidence.filter(path => deliverableEvidenceKind(path) === 'image');
+      const docs = evidence.filter(path => deliverableEvidenceKind(path) === 'text' || deliverableEvidenceKind(path) === 'data');
+      const links = evidence.filter(path => deliverableEvidenceKind(path) === 'url');
+
+      const gallery = images.map(path => {
+        const base = path.split('/').pop() || path;
+        const rawUrl = '/api/evidence/raw?path=' + encodeURIComponent(path);
+        return '<figure class="stage-evidence-figure">' +
+          '<img src="' + escapeHtml(rawUrl) + '" alt="' + escapeHtml(base) + '" loading="lazy" onclick="openImageLightbox(\\'' + escapeJs(rawUrl) + '\\', \\'' + escapeJs(base) + '\\')">' +
+          '<figcaption class="stage-evidence-caption">Subject: ' + escapeHtml(base) + ' — ' + escapeHtml(status.label) + ' deliverable evidence for <code>' + escapeHtml(scope) + '</code></figcaption>' +
+        '</figure>';
+      }).join('');
+
+      const docsHtml = docs.map((path, di) => {
+        const base = path.split('/').pop() || path;
+        const domId = 'stage-doc-' + index + '-' + di;
+        return '<div class="stage-doc-preview">' +
+          '<div class="stage-doc-heading">' + ICONS.doc + escapeHtml(base) + '</div>' +
+          '<button class="btn btn-secondary btn-sm" onclick="loadStageDoc(\\'' + escapeJs(path) + '\\', \\'' + escapeJs(domId) + '\\')">' + ICONS.doc + 'Load document</button>' +
+          '<div class="md-rendered" id="' + escapeHtml(domId) + '"></div>' +
+        '</div>';
+      }).join('');
+
+      const linksHtml = links.map(url =>
+        '<a class="btn btn-secondary btn-sm" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">' + ICONS.external + 'Open evidence link</a>'
+      ).join('');
+
+      const judgmentHtml = j
+        ? '<div class="stage-judgment-banner ' + (j.verdict === 'accept' ? 'accepted' : 'rejected') + '">' +
+            '<div class="stage-judgment-line">' + status.icon + '<strong>' + escapeHtml(String(j.verdict || 'judged').toUpperCase()) + '</strong>' +
+              '<span>by ' + escapeHtml(j.actor || 'human') + '</span>' +
+              (j.at ? '<span>' + escapeHtml(new Date(j.at).toLocaleString()) + '</span>' : '') +
+            '</div>' +
+            '<div class="md-rendered">' + renderMarkdown(j.reason || 'None provided') + '</div>' +
+          '</div>'
+        : '<div class="stage-judgment-banner pending">' + ICONS.clock + 'No judgment recorded yet — proof contract awaiting empirical review.</div>';
+
+      const linkedQitem = item.queueItemId || item.qitemId || (Array.isArray(item.tags) ? String(item.tags.find(tag => typeof tag === 'string' && tag.startsWith('qitem-')) || '') : '');
+      const crossLink = linkedQitem
+        ? '<button class="btn btn-secondary btn-sm" onclick="navigateToApprovals(\\'' + escapeJs(linkedQitem) + '\\')">' + ICONS.reply + 'Jump to Approvals Gate</button>'
+        : '';
+
+      stage.innerHTML = '<div class="stage-container">' +
+        '<div class="stage-header">' +
+          '<div class="stage-breadcrumbs">' +
+            '<span class="breadcrumb-item">Rig: <strong>' + escapeHtml(rigLabel) + '</strong></span>' +
+            '<span class="breadcrumb-sep">/</span>' +
+            '<span class="breadcrumb-item">Scope: <strong>' + escapeHtml(scopeLabel) + '</strong></span>' +
+            '<span class="breadcrumb-sep">/</span>' +
+            '<span class="breadcrumb-item">#' + escapeHtml(item.id || '') + '</span>' +
+          '</div>' +
+          '<div class="stage-badges">' +
+            '<span class="badge ' + status.badge + '">' + status.icon + status.label + '</span>' +
+            '<span class="badge badge-muted">' + escapeHtml(item.revision ? ('rev #' + String(item.revision).slice(0, 7)) : 'rev #initial') + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<h2 class="stage-title">' + escapeHtml(item.text || item.id || 'Deliverable') + '</h2>' +
+        judgmentHtml +
+        '<div class="stage-evidence-section">' +
+          '<div class="stage-section-heading"><span>Delivered Proof Evidence</span><span class="badge badge-blue">' + evidence.length + ' item' + (evidence.length === 1 ? '' : 's') + '</span></div>' +
+          (gallery ? '<div class="stage-evidence-gallery">' + gallery + '</div>' : '<div class="empty-state" style="padding:12px;">No visual evidence attached to this contract.</div>') +
+          (linksHtml ? '<div class="stage-section-heading" style="margin-top:14px;"><span>Evidence Links</span></div><div class="stage-evidence-links">' + linksHtml + '</div>' : '') +
+          (docsHtml ? '<div class="stage-section-heading" style="margin-top:14px;"><span>Documents, Diffs &amp; Logs</span></div><div class="stage-doc-previews">' + docsHtml + '</div>' : '') +
+        '</div>' +
+        '<div class="stage-docked-bar">' +
+          '<div class="stage-action-left">' +
+            (isDeliverableDropped(item)
+              ? '<button class="btn btn-secondary" onclick="restoreDeliverable(' + index + ')">' + ICONS.restore + 'Restore Deliverable</button>'
+              : '<button class="btn btn-success" id="stage-btn-accept" onclick="openActiveProofAcceptModal()">' + ICONS.check + 'Accept Deliverable</button>' +
+                '<button class="btn btn-secondary" id="stage-btn-reject" onclick="openActiveProofRejectModal()">' + ICONS.cross + 'Request Revision...</button>' +
+                '<button class="btn btn-secondary" id="stage-btn-sunset" onclick="toggleActiveDeliverableDropped()">' + ICONS.box + 'Sunset / Drop</button>') +
+          '</div>' +
+          '<div class="stage-action-right">' + crossLink + '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function navigateToDeliverable(scopeHint, itemId) {
+      const tabBtn = document.querySelector('.tab-btn[data-tab="deliverables"]');
+      if (tabBtn) tabBtn.click();
+      deliverablesVerdictFilter = 'all';
+      const searchEl = document.getElementById('deliverables-search');
+      if (searchEl) searchEl.value = '';
+      document.querySelectorAll('#deliverables-filter-pills .filter-pill').forEach(pill => pill.classList.remove('active'));
+      const allPill = document.querySelector('#deliverables-filter-pills .filter-pill[data-filter="all"]');
+      if (allPill) allPill.classList.add('active');
+      renderDeliverables();
+      let index = -1;
+      if (itemId) index = lastFilteredDeliverables.findIndex(it => it.id === itemId);
+      if (index < 0 && scopeHint) index = lastFilteredDeliverables.findIndex(it => String(it.scope || '').includes(scopeHint));
+      if (index >= 0) selectDeliverable(index);
+    }
+
+    function navigateToApprovals(qitemId) {
+      const tabBtn = document.querySelector('.tab-btn[data-tab="approvals"]');
+      if (tabBtn) tabBtn.click();
+      const searchEl = document.getElementById('approvals-search');
+      if (searchEl && qitemId) {
+        searchEl.value = qitemId;
+        filterApprovals();
+      }
+    }
+
     function renderDeliverables() {
       const list = document.getElementById('deliverables-list');
+      if (!list) return;
       const search = (document.getElementById('deliverables-search')?.value || '').toLowerCase().trim();
       const rigFilter = document.getElementById('deliverables-rig-filter')?.value || 'all';
       const sortOrder = document.getElementById('deliverables-sort')?.value || 'newest';
@@ -5304,8 +5986,8 @@ export function renderSidecarHtml(daemonUrl) {
         const isDropped = isDeliverableDropped(item);
         if (deliverablesVerdictFilter === 'dropped') {
           if (!isDropped) return false;
-        } else {
-          if (isDropped) return false;
+        } else if (isDropped) {
+          return false;
         }
 
         const j = item.judgment;
@@ -5335,120 +6017,44 @@ export function renderSidecarHtml(daemonUrl) {
         return sortOrder === 'newest' ? tB - tA : tA - tB;
       });
 
-      document.getElementById('proofs-count').textContent = filtered.length;
+      lastFilteredDeliverables = filtered;
+      const countEl = document.getElementById('proofs-count');
+      if (countEl) countEl.textContent = filtered.length;
+
+      if (activeDeliverableIndex >= filtered.length) {
+        activeDeliverableIndex = Math.max(0, filtered.length - 1);
+      }
 
       if (filtered.length === 0) {
         list.innerHTML = '<div class="empty-state">' + (cachedDeliverables.length === 0 ? 'No proof contracts found for current workspace. Deliverables and proofs will populate as contracts are executed.' : (deliverablesVerdictFilter === 'dropped' ? 'No sunset or dropped deliverables.' : 'No deliverables match current search or verdict filter.')) + '</div>';
+        renderDeliverablesStage(null);
+        updateDeliverablesBatchBar();
         return;
       }
 
-      let html = '';
+      const groups = new Map();
       for (let i = 0; i < filtered.length; i++) {
-        const item = filtered[i];
-        const j = item.judgment;
-        const isAccepted = (j && j.verdict === 'accept') || item.state === 'accepted';
-        const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
-        const isDropped = isDeliverableDropped(item);
-        const statusBadge = isDropped ? 'badge-purple' : isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
-        const statusIcon = isDropped ? ICONS.box : isAccepted ? ICONS.check : isRejected ? ICONS.cross : ICONS.clock;
-        const statusText = isDropped ? 'Sunset / Dropped' : isAccepted ? 'Accepted' : isRejected ? 'Rejected' : 'Pending / Unjudged';
-        const scope = item.scope || 'default';
-        const origIndex = cachedDeliverables.indexOf(item);
+        const group = filtered[i].scope || 'unscoped';
+        if (!groups.has(group)) groups.set(group, []);
+        groups.get(group).push(i);
+      }
 
-        html += '<div class="card' + (isDropped ? ' card-dropped' : '') + '">' +
-          '<div class="card-header">' +
-            '<div>' +
-              '<div class="card-title">' + renderMarkdown(item.text || item.id) + '</div>' +
-              '<div class="card-meta">' +
-                '<span class="badge ' + statusBadge + '">' + statusIcon + statusText + '</span>' +
-                '<span>Scope: ' + escapeHtml(scope) + '</span>' +
-                '<span>Item: #' + escapeHtml(item.id) + '</span>' +
-                (item.revision ? ('<span>• rev ' + escapeHtml(item.revision.slice(0, 8)) + '</span>') : '') +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-          (j ? (
-            '<div class="card-body">' +
-              '<div><strong>Verdict:</strong> ' + j.verdict + '</div>' +
-              '<div><strong>Judged By:</strong> ' + escapeHtml(j.actor || 'human') + '</div>' +
-              '<div><strong>At:</strong> ' + (j.at ? new Date(j.at).toLocaleString() : '') + '</div>' +
-              '<div style="margin-top:4px;"><strong>Reason:</strong></div>' +
-              renderMarkdown(j.reason || 'None provided') +
-            '</div>'
-          ) : (
-            '<div class="card-meta">' +
-              '<span>Proof contract defined. Awaiting verification evidence and outcome judgment.</span>' +
-            '</div>'
-          )) +
-          (() => {
-            const rawEv = item.evidence || (item.judgment && item.judgment.evidence) || (item.evidenceRef ? [item.evidenceRef] : []);
-            const evList = (Array.isArray(rawEv) ? rawEv : [rawEv])
-              .map(e => (e && typeof e === 'object' && e.ref) ? e.ref : (typeof e === 'string' ? e : (e ? String(e) : '')))
-              .filter(Boolean);
-            if (evList.length === 0) return '';
-
-            let evHtml = '<div style="margin:8px 0; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); font-size:12px;">' +
-              '<div style="color:var(--text-muted); font-size:11px; margin-bottom:6px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Verification Evidence &amp; Delivered Proofs</div>' +
-              '<div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">';
-
-            const imageItems = [];
-            const docItems = [];
-
-            for (const ev of evList) {
-              if (typeof ev === 'string') {
-                const clean = ev.trim();
-                if (/\\.(png|jpg|jpeg|webp|gif|svg)$/i.test(clean)) {
-                  imageItems.push(clean);
-                } else if (/\\.(md|markdown|txt|log|json|yaml|yml)$/i.test(clean)) {
-                  docItems.push(clean);
-                } else {
-                  evHtml += '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace;">' + ICONS.folder + escapeHtml(clean) + '</span>';
-                }
-              } else if (ev && typeof ev === 'object') {
-                evHtml += '<pre class="md-code-block" style="margin:2px 0;"><code>' + escapeHtml(JSON.stringify(ev, null, 2)) + '</code></pre>';
-              }
-            }
-
-            for (const doc of docItems) {
-              const base = doc.split('/').pop() || doc;
-              evHtml += '<button class="btn btn-secondary" style="font-size:11px; padding:2px 8px; font-family:\\'JetBrains Mono\\', monospace;" onclick="toggleInlineEvidenceDoc(' + origIndex + ', \\'' + escapeJs(doc) + '\\')">' + ICONS.doc + escapeHtml(base) + ' (preview)</button>';
-            }
-
-            evHtml += '</div>';
-
-            if (imageItems.length > 0) {
-              evHtml += '<div class="evidence-image-grid">';
-              for (const img of imageItems) {
-                const base = img.split('/').pop() || img;
-                const rawUrl = '/api/evidence/raw?path=' + encodeURIComponent(img);
-                evHtml += '<div class="evidence-image-card" onclick="openImageLightbox(\\'' + escapeJs(rawUrl) + '\\', \\'' + escapeJs(base) + '\\')">' +
-                  '<img class="evidence-thumb-img" src="' + escapeHtml(rawUrl) + '" alt="' + escapeHtml(base) + '" loading="lazy">' +
-                  '<div class="evidence-thumb-label" title="' + escapeHtml(img) + '">' + ICONS.image + escapeHtml(base) + '</div>' +
-                '</div>';
-              }
-              evHtml += '</div>';
-            }
-
-            evHtml += '<div id="inline-evidence-doc-' + origIndex + '" style="display:none;" class="evidence-doc-preview"></div>';
-            evHtml += '</div>';
-            return evHtml;
-          })() +
-          '<div class="card-actions">' +
-            '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">' + ICONS.search + 'Details</button>' +
-            (isDropped ? (
-              '<button class="btn btn-secondary" onclick="restoreDeliverable(' + origIndex + ')">' + ICONS.restore + 'Restore</button>'
-            ) : (
-              '<button class="btn btn-success" onclick="quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">' + ICONS.bolt + 'Quick Complete</button>' +
-              '<button class="btn btn-secondary" onclick="openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">' + ICONS.check + 'Accept...</button>' +
-              '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">' + ICONS.cross + 'Quick Reject</button>' +
-              '<button class="btn btn-secondary" onclick="openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">' + ICONS.cross + 'Reject...</button>' +
-              '<button class="btn btn-secondary" onclick="dropDeliverable(' + origIndex + ')">' + ICONS.box + 'Sunset / Drop</button>'
-            )) +
-          '</div>' +
+      let html = '';
+      for (const [group, indices] of groups) {
+        const collapsed = collapsedDeliverablesGroups.has(group);
+        html += '<div class="deliverables-group-header' + (collapsed ? ' collapsed' : '') + '" onclick="toggleDeliverablesGroup(\\'' + escapeJs(group) + '\\')">' +
+          '<svg class="group-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+          '<span class="group-title">' + escapeHtml(deliverableGroupLabel(group)) + '</span>' +
+          '<span class="badge badge-muted">' + indices.length + ' contract' + (indices.length === 1 ? '' : 's') + '</span>' +
         '</div>';
+        if (!collapsed) {
+          for (const index of indices) html += renderDeliverableRow(filtered[index], index);
+        }
       }
 
       list.innerHTML = html;
+      renderDeliverablesStage(activeDeliverable());
+      updateDeliverablesBatchBar();
     }
 
     function openDeliverableDetail(index) {

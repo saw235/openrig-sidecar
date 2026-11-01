@@ -258,19 +258,26 @@ describe('SDCR.0.6.02: Markdown, Inline Images & Delivered Proofs Test Suite', (
     renderDeliverables();`, context);
 
     const listHtml = mockElements['deliverables-list'].innerHTML;
-    // Check image card rendered
-    assert.match(listHtml, /class="evidence-image-card"/);
-    assert.match(listHtml, /class="evidence-thumb-img"/);
-    assert.match(listHtml, /smoke_check\.png/);
+    const stageHtml = mockElements['deliverables-stage-inspector'].innerHTML;
+    // Master rail renders compact rows, not evidence cards
+    assert.match(listHtml, /class="deliverables-row/);
+    assert.match(listHtml, /Visual Regression/);
+    assert.doesNotMatch(listHtml, /evidence-image-card/);
 
-    // Check document preview trigger button
-    assert.match(listHtml, /toggleInlineEvidenceDoc\(0/);
-    assert.match(listHtml, /evidence\.md \(preview\)/);
+    // Stage inspector renders reviewable image evidence with a subject caption
+    assert.match(stageHtml, /class="stage-evidence-figure"/);
+    assert.match(stageHtml, /smoke_check\.png/);
+    assert.match(stageHtml, /Subject: smoke_check\.png/);
 
-    // Test toggleInlineEvidenceDoc fetches and renders markdown
-    await vm.runInContext(`toggleInlineEvidenceDoc(0, 'proof/evidence.md');`, context);
-    const inlineContainer = mockElements['inline-evidence-doc-0'];
-    assert.ok(inlineContainer, 'inline-evidence-doc-0 must exist');
+    // Document preview trigger lives on the stage
+    assert.match(stageHtml, /class="stage-doc-preview"/);
+    assert.match(stageHtml, /loadStageDoc\(/);
+    assert.match(stageHtml, /evidence\.md/);
+
+    // Test loadStageDoc fetches and renders markdown in the stage
+    await vm.runInContext(`loadStageDoc('proof/evidence.md', 'stage-doc-0-0');`, context);
+    const inlineContainer = mockElements['stage-doc-0-0'];
+    assert.ok(inlineContainer, 'stage-doc-0-0 must exist');
     assert.match(inlineContainer.innerHTML, /Verified Test Output/);
 
     // Test openDeliverableDetail renders full-width image preview and triggers doc load
@@ -325,6 +332,7 @@ describe('SDCR.0.6.02: Markdown, Inline Images & Delivered Proofs Test Suite', (
     // 3. Deliverables list and detail action buttons use SVG icons without Unicode emojis
     const mockElements = {
       'deliverables-list': { innerHTML: '' },
+      'deliverables-stage-inspector': { innerHTML: '' },
       'detail-evidence': { innerHTML: '', textContent: '' },
       'detail-actions-left': { innerHTML: '' },
       'detail-badge': { innerHTML: '', textContent: '', className: '' },
@@ -355,11 +363,15 @@ describe('SDCR.0.6.02: Markdown, Inline Images & Delivered Proofs Test Suite', (
     `, context);
 
     const cardHtml = mockElements['deliverables-list'].innerHTML;
+    const stageHtml = mockElements['deliverables-stage-inspector'].innerHTML;
     const actionsHtml = mockElements['detail-actions-left'].innerHTML;
     const detailEvidenceHtml = mockElements['detail-evidence'].innerHTML;
 
-    assert.match(cardHtml, /<svg class="svg-icon"/);
+    assert.match(cardHtml, /class="deliverables-row/);
     assert.doesNotMatch(cardHtml, /[🖼📄📁📦🔍⚡✕]/);
+
+    assert.match(stageHtml, /<svg class="svg-icon"/);
+    assert.doesNotMatch(stageHtml, /[🖼📄📁📦🔍⚡✕]/);
 
     assert.match(actionsHtml, /<svg class="svg-icon"/);
     assert.doesNotMatch(actionsHtml, /[🖼📄📁📦🔍⚡✕]/);
