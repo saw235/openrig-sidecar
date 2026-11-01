@@ -2221,7 +2221,10 @@ export function renderSidecarHtml(daemonUrl) {
         <div class="detail-section" id="approval-detail-evidence-section" style="display:none;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <div class="detail-label">Linked Evidence Artifact (<span id="approval-detail-evidence-name">file</span>)</div>
-            <button class="btn" id="approval-detail-copy-path-btn" style="padding:3px 8px; font-size:11px;"><svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Path</button>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <a class="btn" id="approval-detail-open-external-btn" href="#" target="_blank" rel="noopener noreferrer" style="display:none; padding:3px 8px; font-size:11px; text-decoration:none;"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span>Open Link</span></a>
+              <button class="btn" id="approval-detail-copy-path-btn" style="padding:3px 8px; font-size:11px;"><svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Path</button>
+            </div>
           </div>
           <div class="detail-box" id="approval-detail-evidence-path" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--accent-amber); word-break:break-all;">—</div>
           <div class="detail-box md-rendered" id="approval-detail-evidence-body" style="display:none; font-size:12.5px; line-height:1.55; background-color:#141414; margin-top:4px;"></div>
@@ -3153,6 +3156,14 @@ export function renderSidecarHtml(daemonUrl) {
       return typeof ref === 'string' && (ref.startsWith('/') || ref.startsWith('file:///'));
     }
 
+    function isHttpUrl(str) {
+      return typeof str === 'string' && /^https?:\\/\\//i.test(str.trim());
+    }
+
+    function isGoogleDocUrl(str) {
+      return typeof str === 'string' && /^https?:\\/\\/(docs|drive)\\.google\\.com\\//i.test(str.trim());
+    }
+
     // Tab 1 Filtering & Rendering
     function setApprovalsStatusFilter(filter, el) {
       approvalsStatusFilter = filter;
@@ -3239,7 +3250,8 @@ export function renderSidecarHtml(daemonUrl) {
         const hasGenericUnblocks = typeof item.unblocks === 'string' && item.unblocks.startsWith('No dependent task recorded');
         const showUnblocks = Boolean(item.unblocks) && (!proposalMarkdown || !hasGenericUnblocks);
         const evidenceRef = (item.evidenceRef || '').trim();
-        const evidenceName = isLikelyAbsoluteFilePath(evidenceRef) ? extractBasename(evidenceRef) : evidenceRef;
+        const evidenceIsUrl = isHttpUrl(evidenceRef);
+        const evidenceName = evidenceIsUrl ? evidenceRef : (extractBasename(evidenceRef) || evidenceRef);
 
         html += '<div class="card" data-approval-id="' + escapeHtml(item.id) + '">' +
           '<div class="card-header">' +
@@ -3261,10 +3273,17 @@ export function renderSidecarHtml(daemonUrl) {
             '</div>'
           ) : '') +
           (evidenceRef ? (
-            '<div class="approval-evidence-bar">' +
-              '<span class="approval-evidence-path" title="' + escapeHtml(evidenceRef) + '">' + ICONS.paperclip + 'Evidence: ' + escapeHtml(evidenceName) + '</span>' +
-              '<button class="btn" style="padding:3px 8px; font-size:11px; flex-shrink:0;" onclick="openApprovalDetailModal(' + origIndex + ')">Inspect</button>' +
-            '</div>'
+            evidenceIsUrl ? (
+              '<div class="approval-evidence-bar">' +
+                '<span class="approval-evidence-path" title="' + escapeHtml(evidenceRef) + '">' + ICONS.link + escapeHtml(evidenceRef) + '</span>' +
+                '<a href="' + escapeHtml(evidenceRef) + '" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding:3px 8px; font-size:11px; flex-shrink:0; text-decoration:none;">' + ICONS.external + (isGoogleDocUrl(evidenceRef) ? 'Open in Google Docs' : 'Open Link') + '</a>' +
+              '</div>'
+            ) : (
+              '<div class="approval-evidence-bar">' +
+                '<span class="approval-evidence-path" title="' + escapeHtml(evidenceRef) + '">' + ICONS.paperclip + 'Evidence: ' + escapeHtml(evidenceName) + '</span>' +
+                '<button class="btn" style="padding:3px 8px; font-size:11px; flex-shrink:0;" onclick="openApprovalDetailModal(' + origIndex + ')">Inspect Full Artifact</button>' +
+              '</div>'
+            )
           ) : '') +
           (showUnblocks ? ('<div class="card-meta"><span>Unblocks: ' + renderMarkdown(item.unblocks) + '</span></div>') : '') +
           '<div class="card-actions" style="flex-wrap:wrap;">' +
@@ -3343,33 +3362,54 @@ export function renderSidecarHtml(daemonUrl) {
       const evPathEl = document.getElementById('approval-detail-evidence-path');
       const evBodyEl = document.getElementById('approval-detail-evidence-body');
       const copyBtn = document.getElementById('approval-detail-copy-path-btn');
+      const externalBtn = document.getElementById('approval-detail-open-external-btn');
       const evidenceRef = (item.evidenceRef || '').trim();
 
       if (evidenceRef) {
         evSection.style.display = 'flex';
-        evNameEl.textContent = isLikelyAbsoluteFilePath(evidenceRef) ? extractBasename(evidenceRef) : 'reference';
-        evPathEl.textContent = evidenceRef;
         evBodyEl.style.display = 'none';
         evBodyEl.innerHTML = '';
-        copyBtn.onclick = () => copyToClipboard(evidenceRef);
+        externalBtn.style.display = 'none';
+        externalBtn.href = '#';
 
-        if (isLikelyAbsoluteFilePath(evidenceRef)) {
+        if (isHttpUrl(evidenceRef)) {
+          evNameEl.textContent = isGoogleDocUrl(evidenceRef) ? 'google document' : 'external document';
+          evPathEl.innerHTML = '<a href="' + escapeHtml(evidenceRef) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent-blue); text-decoration:underline;">' + escapeHtml(evidenceRef) + '</a>';
+          copyBtn.onclick = () => copyToClipboard(evidenceRef);
+          externalBtn.href = evidenceRef;
+          const externalLabel = externalBtn.querySelector('span');
+          if (externalLabel) externalLabel.textContent = isGoogleDocUrl(evidenceRef) ? 'Open in Google Docs' : 'Open Link';
+          externalBtn.style.display = 'inline-flex';
+          externalBtn.style.alignItems = 'center';
+        } else {
+          evNameEl.textContent = extractBasename(evidenceRef) || 'reference';
+          evPathEl.textContent = evidenceRef;
+          copyBtn.onclick = () => copyToClipboard(evidenceRef);
+
           try {
-            const evRes = await fetch('/api/evidence?path=' + encodeURIComponent(evidenceRef));
+            const evRes = await fetch('/api/evidence?path=' + encodeURIComponent(evidenceRef) + '&session=' + encodeURIComponent(sourceSession));
             if (evRes.ok) {
               const evData = await evRes.json();
-              if (evData && evData.ok && typeof evData.content === 'string' && evData.content.trim()) {
-                // If primary body was empty, promote evidence markdown into primary body; otherwise show if distinct
-                if (!primaryMarkdown) {
-                  bodyEl.innerHTML = renderMarkdown(evData.content);
-                } else if (evData.content.trim() !== primaryMarkdown) {
+              if (evData && evData.ok) {
+                const resolvedPath = evData.path || evidenceRef;
+                evPathEl.textContent = resolvedPath;
+                evNameEl.textContent = evData.basename || extractBasename(evidenceRef) || 'reference';
+                copyBtn.onclick = () => copyToClipboard(resolvedPath);
+
+                if (evData.kind === 'image' && evData.rawUrl) {
+                  evBodyEl.innerHTML = '<img src="' + escapeHtml(evData.rawUrl) + '" alt="' + escapeHtml(evData.basename || evidenceRef) + '" style="max-width:100%; max-height:450px; cursor:zoom-in; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);" onclick="openImageLightbox(\\'' + escapeJs(evData.rawUrl) + '\\', \\'' + escapeJs(evData.basename || evidenceRef) + '\\')" />';
                   evBodyEl.style.display = 'block';
+                } else if (typeof evData.content === 'string' && evData.content.trim()) {
+                  if (!primaryMarkdown) {
+                    bodyEl.innerHTML = renderMarkdown(evData.content);
+                  }
                   evBodyEl.innerHTML = renderMarkdown(evData.content);
+                  evBodyEl.style.display = 'block';
                 }
               }
             }
           } catch (e) {
-            // Keep path reference visible even if file preview is unavailable
+            // Keep the reference visible even if the runtime cannot resolve the artifact.
           }
         }
       } else {
