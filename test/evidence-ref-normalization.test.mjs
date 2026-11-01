@@ -142,6 +142,7 @@ describe('SDCR.0.6.03: Evidence Schema Normalization & Workspace Root Resolution
 
     const mockElements = {
       'deliverables-list': { innerHTML: '' },
+      'deliverables-stage-inspector': { innerHTML: '' },
       'proofs-count': { textContent: '' },
       'dropped-proofs-count': { textContent: '0' },
       'detail-evidence': { innerHTML: '', textContent: '' },
@@ -202,15 +203,20 @@ describe('SDCR.0.6.03: Evidence Schema Normalization & Workspace Root Resolution
       'missions/nintendogs-studio/slices/01-nds-rom-extraction-and-hd-icons/proof/evidence.md'
     ]);
 
-    // 3. Verify card rendering in deliverables-list
+    // 3. Verify master rows + persistent stage evidence for the active contract
     const listHtml = mockElements['deliverables-list'].innerHTML;
-    // Thumbnails for contact_sheet_hd.png
-    assert.match(listHtml, /class="evidence-image-card"/);
-    assert.match(listHtml, /contact_sheet_hd\.png/);
-    assert.match(listHtml, /src="\/api\/evidence\/raw\?path=missions%2Fnintendogs-studio%2Fslices%2F01-nds-rom-extraction-and-hd-icons%2Fproof%2Fcontact_sheet_hd\.png"/);
-    // Preview button for evidence.md
-    assert.match(listHtml, /evidence\.md \(preview\)/);
-    assert.match(listHtml, /toggleInlineEvidenceDoc\(0/);
+    const stageHtml = mockElements['deliverables-stage-inspector'].innerHTML;
+    assert.match(listHtml, /class="deliverables-row/);
+    assert.match(listHtml, /NDS ROM Asset Extraction/);
+    // Reviewable image evidence with a named subject
+    assert.match(stageHtml, /class="stage-evidence-figure"/);
+    assert.match(stageHtml, /contact_sheet_hd\.png/);
+    assert.match(stageHtml, /Subject: contact_sheet_hd\.png/);
+    assert.match(stageHtml, /src="\/api\/evidence\/raw\?path=missions%2Fnintendogs-studio%2Fslices%2F01-nds-rom-extraction-and-hd-icons%2Fproof%2Fcontact_sheet_hd\.png"/);
+    // Document preview trigger for evidence.md
+    assert.match(stageHtml, /class="stage-doc-preview"/);
+    assert.match(stageHtml, /evidence\.md/);
+    assert.match(stageHtml, /loadStageDoc\(/);
 
     // 4. Verify detail modal rendering for normalized evidence
     vm.runInContext('openDeliverableDetail(0);', context);
@@ -221,6 +227,7 @@ describe('SDCR.0.6.03: Evidence Schema Normalization & Workspace Root Resolution
 
     // 5. Zero Unicode emojis in rendered output
     assert.doesNotMatch(listHtml, /[🖼📄📁📦🔍⚡✕]/);
+    assert.doesNotMatch(stageHtml, /[🖼📄📁📦🔍⚡✕]/);
     assert.doesNotMatch(detailEvHtml, /[🖼📄📁📦🔍⚡✕]/);
   });
 });

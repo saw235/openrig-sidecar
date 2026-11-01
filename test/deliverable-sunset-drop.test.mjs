@@ -193,8 +193,9 @@ describe('SDCR.0.7.01: Deliverable Sunset, Quick Complete & Drop Controls Test S
     vm.runInContext(`deliverablesVerdictFilter = 'dropped'; renderDeliverables();`, context);
     assert.equal(mockElements['proofs-count'].textContent, 1);
     assert.match(mockElements['deliverables-list'].innerHTML, /Deliverable to be dropped/);
-    assert.match(mockElements['deliverables-list'].innerHTML, /Sunset \/ Dropped/);
-    assert.match(mockElements['deliverables-list'].innerHTML, /restoreDeliverable\(1\)/);
+    const droppedStageHtml = mockElements['deliverables-stage-inspector'].innerHTML;
+    assert.match(droppedStageHtml, /Sunset \/ Dropped/);
+    assert.match(droppedStageHtml, /restoreDeliverable\(1\)/);
 
     // Restore item-2
     vm.runInContext(`restoreDeliverable(1);`, context);

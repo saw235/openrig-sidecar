@@ -21,12 +21,14 @@ A standalone, lightweight, zero-dependency web companion and control plane for O
   - **Live Terminal Screen Capture Modal**: Inspect live terminal screens for any active seat with clean ANSI stripping, configurable line depths (30/50/100/200), auto-refresh, and one-click clipboard copy.
   - **Fleet Telemetry Dashboard**: Real-time aggregated token metrics, estimated cost tracking, and per-seat context utilization indicators.
 
-- **Tab 3: Deliverables & Proofs**
-  - **One full-width proof card per row** at every viewport, so long proof contracts and evidence stay readable.
-  - Rich preview of delivered artifacts: GFM Markdown, inline screenshots and diagrams served from `/api/evidence/raw`, and a full-screen lightbox.
-  - **Deliverable & Proof Detail Inspector Modal**: Deep inspect proof requirements, cryptographic revision fingerprints, historical verdicts, actor attributions, and evidence payloads in an Obsidian-styled drawer.
-  - **Verdict lifecycle controls**: Quick Complete, Accept Proof (with confirmation), Quick Reject, Sunset / Drop, and Restore.
-  - **Search & Verdict Filtering**: Search items by text, scope, or item ID, with verdict pill filtering (`All`, `Accepted`, `Rejected`, `Pending`, `Sunset / Dropped`).
+- **Tab 3: Deliverables & Proofs — Master-Detail Studio**
+  - **Two-pane studio**: a grouped master rail (~38%) of 44px contract rows — mission/slice headers, status dots (accepted/pending/rejected/dropped), `rev #…` pills, relative timestamps, and multi-select checkboxes for batch triage.
+  - **Persistent stage inspector**: breadcrumbs (rig / scope / contract id), verdict banner with critic reason, reviewable-scale evidence (800px canvas, `Subject:` captions, click-to-zoom), inline document/diff/log previews, and a docked Accept / Request Revision / Sunset-Drop action bar.
+  - **Batch accept**: select rows, confirm in the modal gate, and the studio judges each selected deliverable sequentially with `expectedRevision`/`expectedPrevious`.
+  - **Keyboard navigation**: `J`/`K` next/previous, `A` accept gate, `R` request revision, `Space` toggle selection — all no-op while a text input has focus.
+  - **Reciprocal links**: Tab 1's "What This Unblocks" card jumps straight to the target proof contract; the stage links back to its approvals gate when the contract carries a queue-item association.
+  - **Filters**: search, verdict pills (`All`, `Accepted`, `Rejected`, `Pending`, `Sunset / Dropped`), rig and sort controls all preserved.
+  - GFM Markdown, inline images from `/api/evidence/raw`, and the full-screen lightbox remain available for deep reading.
 
 - **Shared UI standard**
   - Zero Unicode emoji anywhere in the interface: every control, badge, and action uses clean inline SVG icons that render identically on Linux, macOS, Windows, and mobile.
@@ -40,8 +42,8 @@ A standalone, lightweight, zero-dependency web companion and control plane for O
 ### Tab 2 — Fleet Topology (Matrix Grid; the graph view is the default)
 ![Topology](screenshots/tab2-topology.png)
 
-### Tab 3 — Deliverables & Proofs (one full-width card per row)
-![Deliverables](screenshots/tab3-deliverables.png)
+### Tab 3 — Deliverables Master-Detail Studio
+![Deliverables Studio](screenshots/tab3-deliverables-studio.png)
 
 ---
 

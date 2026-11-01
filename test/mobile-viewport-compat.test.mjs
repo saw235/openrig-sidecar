@@ -91,7 +91,9 @@ test("SDCR.0.6.01: Android Phone & Mobile Viewport Compatibility Suite", async (
     assert.ok(topologyToolbar && topologyToolbar[0].includes('class="filter-controls-group"'), "Tab 2 must use .filter-controls-group");
 
     const deliverablesToolbar = html.match(/id="tab-deliverables"[\s\S]*?id="deliverables-list"/);
-    assert.ok(deliverablesToolbar && deliverablesToolbar[0].includes('class="filter-controls-group"'), "Tab 3 must use .filter-controls-group");
+    assert.ok(deliverablesToolbar && deliverablesToolbar[0].includes('filter-controls-group'), "Tab 3 must use .filter-controls-group");
+    assert.ok(html.includes('deliverables-studio'), "Tab 3 must render the master-detail studio");
+    assert.ok(/@media \(max-width:\s*900px\)[\s\S]*?\.deliverables-studio\s*\{[\s\S]*?grid-template-columns:\s*1fr;/.test(html), "Studio must stack below 900px");
 
     // Search input takes full width below 640px
     assert.ok(
