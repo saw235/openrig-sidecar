@@ -139,7 +139,7 @@ test("OpenRig Sidecar Phase 1 Verification Suite", async (t) => {
 
     // Verify Screen Action Button in Topology Seat Item
     assert.ok(html.includes("openCaptureModal"), "Seat card must bind openCaptureModal action");
-    assert.ok(html.includes("📺 Screen"), "Screen button label present");
+    assert.ok(html.includes("ICONS.monitor + 'Screen"), "Screen button label present via inline SVG icon");
     assert.ok(html.includes("stripAnsi"), "ANSI stripper function must be present to remove raw escape sequences");
   });
 

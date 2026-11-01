@@ -167,7 +167,7 @@ test("OpenRig Sidecar Phase 3 Verification Suite: 5 Core Capabilities", async (t
       html.includes("Open Chat") ||
       html.includes("Open Conversation") ||
       html.includes("conv-link") ||
-      html.includes("🔗");
+      html.includes("ICONS.link");
 
     assert.ok(hasOpenChatLabel, "Seat view must display an explicit 'Open Chat' action");
 
