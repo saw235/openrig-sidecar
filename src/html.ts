@@ -145,7 +145,25 @@ export function renderSidecarHtml(daemonUrl: string): string {
     .badge-green { background: rgba(129, 201, 149, 0.15); color: var(--accent-green); }
     .badge-red { background: rgba(242, 139, 130, 0.15); color: var(--accent-red); }
     .badge-amber { background: rgba(253, 214, 99, 0.15); color: var(--accent-amber); }
+    .badge-purple { background: rgba(187, 134, 252, 0.15); color: #bb86fc; }
     .badge-muted { background: var(--bg-elevated); color: var(--text-secondary); }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1px 5px;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: var(--radius-full);
+      background: rgba(255, 255, 255, 0.08);
+      margin-left: 4px;
+    }
+
+    .card-dropped {
+      opacity: 0.85;
+      border-color: rgba(187, 134, 252, 0.25);
+    }
 
     .header-actions {
       display: flex;
@@ -1766,6 +1784,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
           <button class="filter-pill" data-filter="accepted" onclick="setDeliverablesVerdictFilter('accepted', this)">Accepted</button>
           <button class="filter-pill" data-filter="rejected" onclick="setDeliverablesVerdictFilter('rejected', this)">Rejected</button>
           <button class="filter-pill" data-filter="pending" onclick="setDeliverablesVerdictFilter('pending', this)">Pending</button>
+          <button class="filter-pill" id="pill-deliverables-dropped" data-filter="dropped" onclick="setDeliverablesVerdictFilter('dropped', this)">Sunset / Dropped <span class="pill-badge" id="dropped-proofs-count">0</span></button>
         </div>
         <div class="filter-controls-group">
           <select id="deliverables-rig-filter" class="form-select" onchange="filterDeliverables()">
@@ -2294,6 +2313,135 @@ export function renderSidecarHtml(daemonUrl: string): string {
       } catch (err) {
         showToast("Error recording proof rejection", true);
       }
+    }
+
+    // 1-Click Quick Complete proof (accepts with default reason)
+    async function quickCompleteProof(scope, item, expectedRevision, expectedPrevious) {
+      try {
+        const res = await fetch('/api/proof/judge', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-OpenRig-Session': 'human'
+          },
+          body: JSON.stringify({
+            scope,
+            item,
+            verdict: 'accept',
+            reason: 'Completed and accepted by operator via OpenRig Sidecar',
+            evidence: ['proof/evidence.md'],
+            expectedRevision,
+            expectedPrevious: expectedPrevious || null,
+            actorSession: 'human'
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast("Proof accepted & completed: " + scope + "#" + item);
+          fetchDeliverables();
+        } else {
+          showToast(data.message || data.error || "Completion failed", true);
+        }
+      } catch (err) {
+        showToast("Error completing deliverable", true);
+      }
+    }
+
+    // Ledger-aware proof withdrawal
+    async function withdrawProof(scope, item, expectedRevision, expectedPrevious) {
+      try {
+        const res = await fetch('/api/proof/judge', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-OpenRig-Session': 'human'
+          },
+          body: JSON.stringify({
+            scope,
+            item,
+            verdict: 'withdraw',
+            reason: 'Sunset / dropped by operator via Sidecar',
+            expectedRevision,
+            expectedPrevious: expectedPrevious || null,
+            actorSession: 'human'
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          fetchDeliverables();
+        } else {
+          console.warn("Proof withdrawal note:", data.message || data.error);
+        }
+      } catch (err) {
+        console.warn("Background proof withdrawal error:", err);
+      }
+    }
+
+    // Deliverable Sunset / Drop helpers
+    function getDeliverableKey(item) {
+      if (!item) return '';
+      return (item.scope || 'default') + '#' + (item.id || item.text || '');
+    }
+
+    function getDroppedDeliverables() {
+      try {
+        if (typeof localStorage === 'undefined') return [];
+        const raw = localStorage.getItem('openrig_dropped_deliverables');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function setDeliverableDropped(key, isDropped) {
+      try {
+        if (typeof localStorage === 'undefined') return;
+        const current = getDroppedDeliverables();
+        const set = new Set(current);
+        if (isDropped) {
+          set.add(key);
+        } else {
+          set.delete(key);
+        }
+        localStorage.setItem('openrig_dropped_deliverables', JSON.stringify(Array.from(set)));
+      } catch (e) {
+        console.error("Error updating dropped deliverables:", e);
+      }
+    }
+
+    function isDeliverableDropped(item) {
+      if (!item) return false;
+      const key = getDeliverableKey(item);
+      const dropped = getDroppedDeliverables();
+      return dropped.includes(key);
+    }
+
+    async function dropDeliverable(index) {
+      const item = cachedDeliverables[index];
+      if (!item) return;
+      const key = getDeliverableKey(item);
+      setDeliverableDropped(key, true);
+
+      const j = item.judgment;
+      const isUnjudged = !j || !j.verdict;
+      if (isUnjudged && item.scope && item.id) {
+        withdrawProof(item.scope, item.id, item.revision, j ? j.id : null);
+      }
+
+      const label = item.text || item.id || key;
+      showToast("Deliverable sunset / dropped: " + (label.length > 40 ? label.slice(0, 39) + '…' : label));
+      renderDeliverables();
+    }
+
+    function restoreDeliverable(index) {
+      const item = cachedDeliverables[index];
+      if (!item) return;
+      const key = getDeliverableKey(item);
+      setDeliverableDropped(key, false);
+
+      const label = item.text || item.id || key;
+      showToast("Restored deliverable: " + (label.length > 40 ? label.slice(0, 39) + '…' : label) + " to active view");
+      renderDeliverables();
     }
 
     // Open Proof Accept Confirmation Modal
@@ -4450,7 +4598,18 @@ export function renderSidecarHtml(daemonUrl: string): string {
       const rigFilter = document.getElementById('deliverables-rig-filter')?.value || 'all';
       const sortOrder = document.getElementById('deliverables-sort')?.value || 'newest';
 
+      const droppedCount = cachedDeliverables.filter(item => isDeliverableDropped(item)).length;
+      const droppedBadge = document.getElementById('dropped-proofs-count');
+      if (droppedBadge) droppedBadge.textContent = droppedCount;
+
       const filtered = cachedDeliverables.filter(item => {
+        const isDropped = isDeliverableDropped(item);
+        if (deliverablesVerdictFilter === 'dropped') {
+          if (!isDropped) return false;
+        } else {
+          if (isDropped) return false;
+        }
+
         const j = item.judgment;
         const isAccepted = (j && j.verdict === 'accept') || item.state === 'accepted';
         const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
@@ -4481,7 +4640,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
       document.getElementById('proofs-count').textContent = filtered.length;
 
       if (filtered.length === 0) {
-        list.innerHTML = '<div class="empty-state">' + (cachedDeliverables.length === 0 ? 'No proof contracts found for current workspace. Deliverables and proofs will populate as contracts are executed.' : 'No deliverables match current search or verdict filter.') + '</div>';
+        list.innerHTML = '<div class="empty-state">' + (cachedDeliverables.length === 0 ? 'No proof contracts found for current workspace. Deliverables and proofs will populate as contracts are executed.' : (deliverablesVerdictFilter === 'dropped' ? 'No sunset or dropped deliverables.' : 'No deliverables match current search or verdict filter.')) + '</div>';
         return;
       }
 
@@ -4491,12 +4650,13 @@ export function renderSidecarHtml(daemonUrl: string): string {
         const j = item.judgment;
         const isAccepted = (j && j.verdict === 'accept') || item.state === 'accepted';
         const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
-        const statusBadge = isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
-        const statusText = isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
+        const isDropped = isDeliverableDropped(item);
+        const statusBadge = isDropped ? 'badge-purple' : isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
+        const statusText = isDropped ? '📦 Sunset / Dropped' : isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
         const scope = item.scope || 'default';
         const origIndex = cachedDeliverables.indexOf(item);
 
-        html += '<div class="card">' +
+        html += '<div class="card' + (isDropped ? ' card-dropped' : '') + '">' +
           '<div class="card-header">' +
             '<div>' +
               '<div class="card-title">' + renderMarkdown(item.text || item.id) + '</div>' +
@@ -4529,9 +4689,15 @@ export function renderSidecarHtml(daemonUrl: string): string {
           ) : '') +
           '<div class="card-actions">' +
             '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">🔍 Details</button>' +
-            '<button class="btn btn-success" onclick="openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">✓ Accept</button>' +
-            '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">⚡ Quick Reject</button>' +
-            '<button class="btn btn-secondary" onclick="openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">✕ Reject...</button>' +
+            (isDropped ? (
+              '<button class="btn btn-secondary" onclick="restoreDeliverable(' + origIndex + ')">↩ Restore</button>'
+            ) : (
+              '<button class="btn btn-success" onclick="quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">⚡ Quick Complete</button>' +
+              '<button class="btn btn-secondary" onclick="openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">✓ Accept...</button>' +
+              '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">⚡ Quick Reject</button>' +
+              '<button class="btn btn-secondary" onclick="openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">✕ Reject...</button>' +
+              '<button class="btn btn-secondary" onclick="dropDeliverable(' + origIndex + ')">📦 Sunset / Drop</button>'
+            )) +
           '</div>' +
         '</div>';
       }
@@ -4546,8 +4712,9 @@ export function renderSidecarHtml(daemonUrl: string): string {
       const j = item.judgment;
       const isAccepted = (j && j.verdict === 'accept') || item.state === 'accepted';
       const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
-      const statusBadge = isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
-      const statusText = isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
+      const isDropped = isDeliverableDropped(item);
+      const statusBadge = isDropped ? 'badge-purple' : isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
+      const statusText = isDropped ? '📦 Sunset / Dropped' : isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
       const scope = item.scope || 'default';
 
       const badgeEl = document.getElementById('detail-badge');
@@ -4591,9 +4758,15 @@ export function renderSidecarHtml(daemonUrl: string): string {
       }, null, 2);
 
       const actionsLeft = document.getElementById('detail-actions-left');
-      actionsLeft.innerHTML = '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ');">✓ Accept Proof</button>' +
-        '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\'); closeModal(\\'deliverable-detail-modal\\');">⚡ Quick Reject</button>' +
-        '<button class="btn btn-secondary" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">✕ Reject Proof...</button>';
+      if (isDropped) {
+        actionsLeft.innerHTML = '<button class="btn btn-secondary" onclick="restoreDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">↩ Restore Deliverable</button>';
+      } else {
+        actionsLeft.innerHTML = '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">⚡ Quick Complete</button>' +
+          '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ');">✓ Accept...</button>' +
+          '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\'); closeModal(\\'deliverable-detail-modal\\');">⚡ Quick Reject</button>' +
+          '<button class="btn btn-secondary" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">✕ Reject Proof...</button>' +
+          '<button class="btn btn-secondary" onclick="dropDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">📦 Sunset / Drop</button>';
+      }
 
       openModal('deliverable-detail-modal');
     }
