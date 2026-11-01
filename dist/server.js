@@ -128,6 +128,7 @@ export function startSidecarServer(opts) {
     const home = os.homedir();
     const allowedEvidenceRoots = (opts?.allowedEvidenceRoots ?? [
         path.join(home, "antigravity"),
+        path.join(home, ".openrig", "workspace"),
         path.join(home, ".openrig"),
     ]).map((r) => {
         try {

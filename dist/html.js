@@ -4955,9 +4955,10 @@ export function renderSidecarHtml(daemonUrl) {
             '</div>'
           )) +
           (() => {
-            const evList = Array.isArray(item.evidence)
-              ? item.evidence
-              : (item.evidence ? [item.evidence] : (item.evidenceRef ? [item.evidenceRef] : []));
+            const rawEv = item.evidence || (item.judgment && item.judgment.evidence) || (item.evidenceRef ? [item.evidenceRef] : []);
+            const evList = (Array.isArray(rawEv) ? rawEv : [rawEv])
+              .map(e => (e && typeof e === 'object' && e.ref) ? e.ref : (typeof e === 'string' ? e : (e ? String(e) : '')))
+              .filter(Boolean);
             if (evList.length === 0) return '';
 
             let evHtml = '<div style="margin:8px 0; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); font-size:12px;">' +
@@ -5057,9 +5058,10 @@ export function renderSidecarHtml(daemonUrl) {
 
       const evDetailEl = document.getElementById('detail-evidence');
       if (evDetailEl) {
-        const evList = Array.isArray(item.evidence)
-          ? item.evidence
-          : (item.evidence ? [item.evidence] : (item.evidenceRef ? [item.evidenceRef] : []));
+        const rawEv = item.evidence || (item.judgment && item.judgment.evidence) || (item.evidenceRef ? [item.evidenceRef] : []);
+        const evList = (Array.isArray(rawEv) ? rawEv : [rawEv])
+          .map(e => (e && typeof e === 'object' && e.ref) ? e.ref : (typeof e === 'string' ? e : (e ? String(e) : '')))
+          .filter(Boolean);
         if (evList.length > 0) {
           let detailEvHtml = '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">';
           const images = [];
@@ -5135,18 +5137,41 @@ export function renderSidecarHtml(daemonUrl) {
       try {
         const res = await fetch('/api/proof');
         const data = await res.json();
-        let items = data.items || [];
-        if (items.length === 0 && data.missions) {
+        let items = [];
+        if (data.missions && Array.isArray(data.missions) && data.missions.length > 0) {
           for (const m of data.missions) {
             for (const s of (m.slices || [])) {
               const sliceItems = (s.readiness && s.readiness.items) || [];
               for (const it of sliceItems) {
+                const rawEv = it.evidence || (it.judgment && it.judgment.evidence) || [];
+                const normalizedEvidence = (Array.isArray(rawEv) ? rawEv : [rawEv])
+                  .map(e => (e && typeof e === 'object' && e.ref) ? e.ref : e)
+                  .filter(Boolean);
+
+                // If still empty and unjudged, provide default slice proof path
+                const fallbackEvidence = normalizedEvidence.length > 0
+                  ? normalizedEvidence
+                  : ['missions/' + m.name + '/slices/' + s.id + '/proof/evidence.md'];
+
                 items.push({
                   ...it,
-                  scope: m.name + '/slices/' + s.id
+                  scope: m.name + '/slices/' + s.id,
+                  evidence: fallbackEvidence
                 });
               }
             }
+          }
+        }
+        if (items.length === 0 && data.items && Array.isArray(data.items)) {
+          for (const it of data.items) {
+            const rawEv = it.evidence || (it.judgment && it.judgment.evidence) || [];
+            const normalizedEvidence = (Array.isArray(rawEv) ? rawEv : [rawEv])
+              .map(e => (e && typeof e === 'object' && e.ref) ? e.ref : e)
+              .filter(Boolean);
+            items.push({
+              ...it,
+              evidence: normalizedEvidence.length > 0 ? normalizedEvidence : it.evidence
+            });
           }
         }
         cachedDeliverables = items;
