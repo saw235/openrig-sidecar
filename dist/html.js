@@ -1333,6 +1333,116 @@ export function renderSidecarHtml(daemonUrl) {
         grid-template-columns: 1fr;
       }
     }
+
+    /* Tab 1: three-tier triage inbox, sweep nesting, unblocks context */
+    #approvals-list.card-grid.sectioned {
+      display: block;
+    }
+    .triage-section {
+      margin-bottom: 18px;
+    }
+    .triage-section-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 10px 2px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    .triage-section-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+      gap: 16px;
+    }
+    @media (max-width: 560px) {
+      .triage-section-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .card-tier-1 {
+      border-color: rgba(253, 214, 99, 0.4);
+    }
+    .card-tier-2 {
+      border-color: rgba(138, 180, 248, 0.3);
+    }
+    .card-tier-3 {
+      border-color: var(--border-subtle);
+    }
+    .card:focus-visible {
+      outline: 1px solid var(--accent-blue);
+      outline-offset: 2px;
+    }
+    .owed-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(253, 214, 99, 0.45);
+      background: rgba(253, 214, 99, 0.1);
+      color: var(--accent-amber);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+    .nested-sweep-banner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .nested-sweep-banner .badge {
+      white-space: normal;
+      text-align: left;
+      line-height: 1.4;
+    }
+    .unblocks-context-card {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border: 1px solid rgba(138, 180, 248, 0.2);
+      border-radius: var(--radius-sm);
+      background: rgba(138, 180, 248, 0.06);
+    }
+    .unblocks-title {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent-blue);
+      margin-bottom: 4px;
+    }
+    .unblocks-detail {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+    .triage-details summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      list-style: none;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 0 0 10px 2px;
+    }
+    .triage-details summary::-webkit-details-marker {
+      display: none;
+    }
+    .triage-details[open] summary {
+      margin-bottom: 12px;
+    }
     .approval-from-pill {
       display: inline-flex;
       align-items: center;
@@ -1973,6 +2083,26 @@ export function renderSidecarHtml(daemonUrl) {
     </div>
   </div>
 
+  <!-- TRIAGE CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="triage-confirm-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="triage-confirm-title">Confirm Action</div>
+        <button class="modal-close" onclick="closeModal('triage-confirm-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <div id="triage-confirm-summary" style="font-weight:600; color:#fff; word-break:break-word;"></div>
+        </div>
+        <div class="detail-box" id="triage-confirm-detail" style="font-size:12px; color:var(--text-secondary); line-height:1.5;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('triage-confirm-modal')">Cancel</button>
+        <button class="btn btn-success" id="triage-confirm-btn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <!-- REPLY TO AGENT MODAL -->
   <div class="modal-overlay" id="reply-modal">
     <div class="modal">
@@ -2332,6 +2462,41 @@ export function renderSidecarHtml(daemonUrl) {
       });
     }
 
+    function triageHotkeysAllowed() {
+      const el = document.activeElement;
+      if (!el) return true;
+      const tagName = String(el.tagName || '').toUpperCase();
+      return !(tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT' || el.isContentEditable);
+    }
+
+    // Triage hotkeys operate only on a focused approval card and never while typing.
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', (e) => {
+        if (!triageHotkeysAllowed()) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const approvalsTab = document.getElementById('tab-approvals');
+        if (!approvalsTab || !approvalsTab.classList || !approvalsTab.classList.contains('active')) return;
+        const active = document.activeElement;
+        const card = active && active.closest ? active.closest('.card[data-approval-id]') : null;
+        if (!card) return;
+        const approvalId = card.getAttribute('data-approval-id');
+        const item = cachedApprovals.find(entry => entry && entry.id === approvalId);
+        if (!item || !item.id.startsWith('queue:')) return;
+        const qitemId = item.id.slice(6);
+        const key = String(e.key || '').toLowerCase();
+        if (key === 'a') {
+          e.preventDefault();
+          requestApprove(qitemId, item.summary || '', item.sourceSession || '');
+        } else if (key === 'x') {
+          e.preventDefault();
+          requestQuickReject(qitemId, item.summary || '', item.sourceSession || '');
+        } else if (key === 'r') {
+          e.preventDefault();
+          openRejectModal(qitemId, item.summary || '', item.sourceSession || '');
+        }
+      });
+    }
+
     async function toggleInlineEvidenceDoc(index, docPath) {
       const el = document.getElementById('inline-evidence-doc-' + index);
       if (!el) return;
@@ -2494,6 +2659,43 @@ export function renderSidecarHtml(daemonUrl) {
         showToast("Error rejecting request", true);
       }
     }
+
+    // Consequential triage actions go through an explicit confirmation modal first.
+    let pendingTriageConfirmation = null;
+
+    function requestTriageConfirmation(kind, qitemId, summary, sourceSession) {
+      pendingTriageConfirmation = { kind, qitemId, summary, sourceSession };
+      const isApprove = kind === 'approve';
+      document.getElementById('triage-confirm-title').textContent = isApprove ? 'Confirm Approval' : 'Confirm Quick Reject';
+      document.getElementById('triage-confirm-summary').textContent = summary || qitemId;
+      document.getElementById('triage-confirm-detail').textContent = isApprove
+        ? 'Approving applies the decision immediately and wakes the originating seat. This cannot be undone from the Sidecar.'
+        : 'Quick Reject denies this request with the default reason "Rejected by operator" and wakes the originating seat.';
+      const confirmBtn = document.getElementById('triage-confirm-btn');
+      confirmBtn.className = 'btn ' + (isApprove ? 'btn-success' : 'btn-danger');
+      confirmBtn.innerHTML = isApprove ? (ICONS.check + 'Approve') : (ICONS.bolt + 'Quick Reject');
+      openModal('triage-confirm-modal');
+    }
+
+    function requestApprove(qitemId, summary, sourceSession) {
+      requestTriageConfirmation('approve', qitemId, summary, sourceSession);
+    }
+
+    function requestQuickReject(qitemId, summary, sourceSession) {
+      requestTriageConfirmation('quick-reject', qitemId, summary, sourceSession);
+    }
+
+    document.getElementById('triage-confirm-btn').addEventListener('click', async () => {
+      const pending = pendingTriageConfirmation;
+      if (!pending) return;
+      pendingTriageConfirmation = null;
+      closeModal('triage-confirm-modal');
+      if (pending.kind === 'approve') {
+        await approveItem(pending.qitemId, pending.summary, pending.sourceSession);
+      } else {
+        await quickRejectItem(pending.qitemId, pending.summary, pending.sourceSession);
+      }
+    });
 
     // Reject proof action (optional reason defaulting to "Rejected by operator")
     document.getElementById('confirm-proof-reject-btn').addEventListener('click', async () => {
@@ -3177,6 +3379,84 @@ export function renderSidecarHtml(daemonUrl) {
       renderApprovals();
     }
 
+    // ---- Triage helpers: sweep nesting, tiering, unblocks synthesis (SDCR.0.8.01) ----
+    function approvalTags(item) {
+      return item && Array.isArray(item.tags) ? item.tags : [];
+    }
+
+    // Watchdog sweep rows are recovery notes for another qitem, not standalone work.
+    function sweepParentQitemId(item) {
+      const tags = approvalTags(item);
+      const isSweep = tags.includes('stuck-sweep-finding') || /^Stuck sweep:/i.test((item && item.summary) || '');
+      if (!isSweep) return null;
+      for (const tag of tags) {
+        if (typeof tag === 'string' && tag.startsWith('recovery-for:')) {
+          const value = tag.slice('recovery-for:'.length).trim();
+          if (value) return value;
+        }
+      }
+      const summary = (item && item.summary) || '';
+      const tagged = summary.match(/recovery-for:([A-Za-z0-9_-]+)/);
+      if (tagged) return tagged[1];
+      const onMatch = summary.match(/on (qitem-[A-Za-z0-9_-]+)/);
+      return onMatch ? onMatch[1] : null;
+    }
+
+    function approvalTier(item) {
+      const tags = approvalTags(item);
+      if (
+        item.humanIntent === 'decision' ||
+        item.priority === 'urgent' ||
+        item.priority === 'critical' ||
+        item.urgency === 'urgent' ||
+        item.urgency === 'critical'
+      ) {
+        return 1;
+      }
+      if (
+        item.gate === 'human' ||
+        tags.some(tag => typeof tag === 'string' && (tag.startsWith('gate:') || tag.startsWith('slice:'))) ||
+        item.kind === 'action'
+      ) {
+        return 2;
+      }
+      return 3;
+    }
+
+    function owedDuration(at) {
+      const created = at ? new Date(at).getTime() : 0;
+      if (!created || isNaN(created)) return '';
+      const minutes = Math.max(0, Math.floor((Date.now() - created) / 60000));
+      if (minutes < 60) return minutes + 'm';
+      const hours = Math.floor(minutes / 60);
+      return hours < 48 ? hours + 'h' : Math.floor(hours / 24) + 'd';
+    }
+
+    function approvalScopeTag(item) {
+      const tag = approvalTags(item).find(
+        entry => typeof entry === 'string' && (entry.startsWith('slice:') || entry.startsWith('mission:'))
+      );
+      if (!tag) return null;
+      const isSlice = tag.startsWith('slice:');
+      return { kind: isSlice ? 'slice' : 'mission', id: tag.slice(isSlice ? 6 : 8) };
+    }
+
+    // Cross-reference hydrated /api/proof data to state what a request unblocks.
+    function pendingDeliverablesForScope(scopeTag) {
+      if (!scopeTag) return 0;
+      const slicePath = '/slices/' + scopeTag.id;
+      return cachedDeliverables.filter(deliverable => {
+        if (!deliverable) return false;
+        const scope = String(deliverable.scope || '');
+        const matches = scopeTag.kind === 'slice'
+          ? (scope === scopeTag.id || scope.includes(slicePath))
+          : scope.startsWith(scopeTag.id + '/');
+        if (!matches) return false;
+        const verdict = deliverable.judgment && (deliverable.judgment.verdict || deliverable.judgment.decision);
+        return !verdict || (verdict !== 'accept' && verdict !== 'reject');
+      }).length;
+    }
+
     function renderApprovals() {
       const list = document.getElementById('approvals-list');
       const search = (document.getElementById('approvals-search')?.value || '').toLowerCase().trim();
@@ -3223,9 +3503,43 @@ export function renderSidecarHtml(daemonUrl) {
         return sortOrder === 'newest' ? tB - tA : tA - tB;
       });
 
-      document.getElementById('approvals-count').textContent = filtered.length;
+      // Triage partition: nest watchdog sweeps under their parent, then group the rest by tier.
+      for (const item of cachedApprovals) {
+        if (item && item.attachedSweeps) item.attachedSweeps = [];
+      }
+      const topLevelItems = [];
+      const orphanSweeps = [];
+      for (const item of filtered) {
+        const parentId = sweepParentQitemId(item);
+        if (!parentId) {
+          topLevelItems.push(item);
+          continue;
+        }
+        const parent = filtered.find(candidate =>
+          candidate !== item && (candidate.id === 'queue:' + parentId || candidate.id === parentId || candidate.qitemId === parentId)
+        );
+        if (parent) {
+          parent.attachedSweeps = parent.attachedSweeps || [];
+          parent.attachedSweeps.push(item);
+        } else {
+          orphanSweeps.push(item);
+        }
+      }
+      const tierGroups = { 1: [], 2: [], 3: [] };
+      for (const item of topLevelItems) tierGroups[approvalTier(item)].push(item);
+      for (const sweep of orphanSweeps) tierGroups[3].push(sweep);
 
-      if (filtered.length === 0) {
+      const orderedItems = [];
+      for (const tier of [1, 2, 3]) {
+        for (const item of tierGroups[tier]) {
+          item._triageTier = tier;
+          orderedItems.push(item);
+        }
+      }
+
+      document.getElementById('approvals-count').textContent = orderedItems.length;
+
+      if (orderedItems.length === 0) {
         const emptyHtml = '<div class="empty-state">' + (cachedApprovals.length === 0 ? 'No pending approvals or attention required. All agents operating smoothly.' : 'No attention items match current filters.') + '</div>';
         const prevEmpty = list.dataset ? list.dataset.lastHtml : list._lastHtml;
         if (prevEmpty !== emptyHtml) {
@@ -3237,7 +3551,31 @@ export function renderSidecarHtml(daemonUrl) {
       }
 
       let html = '';
-      for (const item of filtered) {
+      let currentTier = 0;
+      const tierMeta = {
+        1: { heading: 'High-Stakes Decisions', icon: ICONS.clock },
+        2: { heading: 'Milestone & Gate Approvals', icon: ICONS.doc },
+        3: { heading: 'Diagnostic & Maintenance Notices', icon: ICONS.bolt }
+      };
+      for (const item of orderedItems) {
+        const tier = item._triageTier;
+        if (tier !== currentTier) {
+          if (currentTier !== 0) {
+            html += '</div>' + (currentTier === 3 ? '</details></div>' : '</div>');
+          }
+          currentTier = tier;
+          const meta = tierMeta[tier];
+          if (tier === 3) {
+            html += '<div class="triage-section" data-tier="3">' +
+              '<details class="triage-details"' + (orphanSweeps.length > 0 ? ' open' : '') + '>' +
+                '<summary>' + meta.icon + meta.heading + ' (' + tierGroups[3].length + ')</summary>' +
+                '<div class="triage-section-grid">';
+          } else {
+            html += '<div class="triage-section" data-tier="' + tier + '">' +
+              '<div class="triage-section-heading">' + meta.icon + meta.heading + ' (' + tierGroups[tier].length + ')</div>' +
+              '<div class="triage-section-grid">';
+          }
+        }
         const origIndex = cachedApprovals.indexOf(item);
         const qitemId = item.id.startsWith('queue:') ? item.id.slice(6) : item.id;
         const isQueue = item.id.startsWith('queue:');
@@ -3247,26 +3585,57 @@ export function renderSidecarHtml(daemonUrl) {
         const replyTarget = item.replyTo || sourceSession || recipient;
         const at = item.at ? new Date(item.at).toLocaleTimeString() : '';
         const proposalMarkdown = (item.body || item.humanDetail || '').trim();
-        const hasGenericUnblocks = typeof item.unblocks === 'string' && item.unblocks.startsWith('No dependent task recorded');
-        const showUnblocks = Boolean(item.unblocks) && (!proposalMarkdown || !hasGenericUnblocks);
+        const tierBadge = tier === 1
+          ? '<span class="badge badge-amber">DECISION</span>'
+          : tier === 2
+            ? '<span class="badge badge-blue">' + (approvalTags(item).some(tag => typeof tag === 'string' && tag.startsWith('gate:')) ? 'GATE' : 'PROPOSAL') + '</span>'
+            : '<span class="badge badge-muted">NOTICE</span>';
+        const owed = tier === 1 ? owedDuration(item.at || item.tsCreated) : '';
+        const genericUnblocks = typeof item.unblocks === 'string' && item.unblocks.startsWith('No dependent task recorded');
+        let unblocksHtml = '';
+        if (item.unblocks && !genericUnblocks) {
+          unblocksHtml = '<div class="card-meta"><span>Unblocks: ' + renderMarkdown(item.unblocks) + '</span></div>';
+        } else if (genericUnblocks) {
+          // Client-side hydration: 'what this unblocks' derives from the tags hydrated by
+          // /api/queue/:qitemId, joined against cachedDeliverables (/api/proof) for pending counts.
+          const scopeTag = approvalScopeTag(item);
+          const pendingCount = pendingDeliverablesForScope(scopeTag);
+          const scopeLabel = scopeTag
+            ? (scopeTag.kind === 'slice'
+              ? '<span>Slice: <code>' + escapeHtml(scopeTag.id) + '</code></span>'
+              : '<span>Mission: <code>' + escapeHtml(scopeTag.id) + '</code></span>')
+            : (item.scope && item.scope !== 'instance · project unknown'
+              ? '<span>Scope: ' + escapeHtml(item.scope) + '</span>'
+              : '<span>No dependent slice or mission is attached to this request.</span>');
+          const pendingLabel = scopeTag
+            ? '<span>• ' + pendingCount + ' pending deliverable' + (pendingCount === 1 ? '' : 's') + ' awaiting sign-off</span>'
+            : '';
+          unblocksHtml = '<div class="unblocks-context-card">' +
+            '<div class="unblocks-title">' + ICONS.doc + 'What This Unblocks:</div>' +
+            '<div class="unblocks-detail">' + scopeLabel + pendingLabel + '</div>' +
+          '</div>';
+        }
         const evidenceRef = (item.evidenceRef || '').trim();
         const evidenceIsUrl = isHttpUrl(evidenceRef);
         const evidenceName = evidenceIsUrl ? evidenceRef : (extractBasename(evidenceRef) || evidenceRef);
 
-        html += '<div class="card" data-approval-id="' + escapeHtml(item.id) + '">' +
+        html += '<div class="card card-tier-' + tier + '" tabindex="0" data-approval-id="' + escapeHtml(item.id) + '">' +
           '<div class="card-header">' +
             '<div style="width:100%; min-width:0;">' +
               '<div class="card-title">' + renderMarkdown(item.summary || 'Attention Item') + '</div>' +
               '<div class="card-meta" style="margin-top:6px;">' +
                 '<span class="badge ' + urgencyBadge + '">' + escapeHtml(item.urgency || item.priority || item.kind || 'routine') + '</span>' +
+                tierBadge +
                 (item.humanIntent ? ('<span class="badge badge-blue">' + escapeHtml(item.humanIntent) + '</span>') : '') +
                 (sourceSession ? ('<span class="approval-from-pill" title="Originating agent seat">From: ' + escapeHtml(sourceSession) + '</span>') : '') +
                 '<span>To: ' + escapeHtml(recipient) + '</span>' +
                 (item.scope && item.scope !== 'instance · project unknown' ? ('<span>• ' + escapeHtml(item.scope) + '</span>') : '') +
                 (at ? ('<span>• ' + at + '</span>') : '') +
+                (owed ? ('<span class="owed-pill" title="Time since filed">' + ICONS.clock + 'Owed ' + owed + '</span>') : '') +
               '</div>' +
             '</div>' +
           '</div>' +
+          ((item.attachedSweeps && item.attachedSweeps.length) ? item.attachedSweeps.map(sweep => '<div class="nested-sweep-banner"><span class="badge badge-amber" title="' + escapeHtml(sweep.id) + '">' + ICONS.bolt + 'Watchdog Wake: ' + escapeHtml(sweep.summary || 'Stuck sweep finding') + '</span></div>').join('') : '') +
           (proposalMarkdown ? (
             '<div class="approval-markdown-preview md-rendered" data-preview-id="' + escapeHtml(item.id) + '">' +
               renderMarkdown(proposalMarkdown) +
@@ -3285,20 +3654,24 @@ export function renderSidecarHtml(daemonUrl) {
               '</div>'
             )
           ) : '') +
-          (showUnblocks ? ('<div class="card-meta"><span>Unblocks: ' + renderMarkdown(item.unblocks) + '</span></div>') : '') +
+          unblocksHtml +
           '<div class="card-actions" style="flex-wrap:wrap;">' +
             ((proposalMarkdown || evidenceRef || isQueue) ? (
               '<button class="btn btn-secondary" onclick="openApprovalDetailModal(' + origIndex + ')">' + ICONS.doc + 'Full Proposal</button>'
             ) : '') +
             (isQueue ? (
-              '<button class="btn btn-success" onclick="approveItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.check + 'Approve</button>' +
-              '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.bolt + 'Quick Reject</button>' +
+              '<button class="btn btn-success" onclick="requestApprove(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.check + 'Approve</button>' +
+              '<button class="btn btn-danger" onclick="requestQuickReject(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.bolt + 'Quick Reject</button>' +
               '<button class="btn btn-secondary" onclick="openRejectModal(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.cross + 'Reject...</button>'
             ) : '') +
             '<button class="btn btn-primary" onclick="openReplyModal(\\'' + escapeJs(replyTarget) + '\\')">' + ICONS.reply + 'Reply</button>' +
           '</div>' +
         '</div>';
       }
+      if (currentTier !== 0) {
+        html += '</div>' + (currentTier === 3 ? '</details></div>' : '</div>');
+      }
+      if (list.classList && list.classList.add) list.classList.add('sectioned');
 
       const prevRendered = list.dataset ? list.dataset.lastHtml : list._lastHtml;
       if (prevRendered === html) {
@@ -3419,8 +3792,8 @@ export function renderSidecarHtml(daemonUrl) {
       const actionsLeft = document.getElementById('approval-detail-actions-left');
       actionsLeft.innerHTML =
         (isQueue ? (
-          '<button class="btn btn-success" onclick="approveItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.check + 'Approve</button>' +
-          '<button class="btn btn-danger" onclick="quickRejectItem(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.bolt + 'Quick Reject</button>' +
+          '<button class="btn btn-success" onclick="requestApprove(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.check + 'Approve</button>' +
+          '<button class="btn btn-danger" onclick="requestQuickReject(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.bolt + 'Quick Reject</button>' +
           '<button class="btn btn-secondary" onclick="closeModal(\\'approval-detail-modal\\'); openRejectModal(\\'' + escapeJs(qitemId) + '\\', \\'' + escapeJs(item.summary) + '\\', \\'' + escapeJs(sourceSession) + '\\')">' + ICONS.cross + 'Reject...</button>'
         ) : '') +
         '<button class="btn btn-primary" onclick="closeModal(\\'approval-detail-modal\\'); openReplyModal(\\'' + escapeJs(replyTarget) + '\\')">' + ICONS.reply + 'Reply' + (sourceSession ? (' to ' + escapeHtml(sourceSession.split('@')[0])) : '') + '</button>';
