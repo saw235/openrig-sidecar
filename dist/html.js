@@ -1179,6 +1179,146 @@ export function renderSidecarHtml(daemonUrl) {
       }
     }
 
+    /* SVG Icons */
+    .svg-icon {
+      width: 12px;
+      height: 12px;
+      vertical-align: -1.5px;
+      margin-right: 4px;
+      display: inline-block;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    /* Markdown Images & Visual Delivered Proofs */
+    .md-image-container {
+      margin: 10px 0;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      background: #0d0d0d;
+      max-width: 100%;
+    }
+    .md-proof-image {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      max-height: 480px;
+      object-fit: contain;
+      cursor: zoom-in;
+      background: #000;
+      margin: 0 auto;
+      transition: opacity 0.15s ease;
+    }
+    .md-proof-image:hover {
+      opacity: 0.95;
+    }
+    .md-image-caption {
+      padding: 6px 10px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .evidence-image-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .evidence-image-card {
+      display: flex;
+      flex-direction: column;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      overflow: hidden;
+      max-width: 200px;
+      cursor: zoom-in;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .evidence-image-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+    .evidence-thumb-img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      background: #000;
+      display: block;
+    }
+    .evidence-thumb-label {
+      padding: 4px 6px;
+      font-size: 10.5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-subtle);
+    }
+    .evidence-doc-preview {
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+    #image-lightbox-modal .modal-content-lightbox {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+    }
+    .lightbox-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+    }
+    .lightbox-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .lightbox-body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      padding: 12px;
+      overflow: auto;
+      max-height: calc(90vh - 65px);
+    }
+    .lightbox-img {
+      max-width: 100%;
+      max-height: calc(90vh - 90px);
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
     /* Rich Approval Proposal Card & Inspector Styles */
     #approvals-list.card-grid {
       grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
@@ -1705,10 +1845,10 @@ export function renderSidecarHtml(daemonUrl) {
           </select>
           <div class="btn-group" id="topology-view-toggle">
             <button class="view-toggle-btn active" id="view-toggle-graph" onclick="toggleTopologyView('graph')">
-              ☊ Visual Graph
+              Visual Graph
             </button>
             <button class="view-toggle-btn" id="view-toggle-grid" onclick="toggleTopologyView('grid')">
-              ⊞ Matrix Grid
+              Matrix Grid
             </button>
           </div>
         </div>
@@ -1743,13 +1883,13 @@ export function renderSidecarHtml(daemonUrl) {
               <button class="graph-zoom-btn" id="graph-zoom-out" onclick="adjustGraphZoom(-0.15)" title="Zoom Out">−</button>
               <button class="graph-zoom-btn" id="graph-zoom-reset" onclick="resetGraphZoom()" title="Reset Zoom">100%</button>
               <button class="graph-zoom-btn" id="graph-zoom-in" onclick="adjustGraphZoom(0.15)" title="Zoom In">+</button>
-              <button class="graph-zoom-btn" id="graph-zoom-fit" onclick="fitGraphZoom()" title="Fit Graph to Width">⊡ Fit</button>
+              <button class="graph-zoom-btn" id="graph-zoom-fit" onclick="fitGraphZoom()" title="Fit Graph to Width">Fit</button>
             </div>
           </div>
         </div>
         <div id="topology-seat-inspector">
           <div class="inspector-hint">
-            <span>☊ <strong>Interactive Fleet Graph:</strong> Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight its causal relationships, inspect upstream/downstream seats, or open Antigravity Chat &amp; Terminal Screen. Drag canvas to pan.</span>
+            <span><strong>Interactive Fleet Graph:</strong> Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight its causal relationships, inspect upstream/downstream seats, or open Antigravity Chat &amp; Terminal Screen. Drag canvas to pan.</span>
           </div>
         </div>
         <div id="topology-graph-viewport">
@@ -1901,7 +2041,7 @@ export function renderSidecarHtml(daemonUrl) {
       </div>
       <div class="modal-footer">
         <button class="btn" onclick="closeModal('proof-accept-modal')">Cancel</button>
-        <button class="btn btn-success" id="confirm-proof-accept-btn">✓ Confirm & Accept Proof</button>
+        <button class="btn btn-success" id="confirm-proof-accept-btn"><svg class="svg-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Confirm &amp; Accept Proof</button>
       </div>
     </div>
   </div>
@@ -1968,7 +2108,7 @@ export function renderSidecarHtml(daemonUrl) {
               <span>Refresh</span>
             </button>
             <button class="btn btn-primary" onclick="copyCaptureText()">
-              📋 Copy Screen
+              <svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Screen
             </button>
           </div>
         </div>
@@ -2076,7 +2216,7 @@ export function renderSidecarHtml(daemonUrl) {
         <div class="detail-section" id="approval-detail-evidence-section" style="display:none;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <div class="detail-label">Linked Evidence Artifact (<span id="approval-detail-evidence-name">file</span>)</div>
-            <button class="btn" id="approval-detail-copy-path-btn" style="padding:3px 8px; font-size:11px;">📋 Copy Path</button>
+            <button class="btn" id="approval-detail-copy-path-btn" style="padding:3px 8px; font-size:11px;"><svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Path</button>
           </div>
           <div class="detail-box" id="approval-detail-evidence-path" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--accent-amber); word-break:break-all;">—</div>
           <div class="detail-box md-rendered" id="approval-detail-evidence-body" style="display:none; font-size:12.5px; line-height:1.55; background-color:#141414; margin-top:4px;"></div>
@@ -2089,10 +2229,38 @@ export function renderSidecarHtml(daemonUrl) {
     </div>
   </div>
 
+  <!-- IMAGE LIGHTBOX MODAL -->
+  <div class="modal-overlay" id="image-lightbox-modal" onclick="if(event.target===this) closeModal('image-lightbox-modal')">
+    <div class="modal-content-lightbox">
+      <div class="lightbox-header">
+        <div id="lightbox-title" class="lightbox-title">Image Proof Preview</div>
+        <button class="modal-close" onclick="closeModal('image-lightbox-modal')">&times;</button>
+      </div>
+      <div class="lightbox-body">
+        <img id="lightbox-image" src="" alt="Proof Preview" class="lightbox-img">
+      </div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script src="/vendor/dagre.min.js"></script>
   <script>
+    // Clean SVG Icons
+    const ICONS = {
+      image: '<svg class="svg-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+      doc: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+      folder: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+      check: '<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+      cross: '<svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      bolt: '<svg class="svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+      box: '<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+      restore: '<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+      search: '<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+      clock: '<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      copy: '<svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+    };
+
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -2121,6 +2289,73 @@ export function renderSidecarHtml(daemonUrl) {
     }
     function closeModal(id) {
       document.getElementById(id).classList.remove('open');
+    }
+
+    function openImageLightbox(src, alt) {
+      const img = document.getElementById('lightbox-image');
+      const title = document.getElementById('lightbox-title');
+      if (img) {
+        img.src = src;
+        img.alt = alt || 'Proof Preview';
+      }
+      if (title) {
+        title.textContent = alt || 'Image Proof Preview';
+      }
+      openModal('image-lightbox-modal');
+    }
+
+    function closeImageLightbox() {
+      closeModal('image-lightbox-modal');
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeModal('image-lightbox-modal');
+        }
+      });
+    }
+
+    async function toggleInlineEvidenceDoc(index, docPath) {
+      const el = document.getElementById('inline-evidence-doc-' + index);
+      if (!el) return;
+      if (el.style.display === 'block') {
+        el.style.display = 'none';
+        return;
+      }
+      el.style.display = 'block';
+      el.innerHTML = '<div style="color:var(--text-secondary); font-size:11.5px;">Loading proof document...</div>';
+      try {
+        const res = await fetch('/api/evidence?path=' + encodeURIComponent(docPath));
+        const data = await res.json();
+        if (data.ok && data.content) {
+          el.innerHTML = '<div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:600; text-transform:uppercase;">' + escapeHtml(data.basename || docPath) + '</div>' + renderMarkdown(data.content);
+        } else {
+          el.innerHTML = '<div style="color:var(--accent-red); font-size:11.5px;">Unable to load evidence artifact: ' + escapeHtml(data.error || 'not found') + '</div>';
+        }
+      } catch (err) {
+        el.innerHTML = '<div style="color:var(--accent-red); font-size:11.5px;">Failed to fetch evidence document.</div>';
+      }
+    }
+
+    async function loadDetailDocPreview(docPath) {
+      const container = document.getElementById('detail-doc-previews');
+      if (!container) return;
+      container.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; margin-top:6px;">Loading proof: ' + escapeHtml(docPath) + '...</div>';
+      try {
+        const res = await fetch('/api/evidence?path=' + encodeURIComponent(docPath));
+        const data = await res.json();
+        if (data.ok && data.content) {
+          container.innerHTML = '<div class="evidence-doc-preview" style="max-height:420px; margin-top:8px;">' +
+            '<div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:600; text-transform:uppercase;">' + escapeHtml(data.basename || docPath) + '</div>' +
+            renderMarkdown(data.content) +
+          '</div>';
+        } else {
+          container.innerHTML = '<div style="color:var(--text-muted); font-size:12px; margin-top:6px;">Proof artifact: ' + escapeHtml(docPath) + ' (' + escapeHtml(data.error || 'unrendered') + ')</div>';
+        }
+      } catch (e) {
+        container.innerHTML = '<div style="color:var(--accent-red); font-size:12px; margin-top:6px;">Failed to load proof artifact.</div>';
+      }
     }
 
     // Modal triggers
@@ -2456,7 +2691,7 @@ export function renderSidecarHtml(daemonUrl) {
 
       const evEl = document.getElementById('proof-accept-evidence');
       if (Array.isArray(evidence) && evidence.length > 0) {
-        evEl.innerHTML = evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
+        evEl.innerHTML = evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\\'JetBrains Mono\\', monospace;">' + ICONS.folder + escapeHtml(e) + '</span>').join('');
       } else if (evidence && typeof evidence === 'object') {
         evEl.innerHTML = '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(evidence, null, 2)) + '</code></pre>';
       } else if (evidence) {
@@ -2627,18 +2862,55 @@ export function renderSidecarHtml(daemonUrl) {
       const mdLinks = [];
       function formatInline(segment) {
         let s = segment;
+
+        // Image Markdown ![alt](url) parsed BEFORE standard links
+        s = s.replace(/!\\[([^\\]]*)\\]\\(([^)\\s]+)\\)/g, (match, alt, rawUrl) => {
+          const decodedUrl = rawUrl.replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
+          const lower = decodedUrl.toLowerCase();
+          const idx = mdLinks.length;
+          let imageUrl = decodedUrl;
+          if (lower.startsWith('http://') || lower.startsWith('https://')) {
+            imageUrl = decodedUrl;
+          } else {
+            let cleanPath = decodedUrl;
+            if (lower.startsWith('file://')) {
+              cleanPath = decodedUrl.slice(7);
+            }
+            imageUrl = '/api/evidence/raw?path=' + encodeURIComponent(cleanPath);
+          }
+          mdLinks.push(
+            '<div class="md-image-container">' +
+              '<img class="md-proof-image" src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(alt) + '" loading="lazy" onclick="openImageLightbox(this.src, this.alt)">' +
+              (alt ? ('<div class="md-image-caption">' + escapeHtml(alt) + '</div>') : '') +
+            '</div>'
+          );
+          return '%%MDLINK_' + idx + '%%';
+        });
+
         // Safe Markdown links [label](url) with strict protocol allowlisting
         s = s.replace(/\\[([^\\]]+)\\]\\(([^)\\s]+)\\)/g, (match, label, rawUrl) => {
           const decodedUrl = rawUrl.replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
           const lower = decodedUrl.toLowerCase();
           const idx = mdLinks.length;
+          const isImgFile = /\\.(png|jpg|jpeg|webp|gif|svg)$/i.test(decodedUrl);
+
           if (lower.startsWith('https://') || lower.startsWith('http://')) {
-            mdLinks.push('<a class="md-link" href="' + escapeHtml(decodedUrl) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>');
+            let html = '<a class="md-link" href="' + escapeHtml(decodedUrl) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+            if (isImgFile) {
+              html += ' <span class="badge badge-purple" style="cursor:pointer; font-size:10px; margin-left:4px;" onclick="openImageLightbox(\\'' + escapeJs(decodedUrl) + '\\', \\'' + escapeJs(label) + '\\')">' + ICONS.image + 'View</span>';
+            }
+            mdLinks.push(html);
           } else if (lower.startsWith('mailto:') || lower.startsWith('conversation://')) {
             mdLinks.push('<a class="md-link" href="' + escapeHtml(decodedUrl) + '">' + label + '</a>');
           } else if (lower.startsWith('file://')) {
             const cleanPath = decodedUrl.slice(7);
-            mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '">📄 ' + label + '</span>');
+            if (isImgFile) {
+              mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '" style="cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(cleanPath) + '\\', \\'' + escapeJs(label) + '\\')">' + ICONS.image + label + '</span>');
+            } else {
+              mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '">' + ICONS.doc + label + '</span>');
+            }
+          } else if (isImgFile) {
+            mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(decodedUrl) + '" style="cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(decodedUrl) + '\\', \\'' + escapeJs(label) + '\\')">' + ICONS.image + label + '</span>');
           } else {
             mdLinks.push(label);
           }
@@ -2656,6 +2928,7 @@ export function renderSidecarHtml(daemonUrl) {
       function stripInlineForLabel(segment) {
         return segment
           .replace(/%%INLINECODE_(\\d+)%%/g, (m, idx) => rawInlineCodes[Number(idx)] || '')
+          .replace(/!\\[([^\\]]*)\\]\\([^)\\s]+\\)/g, '$1')
           .replace(/\\[([^\\]]+)\\]\\([^)\\s]+\\)/g, '$1')
           .replace(/\\*\\*([^*]+)\\*\\*/g, '$1')
           .replace(/__([^_]+)__/g, '$1')
@@ -3632,7 +3905,7 @@ export function renderSidecarHtml(daemonUrl) {
       const totalSeatsCount = Object.keys(graphSeatRegistry).length;
       inspector.innerHTML =
         '<div class="inspector-hint">' +
-          '<span>☊ <strong>Dagre Top-Down Fleet Graph:</strong> Showing <strong>' + totalSeatsCount + ' seats</strong> and <strong>' + allRenderedEdges.length + ' directed seat edges</strong>. Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight causal paths &amp; actions.</span>' +
+          '<span><strong>Dagre Top-Down Fleet Graph:</strong> Showing <strong>' + totalSeatsCount + ' seats</strong> and <strong>' + allRenderedEdges.length + ' directed seat edges</strong>. Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight causal paths &amp; actions.</span>' +
         '</div>';
     }
 
@@ -4651,7 +4924,8 @@ export function renderSidecarHtml(daemonUrl) {
         const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
         const isDropped = isDeliverableDropped(item);
         const statusBadge = isDropped ? 'badge-purple' : isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
-        const statusText = isDropped ? '📦 Sunset / Dropped' : isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
+        const statusIcon = isDropped ? ICONS.box : isAccepted ? ICONS.check : isRejected ? ICONS.cross : ICONS.clock;
+        const statusText = isDropped ? 'Sunset / Dropped' : isAccepted ? 'Accepted' : isRejected ? 'Rejected' : 'Pending / Unjudged';
         const scope = item.scope || 'default';
         const origIndex = cachedDeliverables.indexOf(item);
 
@@ -4660,7 +4934,7 @@ export function renderSidecarHtml(daemonUrl) {
             '<div>' +
               '<div class="card-title">' + renderMarkdown(item.text || item.id) + '</div>' +
               '<div class="card-meta">' +
-                '<span class="badge ' + statusBadge + '">' + statusText + '</span>' +
+                '<span class="badge ' + statusBadge + '">' + statusIcon + statusText + '</span>' +
                 '<span>Scope: ' + escapeHtml(scope) + '</span>' +
                 '<span>Item: #' + escapeHtml(item.id) + '</span>' +
                 (item.revision ? ('<span>• rev ' + escapeHtml(item.revision.slice(0, 8)) + '</span>') : '') +
@@ -4680,22 +4954,68 @@ export function renderSidecarHtml(daemonUrl) {
               '<span>Proof contract defined. Awaiting verification evidence and outcome judgment.</span>' +
             '</div>'
           )) +
-          (item.evidence ? (
-            '<div style="margin:8px 0; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); font-size:12px;">' +
-              '<div style="color:var(--text-muted); font-size:11px; margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Verification Evidence</div>' +
-              (Array.isArray(item.evidence) ? item.evidence.map(e => '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace; margin-right:4px;">📁 ' + escapeHtml(e) + '</span>').join('') : escapeHtml(String(item.evidence))) +
-            '</div>'
-          ) : '') +
+          (() => {
+            const evList = Array.isArray(item.evidence)
+              ? item.evidence
+              : (item.evidence ? [item.evidence] : (item.evidenceRef ? [item.evidenceRef] : []));
+            if (evList.length === 0) return '';
+
+            let evHtml = '<div style="margin:8px 0; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); font-size:12px;">' +
+              '<div style="color:var(--text-muted); font-size:11px; margin-bottom:6px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Verification Evidence &amp; Delivered Proofs</div>' +
+              '<div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">';
+
+            const imageItems = [];
+            const docItems = [];
+
+            for (const ev of evList) {
+              if (typeof ev === 'string') {
+                const clean = ev.trim();
+                if (/\\.(png|jpg|jpeg|webp|gif|svg)$/i.test(clean)) {
+                  imageItems.push(clean);
+                } else if (/\\.(md|markdown|txt|log|json|yaml|yml)$/i.test(clean)) {
+                  docItems.push(clean);
+                } else {
+                  evHtml += '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace;">' + ICONS.folder + escapeHtml(clean) + '</span>';
+                }
+              } else if (ev && typeof ev === 'object') {
+                evHtml += '<pre class="md-code-block" style="margin:2px 0;"><code>' + escapeHtml(JSON.stringify(ev, null, 2)) + '</code></pre>';
+              }
+            }
+
+            for (const doc of docItems) {
+              const base = doc.split('/').pop() || doc;
+              evHtml += '<button class="btn btn-secondary" style="font-size:11px; padding:2px 8px; font-family:\\'JetBrains Mono\\', monospace;" onclick="toggleInlineEvidenceDoc(' + origIndex + ', \\'' + escapeJs(doc) + '\\')">' + ICONS.doc + escapeHtml(base) + ' (preview)</button>';
+            }
+
+            evHtml += '</div>';
+
+            if (imageItems.length > 0) {
+              evHtml += '<div class="evidence-image-grid">';
+              for (const img of imageItems) {
+                const base = img.split('/').pop() || img;
+                const rawUrl = '/api/evidence/raw?path=' + encodeURIComponent(img);
+                evHtml += '<div class="evidence-image-card" onclick="openImageLightbox(\\'' + escapeJs(rawUrl) + '\\', \\'' + escapeJs(base) + '\\')">' +
+                  '<img class="evidence-thumb-img" src="' + escapeHtml(rawUrl) + '" alt="' + escapeHtml(base) + '" loading="lazy">' +
+                  '<div class="evidence-thumb-label" title="' + escapeHtml(img) + '">' + ICONS.image + escapeHtml(base) + '</div>' +
+                '</div>';
+              }
+              evHtml += '</div>';
+            }
+
+            evHtml += '<div id="inline-evidence-doc-' + origIndex + '" style="display:none;" class="evidence-doc-preview"></div>';
+            evHtml += '</div>';
+            return evHtml;
+          })() +
           '<div class="card-actions">' +
-            '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">🔍 Details</button>' +
+            '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">' + ICONS.search + 'Details</button>' +
             (isDropped ? (
-              '<button class="btn btn-secondary" onclick="restoreDeliverable(' + origIndex + ')">↩ Restore</button>'
+              '<button class="btn btn-secondary" onclick="restoreDeliverable(' + origIndex + ')">' + ICONS.restore + 'Restore</button>'
             ) : (
-              '<button class="btn btn-success" onclick="quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">⚡ Quick Complete</button>' +
-              '<button class="btn btn-secondary" onclick="openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">✓ Accept...</button>' +
-              '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">⚡ Quick Reject</button>' +
-              '<button class="btn btn-secondary" onclick="openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">✕ Reject...</button>' +
-              '<button class="btn btn-secondary" onclick="dropDeliverable(' + origIndex + ')">📦 Sunset / Drop</button>'
+              '<button class="btn btn-success" onclick="quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">' + ICONS.bolt + 'Quick Complete</button>' +
+              '<button class="btn btn-secondary" onclick="openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">' + ICONS.check + 'Accept...</button>' +
+              '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">' + ICONS.cross + 'Quick Reject</button>' +
+              '<button class="btn btn-secondary" onclick="openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">' + ICONS.cross + 'Reject...</button>' +
+              '<button class="btn btn-secondary" onclick="dropDeliverable(' + origIndex + ')">' + ICONS.box + 'Sunset / Drop</button>'
             )) +
           '</div>' +
         '</div>';
@@ -4713,12 +5033,14 @@ export function renderSidecarHtml(daemonUrl) {
       const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
       const isDropped = isDeliverableDropped(item);
       const statusBadge = isDropped ? 'badge-purple' : isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
-      const statusText = isDropped ? '📦 Sunset / Dropped' : isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
+      const statusIcon = isDropped ? ICONS.box : isAccepted ? ICONS.check : isRejected ? ICONS.cross : ICONS.clock;
+      const statusText = isDropped ? 'Sunset / Dropped' : isAccepted ? 'Accepted' : isRejected ? 'Rejected' : 'Pending / Unjudged';
       const scope = item.scope || 'default';
 
       const badgeEl = document.getElementById('detail-badge');
       badgeEl.className = 'badge ' + statusBadge;
       badgeEl.textContent = statusText;
+      badgeEl.innerHTML = statusIcon + statusText;
 
       document.getElementById('detail-title').textContent = item.text || item.id;
       document.getElementById('detail-subtitle').textContent = 'Scope: ' + scope + ' · Item #' + item.id;
@@ -4735,12 +5057,49 @@ export function renderSidecarHtml(daemonUrl) {
 
       const evDetailEl = document.getElementById('detail-evidence');
       if (evDetailEl) {
-        if (Array.isArray(item.evidence) && item.evidence.length > 0) {
-          evDetailEl.innerHTML = item.evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
-        } else if (item.evidence && typeof item.evidence === 'object') {
-          evDetailEl.innerHTML = '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(item.evidence, null, 2)) + '</code></pre>';
-        } else if (item.evidence) {
-          evDetailEl.innerHTML = renderMarkdown(String(item.evidence));
+        const evList = Array.isArray(item.evidence)
+          ? item.evidence
+          : (item.evidence ? [item.evidence] : (item.evidenceRef ? [item.evidenceRef] : []));
+        if (evList.length > 0) {
+          let detailEvHtml = '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">';
+          const images = [];
+          const docs = [];
+          for (const ev of evList) {
+            if (typeof ev === 'string') {
+              const clean = ev.trim();
+              if (/\\.(png|jpg|jpeg|webp|gif|svg)$/i.test(clean)) {
+                images.push(clean);
+                detailEvHtml += '<span class="badge badge-purple" style="font-family:\\'JetBrains Mono\\', monospace; cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(clean) + '\\', \\'' + escapeJs(clean) + '\\')">' + ICONS.image + escapeHtml(clean) + '</span>';
+              } else {
+                if (/\\.(md|markdown|txt|log|json|yaml|yml)$/i.test(clean)) {
+                  docs.push(clean);
+                }
+                detailEvHtml += '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace;">' + ICONS.folder + escapeHtml(clean) + '</span>';
+              }
+            } else if (ev && typeof ev === 'object') {
+              detailEvHtml += '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(ev, null, 2)) + '</code></pre>';
+            }
+          }
+          detailEvHtml += '</div>';
+
+          // Visual full-width previews for images
+          if (images.length > 0) {
+            for (const img of images) {
+              const rawUrl = '/api/evidence/raw?path=' + encodeURIComponent(img);
+              detailEvHtml += '<div class="md-image-container">' +
+                '<img class="md-proof-image" src="' + escapeHtml(rawUrl) + '" alt="' + escapeHtml(img) + '" loading="lazy" onclick="openImageLightbox(this.src, this.alt)">' +
+                '<div class="md-image-caption">' + ICONS.image + escapeHtml(img) + ' (click to expand full resolution)</div>' +
+              '</div>';
+            }
+          }
+
+          // Document previews container
+          if (docs.length > 0) {
+            detailEvHtml += '<div id="detail-doc-previews"></div>';
+            loadDetailDocPreview(docs[0]);
+          }
+
+          evDetailEl.innerHTML = detailEvHtml;
         } else {
           evDetailEl.textContent = 'Evidence: proof/evidence.md (Empirically verified in workspace)';
         }
@@ -4758,13 +5117,13 @@ export function renderSidecarHtml(daemonUrl) {
 
       const actionsLeft = document.getElementById('detail-actions-left');
       if (isDropped) {
-        actionsLeft.innerHTML = '<button class="btn btn-secondary" onclick="restoreDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">↩ Restore Deliverable</button>';
+        actionsLeft.innerHTML = '<button class="btn btn-secondary" onclick="restoreDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">' + ICONS.restore + 'Restore Deliverable</button>';
       } else {
-        actionsLeft.innerHTML = '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">⚡ Quick Complete</button>' +
-          '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ');">✓ Accept...</button>' +
-          '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\'); closeModal(\\'deliverable-detail-modal\\');">⚡ Quick Reject</button>' +
-          '<button class="btn btn-secondary" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">✕ Reject Proof...</button>' +
-          '<button class="btn btn-secondary" onclick="dropDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">📦 Sunset / Drop</button>';
+        actionsLeft.innerHTML = '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">' + ICONS.bolt + 'Quick Complete</button>' +
+          '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ');">' + ICONS.check + 'Accept...</button>' +
+          '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\'); closeModal(\\'deliverable-detail-modal\\');">' + ICONS.cross + 'Quick Reject</button>' +
+          '<button class="btn btn-secondary" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">' + ICONS.cross + 'Reject Proof...</button>' +
+          '<button class="btn btn-secondary" onclick="dropDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">' + ICONS.box + 'Sunset / Drop</button>';
       }
 
       openModal('deliverable-detail-modal');
