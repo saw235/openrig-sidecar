@@ -293,4 +293,78 @@ describe('SDCR.0.6.02: Markdown, Inline Images & Delivered Proofs Test Suite', (
     assert.match(detailEvHtml, /smoke_check\.png/);
     assert.match(detailEvHtml, /id="detail-doc-previews"/);
   });
+
+  test('6. Global Culture Mandate: Zero Unicode Emojis in Media & Deliverable UI (Clean Inline SVGs)', () => {
+    // 1. Verify .svg-icon CSS styles exist
+    assert.match(html, /\.svg-icon\s*\{/);
+
+    // 2. Client-side Markdown link & file-ref rendering uses SVG icon, not emojis
+    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
+    const scriptContent = scriptMatch[1];
+    const sandbox = {
+      window: { addEventListener() {} },
+      document: {
+        getElementById() { return { innerHTML: '', textContent: '', value: '', classList: { add() {}, remove() {} }, style: {}, addEventListener() {} }; },
+        querySelectorAll() { return []; },
+        documentElement: { clientWidth: 1024 }
+      },
+      localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
+      fetch: async () => ({ ok: true, json: async () => ({ ok: true }) }),
+      setTimeout() {},
+      setInterval() {},
+      console: { log() {}, warn() {}, error() {} }
+    };
+    const context = vm.createContext(sandbox);
+    const script = new vm.Script(scriptContent);
+    script.runInContext(context);
+
+    const rendered = sandbox.renderMarkdown('[Screenshot](evidence/check.png) and [Doc](file:///proof/report.md)');
+    assert.match(rendered, /<svg class="svg-icon"/);
+    assert.doesNotMatch(rendered, /[🖼📄📁📦🔍⚡✕]/);
+
+    // 3. Deliverables list and detail action buttons use SVG icons without Unicode emojis
+    const mockElements = {
+      'deliverables-list': { innerHTML: '' },
+      'detail-evidence': { innerHTML: '', textContent: '' },
+      'detail-actions-left': { innerHTML: '' },
+      'detail-badge': { innerHTML: '', textContent: '', className: '' },
+      'detail-title': { textContent: '' },
+      'detail-subtitle': { textContent: '' },
+      'detail-item-text': { innerHTML: '' },
+      'detail-scope-id': { textContent: '' },
+      'detail-revision': { textContent: '' },
+      'detail-judgment': { innerHTML: '', textContent: '' },
+      'detail-contract-state': { textContent: '' },
+      'proofs-count': { textContent: '' }
+    };
+    sandbox.document.getElementById = (id) => mockElements[id] || { innerHTML: '', textContent: '', style: {}, classList: { add() {}, remove() {} } };
+    sandbox.openModal = () => {};
+
+    vm.runInContext(`
+      cachedDeliverables = [
+        {
+          id: 'item-200',
+          scope: 'rig-culture',
+          text: 'Enforce SVG Icons',
+          evidence: ['proof/test.png', 'docs/notes.md']
+        }
+      ];
+      deliverablesVerdictFilter = 'all';
+      renderDeliverables();
+      openDeliverableDetail(0);
+    `, context);
+
+    const cardHtml = mockElements['deliverables-list'].innerHTML;
+    const actionsHtml = mockElements['detail-actions-left'].innerHTML;
+    const detailEvidenceHtml = mockElements['detail-evidence'].innerHTML;
+
+    assert.match(cardHtml, /<svg class="svg-icon"/);
+    assert.doesNotMatch(cardHtml, /[🖼📄📁📦🔍⚡✕]/);
+
+    assert.match(actionsHtml, /<svg class="svg-icon"/);
+    assert.doesNotMatch(actionsHtml, /[🖼📄📁📦🔍⚡✕]/);
+
+    assert.match(detailEvidenceHtml, /<svg class="svg-icon"/);
+    assert.doesNotMatch(detailEvidenceHtml, /[🖼📄📁📦🔍⚡✕]/);
+  });
 });

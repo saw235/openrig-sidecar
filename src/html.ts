@@ -1180,6 +1180,21 @@ export function renderSidecarHtml(daemonUrl: string): string {
       }
     }
 
+    /* SVG Icons */
+    .svg-icon {
+      width: 12px;
+      height: 12px;
+      vertical-align: -1.5px;
+      margin-right: 4px;
+      display: inline-block;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
     /* Markdown Images & Visual Delivered Proofs */
     .md-image-container {
       margin: 10px 0;
@@ -1831,10 +1846,10 @@ export function renderSidecarHtml(daemonUrl: string): string {
           </select>
           <div class="btn-group" id="topology-view-toggle">
             <button class="view-toggle-btn active" id="view-toggle-graph" onclick="toggleTopologyView('graph')">
-              ☊ Visual Graph
+              Visual Graph
             </button>
             <button class="view-toggle-btn" id="view-toggle-grid" onclick="toggleTopologyView('grid')">
-              ⊞ Matrix Grid
+              Matrix Grid
             </button>
           </div>
         </div>
@@ -1869,13 +1884,13 @@ export function renderSidecarHtml(daemonUrl: string): string {
               <button class="graph-zoom-btn" id="graph-zoom-out" onclick="adjustGraphZoom(-0.15)" title="Zoom Out">−</button>
               <button class="graph-zoom-btn" id="graph-zoom-reset" onclick="resetGraphZoom()" title="Reset Zoom">100%</button>
               <button class="graph-zoom-btn" id="graph-zoom-in" onclick="adjustGraphZoom(0.15)" title="Zoom In">+</button>
-              <button class="graph-zoom-btn" id="graph-zoom-fit" onclick="fitGraphZoom()" title="Fit Graph to Width">⊡ Fit</button>
+              <button class="graph-zoom-btn" id="graph-zoom-fit" onclick="fitGraphZoom()" title="Fit Graph to Width">Fit</button>
             </div>
           </div>
         </div>
         <div id="topology-seat-inspector">
           <div class="inspector-hint">
-            <span>☊ <strong>Interactive Fleet Graph:</strong> Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight its causal relationships, inspect upstream/downstream seats, or open Antigravity Chat &amp; Terminal Screen. Drag canvas to pan.</span>
+            <span><strong>Interactive Fleet Graph:</strong> Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight its causal relationships, inspect upstream/downstream seats, or open Antigravity Chat &amp; Terminal Screen. Drag canvas to pan.</span>
           </div>
         </div>
         <div id="topology-graph-viewport">
@@ -2027,7 +2042,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
       </div>
       <div class="modal-footer">
         <button class="btn" onclick="closeModal('proof-accept-modal')">Cancel</button>
-        <button class="btn btn-success" id="confirm-proof-accept-btn">✓ Confirm & Accept Proof</button>
+        <button class="btn btn-success" id="confirm-proof-accept-btn"><svg class="svg-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Confirm &amp; Accept Proof</button>
       </div>
     </div>
   </div>
@@ -2094,7 +2109,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
               <span>Refresh</span>
             </button>
             <button class="btn btn-primary" onclick="copyCaptureText()">
-              📋 Copy Screen
+              <svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Screen
             </button>
           </div>
         </div>
@@ -2202,7 +2217,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
         <div class="detail-section" id="approval-detail-evidence-section" style="display:none;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <div class="detail-label">Linked Evidence Artifact (<span id="approval-detail-evidence-name">file</span>)</div>
-            <button class="btn" id="approval-detail-copy-path-btn" style="padding:3px 8px; font-size:11px;">📋 Copy Path</button>
+            <button class="btn" id="approval-detail-copy-path-btn" style="padding:3px 8px; font-size:11px;"><svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Path</button>
           </div>
           <div class="detail-box" id="approval-detail-evidence-path" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--accent-amber); word-break:break-all;">—</div>
           <div class="detail-box md-rendered" id="approval-detail-evidence-body" style="display:none; font-size:12.5px; line-height:1.55; background-color:#141414; margin-top:4px;"></div>
@@ -2232,6 +2247,21 @@ export function renderSidecarHtml(daemonUrl: string): string {
 
   <script src="/vendor/dagre.min.js"></script>
   <script>
+    // Clean SVG Icons
+    const ICONS = {
+      image: '<svg class="svg-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+      doc: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+      folder: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+      check: '<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+      cross: '<svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      bolt: '<svg class="svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+      box: '<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+      restore: '<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+      search: '<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+      clock: '<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      copy: '<svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+    };
+
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -2662,7 +2692,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
 
       const evEl = document.getElementById('proof-accept-evidence');
       if (Array.isArray(evidence) && evidence.length > 0) {
-        evEl.innerHTML = evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
+        evEl.innerHTML = evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\\'JetBrains Mono\\', monospace;">' + ICONS.folder + escapeHtml(e) + '</span>').join('');
       } else if (evidence && typeof evidence === 'object') {
         evEl.innerHTML = '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(evidence, null, 2)) + '</code></pre>';
       } else if (evidence) {
@@ -2868,7 +2898,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
           if (lower.startsWith('https://') || lower.startsWith('http://')) {
             let html = '<a class="md-link" href="' + escapeHtml(decodedUrl) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
             if (isImgFile) {
-              html += ' <span class="badge badge-purple" style="cursor:pointer; font-size:10px; margin-left:4px;" onclick="openImageLightbox(\\'' + escapeJs(decodedUrl) + '\\', \\'' + escapeJs(label) + '\\')">🖼️ View</span>';
+              html += ' <span class="badge badge-purple" style="cursor:pointer; font-size:10px; margin-left:4px;" onclick="openImageLightbox(\\'' + escapeJs(decodedUrl) + '\\', \\'' + escapeJs(label) + '\\')">' + ICONS.image + 'View</span>';
             }
             mdLinks.push(html);
           } else if (lower.startsWith('mailto:') || lower.startsWith('conversation://')) {
@@ -2876,12 +2906,12 @@ export function renderSidecarHtml(daemonUrl: string): string {
           } else if (lower.startsWith('file://')) {
             const cleanPath = decodedUrl.slice(7);
             if (isImgFile) {
-              mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '" style="cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(cleanPath) + '\\', \\'' + escapeJs(label) + '\\')">🖼️ ' + label + '</span>');
+              mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '" style="cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(cleanPath) + '\\', \\'' + escapeJs(label) + '\\')">' + ICONS.image + label + '</span>');
             } else {
-              mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '">📄 ' + label + '</span>');
+              mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '">' + ICONS.doc + label + '</span>');
             }
           } else if (isImgFile) {
-            mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(decodedUrl) + '" style="cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(decodedUrl) + '\\', \\'' + escapeJs(label) + '\\')">🖼️ ' + label + '</span>');
+            mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(decodedUrl) + '" style="cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(decodedUrl) + '\\', \\'' + escapeJs(label) + '\\')">' + ICONS.image + label + '</span>');
           } else {
             mdLinks.push(label);
           }
@@ -3876,7 +3906,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
       const totalSeatsCount = Object.keys(graphSeatRegistry).length;
       inspector.innerHTML =
         '<div class="inspector-hint">' +
-          '<span>☊ <strong>Dagre Top-Down Fleet Graph:</strong> Showing <strong>' + totalSeatsCount + ' seats</strong> and <strong>' + allRenderedEdges.length + ' directed seat edges</strong>. Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight causal paths &amp; actions.</span>' +
+          '<span><strong>Dagre Top-Down Fleet Graph:</strong> Showing <strong>' + totalSeatsCount + ' seats</strong> and <strong>' + allRenderedEdges.length + ' directed seat edges</strong>. Click any <strong>Rig Hub</strong> or <strong>Seat Node</strong> to highlight causal paths &amp; actions.</span>' +
         '</div>';
     }
 
@@ -4895,7 +4925,8 @@ export function renderSidecarHtml(daemonUrl: string): string {
         const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
         const isDropped = isDeliverableDropped(item);
         const statusBadge = isDropped ? 'badge-purple' : isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
-        const statusText = isDropped ? '📦 Sunset / Dropped' : isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
+        const statusIcon = isDropped ? ICONS.box : isAccepted ? ICONS.check : isRejected ? ICONS.cross : ICONS.clock;
+        const statusText = isDropped ? 'Sunset / Dropped' : isAccepted ? 'Accepted' : isRejected ? 'Rejected' : 'Pending / Unjudged';
         const scope = item.scope || 'default';
         const origIndex = cachedDeliverables.indexOf(item);
 
@@ -4904,7 +4935,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
             '<div>' +
               '<div class="card-title">' + renderMarkdown(item.text || item.id) + '</div>' +
               '<div class="card-meta">' +
-                '<span class="badge ' + statusBadge + '">' + statusText + '</span>' +
+                '<span class="badge ' + statusBadge + '">' + statusIcon + statusText + '</span>' +
                 '<span>Scope: ' + escapeHtml(scope) + '</span>' +
                 '<span>Item: #' + escapeHtml(item.id) + '</span>' +
                 (item.revision ? ('<span>• rev ' + escapeHtml(item.revision.slice(0, 8)) + '</span>') : '') +
@@ -4945,7 +4976,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
                 } else if (/\\.(md|markdown|txt|log|json|yaml|yml)$/i.test(clean)) {
                   docItems.push(clean);
                 } else {
-                  evHtml += '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(clean) + '</span>';
+                  evHtml += '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace;">' + ICONS.folder + escapeHtml(clean) + '</span>';
                 }
               } else if (ev && typeof ev === 'object') {
                 evHtml += '<pre class="md-code-block" style="margin:2px 0;"><code>' + escapeHtml(JSON.stringify(ev, null, 2)) + '</code></pre>';
@@ -4954,7 +4985,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
 
             for (const doc of docItems) {
               const base = doc.split('/').pop() || doc;
-              evHtml += '<button class="btn btn-secondary" style="font-size:11px; padding:2px 8px; font-family:\\'JetBrains Mono\\', monospace;" onclick="toggleInlineEvidenceDoc(' + origIndex + ', \\'' + escapeJs(doc) + '\\')">📄 ' + escapeHtml(base) + ' (preview)</button>';
+              evHtml += '<button class="btn btn-secondary" style="font-size:11px; padding:2px 8px; font-family:\\'JetBrains Mono\\', monospace;" onclick="toggleInlineEvidenceDoc(' + origIndex + ', \\'' + escapeJs(doc) + '\\')">' + ICONS.doc + escapeHtml(base) + ' (preview)</button>';
             }
 
             evHtml += '</div>';
@@ -4966,7 +4997,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
                 const rawUrl = '/api/evidence/raw?path=' + encodeURIComponent(img);
                 evHtml += '<div class="evidence-image-card" onclick="openImageLightbox(\\'' + escapeJs(rawUrl) + '\\', \\'' + escapeJs(base) + '\\')">' +
                   '<img class="evidence-thumb-img" src="' + escapeHtml(rawUrl) + '" alt="' + escapeHtml(base) + '" loading="lazy">' +
-                  '<div class="evidence-thumb-label" title="' + escapeHtml(img) + '">🖼️ ' + escapeHtml(base) + '</div>' +
+                  '<div class="evidence-thumb-label" title="' + escapeHtml(img) + '">' + ICONS.image + escapeHtml(base) + '</div>' +
                 '</div>';
               }
               evHtml += '</div>';
@@ -4977,15 +5008,15 @@ export function renderSidecarHtml(daemonUrl: string): string {
             return evHtml;
           })() +
           '<div class="card-actions">' +
-            '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">🔍 Details</button>' +
+            '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">' + ICONS.search + 'Details</button>' +
             (isDropped ? (
-              '<button class="btn btn-secondary" onclick="restoreDeliverable(' + origIndex + ')">↩ Restore</button>'
+              '<button class="btn btn-secondary" onclick="restoreDeliverable(' + origIndex + ')">' + ICONS.restore + 'Restore</button>'
             ) : (
-              '<button class="btn btn-success" onclick="quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">⚡ Quick Complete</button>' +
-              '<button class="btn btn-secondary" onclick="openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">✓ Accept...</button>' +
-              '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">⚡ Quick Reject</button>' +
-              '<button class="btn btn-secondary" onclick="openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">✕ Reject...</button>' +
-              '<button class="btn btn-secondary" onclick="dropDeliverable(' + origIndex + ')">📦 Sunset / Drop</button>'
+              '<button class="btn btn-success" onclick="quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">' + ICONS.bolt + 'Quick Complete</button>' +
+              '<button class="btn btn-secondary" onclick="openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ')">' + ICONS.check + 'Accept...</button>' +
+              '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">' + ICONS.cross + 'Quick Reject</button>' +
+              '<button class="btn btn-secondary" onclick="openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\')">' + ICONS.cross + 'Reject...</button>' +
+              '<button class="btn btn-secondary" onclick="dropDeliverable(' + origIndex + ')">' + ICONS.box + 'Sunset / Drop</button>'
             )) +
           '</div>' +
         '</div>';
@@ -5003,12 +5034,14 @@ export function renderSidecarHtml(daemonUrl: string): string {
       const isRejected = (j && j.verdict === 'reject') || item.state === 'rejected';
       const isDropped = isDeliverableDropped(item);
       const statusBadge = isDropped ? 'badge-purple' : isAccepted ? 'badge-green' : isRejected ? 'badge-red' : 'badge-amber';
-      const statusText = isDropped ? '📦 Sunset / Dropped' : isAccepted ? '✓ Accepted' : isRejected ? '✕ Rejected' : '⏳ Pending / Unjudged';
+      const statusIcon = isDropped ? ICONS.box : isAccepted ? ICONS.check : isRejected ? ICONS.cross : ICONS.clock;
+      const statusText = isDropped ? 'Sunset / Dropped' : isAccepted ? 'Accepted' : isRejected ? 'Rejected' : 'Pending / Unjudged';
       const scope = item.scope || 'default';
 
       const badgeEl = document.getElementById('detail-badge');
       badgeEl.className = 'badge ' + statusBadge;
       badgeEl.textContent = statusText;
+      badgeEl.innerHTML = statusIcon + statusText;
 
       document.getElementById('detail-title').textContent = item.text || item.id;
       document.getElementById('detail-subtitle').textContent = 'Scope: ' + scope + ' · Item #' + item.id;
@@ -5037,12 +5070,12 @@ export function renderSidecarHtml(daemonUrl: string): string {
               const clean = ev.trim();
               if (/\\.(png|jpg|jpeg|webp|gif|svg)$/i.test(clean)) {
                 images.push(clean);
-                detailEvHtml += '<span class="badge badge-purple" style="font-family:\\'JetBrains Mono\\', monospace; cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(clean) + '\\', \\'' + escapeJs(clean) + '\\')">🖼️ ' + escapeHtml(clean) + '</span>';
+                detailEvHtml += '<span class="badge badge-purple" style="font-family:\\'JetBrains Mono\\', monospace; cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(clean) + '\\', \\'' + escapeJs(clean) + '\\')">' + ICONS.image + escapeHtml(clean) + '</span>';
               } else {
                 if (/\\.(md|markdown|txt|log|json|yaml|yml)$/i.test(clean)) {
                   docs.push(clean);
                 }
-                detailEvHtml += '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(clean) + '</span>';
+                detailEvHtml += '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace;">' + ICONS.folder + escapeHtml(clean) + '</span>';
               }
             } else if (ev && typeof ev === 'object') {
               detailEvHtml += '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(ev, null, 2)) + '</code></pre>';
@@ -5056,7 +5089,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
               const rawUrl = '/api/evidence/raw?path=' + encodeURIComponent(img);
               detailEvHtml += '<div class="md-image-container">' +
                 '<img class="md-proof-image" src="' + escapeHtml(rawUrl) + '" alt="' + escapeHtml(img) + '" loading="lazy" onclick="openImageLightbox(this.src, this.alt)">' +
-                '<div class="md-image-caption">🖼️ ' + escapeHtml(img) + ' (click to expand full resolution)</div>' +
+                '<div class="md-image-caption">' + ICONS.image + escapeHtml(img) + ' (click to expand full resolution)</div>' +
               '</div>';
             }
           }
@@ -5085,13 +5118,13 @@ export function renderSidecarHtml(daemonUrl: string): string {
 
       const actionsLeft = document.getElementById('detail-actions-left');
       if (isDropped) {
-        actionsLeft.innerHTML = '<button class="btn btn-secondary" onclick="restoreDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">↩ Restore Deliverable</button>';
+        actionsLeft.innerHTML = '<button class="btn btn-secondary" onclick="restoreDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">' + ICONS.restore + 'Restore Deliverable</button>';
       } else {
-        actionsLeft.innerHTML = '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">⚡ Quick Complete</button>' +
-          '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ');">✓ Accept...</button>' +
-          '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\'); closeModal(\\'deliverable-detail-modal\\');">⚡ Quick Reject</button>' +
-          '<button class="btn btn-secondary" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">✕ Reject Proof...</button>' +
-          '<button class="btn btn-secondary" onclick="dropDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">📦 Sunset / Drop</button>';
+        actionsLeft.innerHTML = '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); quickCompleteProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">' + ICONS.bolt + 'Quick Complete</button>' +
+          '<button class="btn btn-success" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofAcceptModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\', ' + (item.evidence ? JSON.stringify(item.evidence).replace(/"/g, '&quot;') : 'null') + ');">' + ICONS.check + 'Accept...</button>' +
+          '<button class="btn btn-danger" onclick="quickRejectProof(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\'); closeModal(\\'deliverable-detail-modal\\');">' + ICONS.cross + 'Quick Reject</button>' +
+          '<button class="btn btn-secondary" onclick="closeModal(\\'deliverable-detail-modal\\'); openProofRejectModal(\\'' + escapeJs(scope) + '\\', \\'' + escapeJs(item.id) + '\\', \\'' + escapeJs(item.text) + '\\', \\'' + escapeJs(item.revision) + '\\', \\'' + escapeJs(j ? j.id : '') + '\\');">' + ICONS.cross + 'Reject Proof...</button>' +
+          '<button class="btn btn-secondary" onclick="dropDeliverable(' + index + '); closeModal(\\'deliverable-detail-modal\\');">' + ICONS.box + 'Sunset / Drop</button>';
       }
 
       openModal('deliverable-detail-modal');

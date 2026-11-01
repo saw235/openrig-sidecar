@@ -25,20 +25,20 @@ describe('SDCR.0.7.01: Deliverable Sunset, Quick Complete & Drop Controls Test S
   test('3. Card Actions: 1-Click Quick Complete and Sunset / Drop Actions', () => {
     // Card should have Quick Complete button for active proof contracts
     assert.match(html, /quickCompleteProof/);
-    assert.match(html, /⚡ Quick Complete/);
+    assert.match(html, /Quick Complete/);
     // Card should have Sunset / Drop button
     assert.match(html, /dropDeliverable/);
-    assert.match(html, /📦 Sunset \/ Drop/);
+    assert.match(html, /Sunset \/ Drop/);
     // Dropped card should have Restore button
     assert.match(html, /restoreDeliverable/);
-    assert.match(html, /↩ Restore/);
+    assert.match(html, /Restore/);
   });
 
   test('4. Deliverable Detail Modal: Quick Complete, Sunset/Drop, and Restore Integration', () => {
     // Check detail-actions-left handles both active and dropped states
-    assert.match(html, /↩ Restore Deliverable/);
-    assert.match(html, /⚡ Quick Complete/);
-    assert.match(html, /📦 Sunset \/ Drop/);
+    assert.match(html, /Restore Deliverable/);
+    assert.match(html, /Quick Complete/);
+    assert.match(html, /Sunset \/ Drop/);
   });
 
   test('5. Full Client-Side Script Execution & Functional Unit Testing via VM', async () => {
@@ -193,7 +193,7 @@ describe('SDCR.0.7.01: Deliverable Sunset, Quick Complete & Drop Controls Test S
     vm.runInContext(`deliverablesVerdictFilter = 'dropped'; renderDeliverables();`, context);
     assert.equal(mockElements['proofs-count'].textContent, 1);
     assert.match(mockElements['deliverables-list'].innerHTML, /Deliverable to be dropped/);
-    assert.match(mockElements['deliverables-list'].innerHTML, /📦 Sunset \/ Dropped/);
+    assert.match(mockElements['deliverables-list'].innerHTML, /Sunset \/ Dropped/);
     assert.match(mockElements['deliverables-list'].innerHTML, /restoreDeliverable\(1\)/);
 
     // Restore item-2
@@ -203,11 +203,11 @@ describe('SDCR.0.7.01: Deliverable Sunset, Quick Complete & Drop Controls Test S
 
     // Modal detail view test
     vm.runInContext(`openDeliverableDetail(0);`, context);
-    assert.match(mockElements['detail-actions-left'].innerHTML, /⚡ Quick Complete/);
-    assert.match(mockElements['detail-actions-left'].innerHTML, /📦 Sunset \/ Drop/);
+    assert.match(mockElements['detail-actions-left'].innerHTML, /Quick Complete/);
+    assert.match(mockElements['detail-actions-left'].innerHTML, /Sunset \/ Drop/);
 
     vm.runInContext(`dropDeliverable(0); openDeliverableDetail(0);`, context);
-    assert.match(mockElements['detail-actions-left'].innerHTML, /↩ Restore Deliverable/);
-    assert.equal(mockElements['detail-badge'].textContent, '📦 Sunset / Dropped');
+    assert.match(mockElements['detail-actions-left'].innerHTML, /Restore Deliverable/);
+    assert.equal(mockElements['detail-badge'].textContent, 'Sunset / Dropped');
   });
 });

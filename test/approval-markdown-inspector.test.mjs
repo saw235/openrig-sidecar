@@ -138,7 +138,7 @@ test("Approval Markdown Rendering, Queue Detail Hydration & Evidence Inspector S
     // Safe link protocols allowlisted
     assert.ok(rendered.includes('<a class="md-link" href="conversation://15140af0-0c39-4131-88f9-4874882aaf12">Open Chat</a>'));
     assert.ok(rendered.includes('<a class="md-link" href="https://openrig.dev/docs?a=1&amp;b=2" target="_blank" rel="noopener noreferrer">Docs</a>'));
-    assert.ok(rendered.includes('<span class="md-file-ref" title="/home/xsaw/antigravity/busy-shannon/proposals/s1.md">📄 Spec</span>'));
+    assert.ok(rendered.includes('<span class="md-file-ref" title="/home/xsaw/antigravity/busy-shannon/proposals/s1.md">') && rendered.includes('Spec</span>'));
 
     // List following text without blank line is NOT nested inside <p>
     assert.ok(!rendered.includes('<p class="md-p">Action items immediately following text:<br><ul'), "<ul> must not be nested inside <p>");
