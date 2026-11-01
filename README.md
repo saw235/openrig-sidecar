@@ -5,6 +5,10 @@ A standalone, lightweight, zero-dependency web companion and control plane for O
 ## Features
 
 - **Tab 1: Mission Approvals & Attention**
+  - **Three-tier triage inbox**: High-Stakes Decisions (amber border, `DECISION` badge, time-owed pill), Milestone & Gate Approvals (sapphire border, `GATE`/`PROPOSAL` badge), and a collapsible Diagnostic & Maintenance section.
+  - **Watchdog sweep deduplication**: `Stuck sweep:` recovery rows nest under the proposal they recover instead of cluttering the inbox; orphaned sweeps surface as diagnostics.
+  - **Synthesized "What This Unblocks"**: replaces the daemon's generic boilerplate with the hydrated slice/mission and a pending-deliverable count from `/api/proof`.
+  - **Confirm-before-judgment**: Approve and Quick Reject open a confirmation gate before any state mutation; hotkeys (`a` approve, `x` quick reject, `r` reject form) act only on a focused card and no-op while typing in a form field.
   - Live approval queue across every rig, with one-click approve, quick reject (with optional reason), request revision, and reply.
   - GFM Markdown proposals rendered inline, including evidence badges and proof links without leaving the queue.
   - Proof acceptance is gated by an explicit confirmation modal that shows the claim, scope, revision fingerprint, and delivered evidence.
