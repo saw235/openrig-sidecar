@@ -1180,6 +1180,131 @@ export function renderSidecarHtml(daemonUrl: string): string {
       }
     }
 
+    /* Markdown Images & Visual Delivered Proofs */
+    .md-image-container {
+      margin: 10px 0;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      background: #0d0d0d;
+      max-width: 100%;
+    }
+    .md-proof-image {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      max-height: 480px;
+      object-fit: contain;
+      cursor: zoom-in;
+      background: #000;
+      margin: 0 auto;
+      transition: opacity 0.15s ease;
+    }
+    .md-proof-image:hover {
+      opacity: 0.95;
+    }
+    .md-image-caption {
+      padding: 6px 10px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .evidence-image-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .evidence-image-card {
+      display: flex;
+      flex-direction: column;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      overflow: hidden;
+      max-width: 200px;
+      cursor: zoom-in;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .evidence-image-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+    .evidence-thumb-img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      background: #000;
+      display: block;
+    }
+    .evidence-thumb-label {
+      padding: 4px 6px;
+      font-size: 10.5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-subtle);
+    }
+    .evidence-doc-preview {
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+    #image-lightbox-modal .modal-content-lightbox {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+    }
+    .lightbox-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+    }
+    .lightbox-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .lightbox-body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      padding: 12px;
+      overflow: auto;
+      max-height: calc(90vh - 65px);
+    }
+    .lightbox-img {
+      max-width: 100%;
+      max-height: calc(90vh - 90px);
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
     /* Rich Approval Proposal Card & Inspector Styles */
     #approvals-list.card-grid {
       grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
@@ -2090,6 +2215,19 @@ export function renderSidecarHtml(daemonUrl: string): string {
     </div>
   </div>
 
+  <!-- IMAGE LIGHTBOX MODAL -->
+  <div class="modal-overlay" id="image-lightbox-modal" onclick="if(event.target===this) closeModal('image-lightbox-modal')">
+    <div class="modal-content-lightbox">
+      <div class="lightbox-header">
+        <div id="lightbox-title" class="lightbox-title">Image Proof Preview</div>
+        <button class="modal-close" onclick="closeModal('image-lightbox-modal')">&times;</button>
+      </div>
+      <div class="lightbox-body">
+        <img id="lightbox-image" src="" alt="Proof Preview" class="lightbox-img">
+      </div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script src="/vendor/dagre.min.js"></script>
@@ -2122,6 +2260,73 @@ export function renderSidecarHtml(daemonUrl: string): string {
     }
     function closeModal(id) {
       document.getElementById(id).classList.remove('open');
+    }
+
+    function openImageLightbox(src, alt) {
+      const img = document.getElementById('lightbox-image');
+      const title = document.getElementById('lightbox-title');
+      if (img) {
+        img.src = src;
+        img.alt = alt || 'Proof Preview';
+      }
+      if (title) {
+        title.textContent = alt || 'Image Proof Preview';
+      }
+      openModal('image-lightbox-modal');
+    }
+
+    function closeImageLightbox() {
+      closeModal('image-lightbox-modal');
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeModal('image-lightbox-modal');
+        }
+      });
+    }
+
+    async function toggleInlineEvidenceDoc(index, docPath) {
+      const el = document.getElementById('inline-evidence-doc-' + index);
+      if (!el) return;
+      if (el.style.display === 'block') {
+        el.style.display = 'none';
+        return;
+      }
+      el.style.display = 'block';
+      el.innerHTML = '<div style="color:var(--text-secondary); font-size:11.5px;">Loading proof document...</div>';
+      try {
+        const res = await fetch('/api/evidence?path=' + encodeURIComponent(docPath));
+        const data = await res.json();
+        if (data.ok && data.content) {
+          el.innerHTML = '<div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:600; text-transform:uppercase;">' + escapeHtml(data.basename || docPath) + '</div>' + renderMarkdown(data.content);
+        } else {
+          el.innerHTML = '<div style="color:var(--accent-red); font-size:11.5px;">Unable to load evidence artifact: ' + escapeHtml(data.error || 'not found') + '</div>';
+        }
+      } catch (err) {
+        el.innerHTML = '<div style="color:var(--accent-red); font-size:11.5px;">Failed to fetch evidence document.</div>';
+      }
+    }
+
+    async function loadDetailDocPreview(docPath) {
+      const container = document.getElementById('detail-doc-previews');
+      if (!container) return;
+      container.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; margin-top:6px;">Loading proof: ' + escapeHtml(docPath) + '...</div>';
+      try {
+        const res = await fetch('/api/evidence?path=' + encodeURIComponent(docPath));
+        const data = await res.json();
+        if (data.ok && data.content) {
+          container.innerHTML = '<div class="evidence-doc-preview" style="max-height:420px; margin-top:8px;">' +
+            '<div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:600; text-transform:uppercase;">' + escapeHtml(data.basename || docPath) + '</div>' +
+            renderMarkdown(data.content) +
+          '</div>';
+        } else {
+          container.innerHTML = '<div style="color:var(--text-muted); font-size:12px; margin-top:6px;">Proof artifact: ' + escapeHtml(docPath) + ' (' + escapeHtml(data.error || 'unrendered') + ')</div>';
+        }
+      } catch (e) {
+        container.innerHTML = '<div style="color:var(--accent-red); font-size:12px; margin-top:6px;">Failed to load proof artifact.</div>';
+      }
     }
 
     // Modal triggers
@@ -2628,18 +2833,55 @@ export function renderSidecarHtml(daemonUrl: string): string {
       const mdLinks = [];
       function formatInline(segment) {
         let s = segment;
+
+        // Image Markdown ![alt](url) parsed BEFORE standard links
+        s = s.replace(/!\\[([^\\]]*)\\]\\(([^)\\s]+)\\)/g, (match, alt, rawUrl) => {
+          const decodedUrl = rawUrl.replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
+          const lower = decodedUrl.toLowerCase();
+          const idx = mdLinks.length;
+          let imageUrl = decodedUrl;
+          if (lower.startsWith('http://') || lower.startsWith('https://')) {
+            imageUrl = decodedUrl;
+          } else {
+            let cleanPath = decodedUrl;
+            if (lower.startsWith('file://')) {
+              cleanPath = decodedUrl.slice(7);
+            }
+            imageUrl = '/api/evidence/raw?path=' + encodeURIComponent(cleanPath);
+          }
+          mdLinks.push(
+            '<div class="md-image-container">' +
+              '<img class="md-proof-image" src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(alt) + '" loading="lazy" onclick="openImageLightbox(this.src, this.alt)">' +
+              (alt ? ('<div class="md-image-caption">' + escapeHtml(alt) + '</div>') : '') +
+            '</div>'
+          );
+          return '%%MDLINK_' + idx + '%%';
+        });
+
         // Safe Markdown links [label](url) with strict protocol allowlisting
         s = s.replace(/\\[([^\\]]+)\\]\\(([^)\\s]+)\\)/g, (match, label, rawUrl) => {
           const decodedUrl = rawUrl.replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
           const lower = decodedUrl.toLowerCase();
           const idx = mdLinks.length;
+          const isImgFile = /\\.(png|jpg|jpeg|webp|gif|svg)$/i.test(decodedUrl);
+
           if (lower.startsWith('https://') || lower.startsWith('http://')) {
-            mdLinks.push('<a class="md-link" href="' + escapeHtml(decodedUrl) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>');
+            let html = '<a class="md-link" href="' + escapeHtml(decodedUrl) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+            if (isImgFile) {
+              html += ' <span class="badge badge-purple" style="cursor:pointer; font-size:10px; margin-left:4px;" onclick="openImageLightbox(\\'' + escapeJs(decodedUrl) + '\\', \\'' + escapeJs(label) + '\\')">🖼️ View</span>';
+            }
+            mdLinks.push(html);
           } else if (lower.startsWith('mailto:') || lower.startsWith('conversation://')) {
             mdLinks.push('<a class="md-link" href="' + escapeHtml(decodedUrl) + '">' + label + '</a>');
           } else if (lower.startsWith('file://')) {
             const cleanPath = decodedUrl.slice(7);
-            mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '">📄 ' + label + '</span>');
+            if (isImgFile) {
+              mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '" style="cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(cleanPath) + '\\', \\'' + escapeJs(label) + '\\')">🖼️ ' + label + '</span>');
+            } else {
+              mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(cleanPath) + '">📄 ' + label + '</span>');
+            }
+          } else if (isImgFile) {
+            mdLinks.push('<span class="md-file-ref" title="' + escapeHtml(decodedUrl) + '" style="cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(decodedUrl) + '\\', \\'' + escapeJs(label) + '\\')">🖼️ ' + label + '</span>');
           } else {
             mdLinks.push(label);
           }
@@ -2657,6 +2899,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
       function stripInlineForLabel(segment) {
         return segment
           .replace(/%%INLINECODE_(\\d+)%%/g, (m, idx) => rawInlineCodes[Number(idx)] || '')
+          .replace(/!\\[([^\\]]*)\\]\\([^)\\s]+\\)/g, '$1')
           .replace(/\\[([^\\]]+)\\]\\([^)\\s]+\\)/g, '$1')
           .replace(/\\*\\*([^*]+)\\*\\*/g, '$1')
           .replace(/__([^_]+)__/g, '$1')
@@ -4681,12 +4924,58 @@ export function renderSidecarHtml(daemonUrl: string): string {
               '<span>Proof contract defined. Awaiting verification evidence and outcome judgment.</span>' +
             '</div>'
           )) +
-          (item.evidence ? (
-            '<div style="margin:8px 0; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); font-size:12px;">' +
-              '<div style="color:var(--text-muted); font-size:11px; margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Verification Evidence</div>' +
-              (Array.isArray(item.evidence) ? item.evidence.map(e => '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace; margin-right:4px;">📁 ' + escapeHtml(e) + '</span>').join('') : escapeHtml(String(item.evidence))) +
-            '</div>'
-          ) : '') +
+          (() => {
+            const evList = Array.isArray(item.evidence)
+              ? item.evidence
+              : (item.evidence ? [item.evidence] : (item.evidenceRef ? [item.evidenceRef] : []));
+            if (evList.length === 0) return '';
+
+            let evHtml = '<div style="margin:8px 0; padding:8px 10px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); font-size:12px;">' +
+              '<div style="color:var(--text-muted); font-size:11px; margin-bottom:6px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Verification Evidence &amp; Delivered Proofs</div>' +
+              '<div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">';
+
+            const imageItems = [];
+            const docItems = [];
+
+            for (const ev of evList) {
+              if (typeof ev === 'string') {
+                const clean = ev.trim();
+                if (/\\.(png|jpg|jpeg|webp|gif|svg)$/i.test(clean)) {
+                  imageItems.push(clean);
+                } else if (/\\.(md|markdown|txt|log|json|yaml|yml)$/i.test(clean)) {
+                  docItems.push(clean);
+                } else {
+                  evHtml += '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(clean) + '</span>';
+                }
+              } else if (ev && typeof ev === 'object') {
+                evHtml += '<pre class="md-code-block" style="margin:2px 0;"><code>' + escapeHtml(JSON.stringify(ev, null, 2)) + '</code></pre>';
+              }
+            }
+
+            for (const doc of docItems) {
+              const base = doc.split('/').pop() || doc;
+              evHtml += '<button class="btn btn-secondary" style="font-size:11px; padding:2px 8px; font-family:\\'JetBrains Mono\\', monospace;" onclick="toggleInlineEvidenceDoc(' + origIndex + ', \\'' + escapeJs(doc) + '\\')">📄 ' + escapeHtml(base) + ' (preview)</button>';
+            }
+
+            evHtml += '</div>';
+
+            if (imageItems.length > 0) {
+              evHtml += '<div class="evidence-image-grid">';
+              for (const img of imageItems) {
+                const base = img.split('/').pop() || img;
+                const rawUrl = '/api/evidence/raw?path=' + encodeURIComponent(img);
+                evHtml += '<div class="evidence-image-card" onclick="openImageLightbox(\\'' + escapeJs(rawUrl) + '\\', \\'' + escapeJs(base) + '\\')">' +
+                  '<img class="evidence-thumb-img" src="' + escapeHtml(rawUrl) + '" alt="' + escapeHtml(base) + '" loading="lazy">' +
+                  '<div class="evidence-thumb-label" title="' + escapeHtml(img) + '">🖼️ ' + escapeHtml(base) + '</div>' +
+                '</div>';
+              }
+              evHtml += '</div>';
+            }
+
+            evHtml += '<div id="inline-evidence-doc-' + origIndex + '" style="display:none;" class="evidence-doc-preview"></div>';
+            evHtml += '</div>';
+            return evHtml;
+          })() +
           '<div class="card-actions">' +
             '<button class="btn btn-secondary" onclick="openDeliverableDetail(' + origIndex + ')">🔍 Details</button>' +
             (isDropped ? (
@@ -4736,12 +5025,49 @@ export function renderSidecarHtml(daemonUrl: string): string {
 
       const evDetailEl = document.getElementById('detail-evidence');
       if (evDetailEl) {
-        if (Array.isArray(item.evidence) && item.evidence.length > 0) {
-          evDetailEl.innerHTML = item.evidence.map(e => '<span class="badge badge-green" style="margin-right:6px; margin-bottom:4px; font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(e) + '</span>').join('');
-        } else if (item.evidence && typeof item.evidence === 'object') {
-          evDetailEl.innerHTML = '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(item.evidence, null, 2)) + '</code></pre>';
-        } else if (item.evidence) {
-          evDetailEl.innerHTML = renderMarkdown(String(item.evidence));
+        const evList = Array.isArray(item.evidence)
+          ? item.evidence
+          : (item.evidence ? [item.evidence] : (item.evidenceRef ? [item.evidenceRef] : []));
+        if (evList.length > 0) {
+          let detailEvHtml = '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">';
+          const images = [];
+          const docs = [];
+          for (const ev of evList) {
+            if (typeof ev === 'string') {
+              const clean = ev.trim();
+              if (/\\.(png|jpg|jpeg|webp|gif|svg)$/i.test(clean)) {
+                images.push(clean);
+                detailEvHtml += '<span class="badge badge-purple" style="font-family:\\'JetBrains Mono\\', monospace; cursor:pointer;" onclick="openImageLightbox(\\'/api/evidence/raw?path=' + encodeURIComponent(clean) + '\\', \\'' + escapeJs(clean) + '\\')">🖼️ ' + escapeHtml(clean) + '</span>';
+              } else {
+                if (/\\.(md|markdown|txt|log|json|yaml|yml)$/i.test(clean)) {
+                  docs.push(clean);
+                }
+                detailEvHtml += '<span class="badge badge-green" style="font-family:\\'JetBrains Mono\\', monospace;">📁 ' + escapeHtml(clean) + '</span>';
+              }
+            } else if (ev && typeof ev === 'object') {
+              detailEvHtml += '<pre class="md-code-block"><code>' + escapeHtml(JSON.stringify(ev, null, 2)) + '</code></pre>';
+            }
+          }
+          detailEvHtml += '</div>';
+
+          // Visual full-width previews for images
+          if (images.length > 0) {
+            for (const img of images) {
+              const rawUrl = '/api/evidence/raw?path=' + encodeURIComponent(img);
+              detailEvHtml += '<div class="md-image-container">' +
+                '<img class="md-proof-image" src="' + escapeHtml(rawUrl) + '" alt="' + escapeHtml(img) + '" loading="lazy" onclick="openImageLightbox(this.src, this.alt)">' +
+                '<div class="md-image-caption">🖼️ ' + escapeHtml(img) + ' (click to expand full resolution)</div>' +
+              '</div>';
+            }
+          }
+
+          // Document previews container
+          if (docs.length > 0) {
+            detailEvHtml += '<div id="detail-doc-previews"></div>';
+            loadDetailDocPreview(docs[0]);
+          }
+
+          evDetailEl.innerHTML = detailEvHtml;
         } else {
           evDetailEl.textContent = 'Evidence: proof/evidence.md (Empirically verified in workspace)';
         }

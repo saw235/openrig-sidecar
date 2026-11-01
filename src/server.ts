@@ -37,8 +37,108 @@ const ALLOWED_EVIDENCE_EXTENSIONS = new Set([
   ".yaml",
   ".yml",
   ".log",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".webp",
+  ".gif",
+  ".svg",
+]);
+const IMAGE_EXTENSIONS = new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".webp",
+  ".gif",
+  ".svg",
 ]);
 const MAX_EVIDENCE_BYTES = 256 * 1024;
+
+function getMimeType(ext: string): string {
+  switch (ext.toLowerCase()) {
+    case ".png": return "image/png";
+    case ".jpg":
+    case ".jpeg": return "image/jpeg";
+    case ".webp": return "image/webp";
+    case ".gif": return "image/gif";
+    case ".svg": return "image/svg+xml";
+    case ".json": return "application/json; charset=utf-8";
+    case ".yaml":
+    case ".yml": return "text/yaml; charset=utf-8";
+    case ".md":
+    case ".markdown":
+    case ".txt":
+    case ".log":
+    default:
+      return "text/plain; charset=utf-8";
+  }
+}
+
+function resolveEvidenceFile(rawParam: string, roots: string[]): { realPath: string; ext: string } | { error: string; status: number; details?: Record<string, unknown> } {
+  const trimmed = (rawParam || "").trim();
+  if (!trimmed) {
+    return { error: "invalid_evidence_path", status: 400, details: { message: "Evidence path cannot be empty." } };
+  }
+  const cleaned = trimmed.startsWith("file://")
+    ? decodeURIComponent(trimmed.slice("file://".length))
+    : trimmed;
+
+  let candidatePath: string | null = null;
+  if (path.isAbsolute(cleaned)) {
+    candidatePath = cleaned;
+  } else {
+    // Relative path: search roots for existing matching file
+    for (const root of roots) {
+      const testPath = path.resolve(root, cleaned);
+      if (fs.existsSync(testPath)) {
+        candidatePath = testPath;
+        break;
+      }
+    }
+  }
+
+  if (!candidatePath) {
+    return {
+      error: "invalid_evidence_path",
+      status: 400,
+      details: { message: "Evidence path must be absolute or resolve to an existing artifact within an allowed root." },
+    };
+  }
+
+  const ext = path.extname(candidatePath).toLowerCase();
+  if (!ALLOWED_EVIDENCE_EXTENSIONS.has(ext)) {
+    return { error: "unsupported_evidence_extension", status: 403, details: { ext } };
+  }
+
+  let realPath: string;
+  try {
+    realPath = fs.realpathSync(candidatePath);
+  } catch {
+    return { error: "evidence_not_found", status: 404, details: { path: cleaned } };
+  }
+
+  const withinAllowedRoot = roots.some(
+    (root) => realPath === root || realPath.startsWith(root + path.sep)
+  );
+  if (!withinAllowedRoot) {
+    return { error: "evidence_outside_allowed_roots", status: 403 };
+  }
+
+  try {
+    const stat = fs.statSync(realPath);
+    if (!stat.isFile()) {
+      return { error: "evidence_not_a_file", status: 400 };
+    }
+  } catch (err) {
+    return {
+      error: "evidence_stat_failed",
+      status: 500,
+      details: { message: err instanceof Error ? err.message : String(err) },
+    };
+  }
+
+  return { realPath, ext };
+}
 
 export interface RunningSidecar {
   server: http.Server;
@@ -104,59 +204,71 @@ export function startSidecarServer(opts?: SidecarServerOptions): Promise<Running
 
     // Read-only local evidence artifact viewer (scoped to workspace & OpenRig roots)
     if (url.pathname === "/api/evidence" && req.method === "GET") {
-      const rawParam = (url.searchParams.get("path") || "").trim();
-      const cleaned = rawParam.startsWith("file://")
-        ? decodeURIComponent(rawParam.slice("file://".length))
-        : rawParam;
-
-      if (!cleaned || !path.isAbsolute(cleaned)) {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "invalid_evidence_path", message: "Evidence path must be absolute." }));
+      const rawParam = url.searchParams.get("path") || "";
+      const resolved = resolveEvidenceFile(rawParam, allowedEvidenceRoots);
+      if ("error" in resolved) {
+        res.writeHead(resolved.status, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: resolved.error, ...resolved.details }));
         return;
       }
 
-      const ext = path.extname(cleaned).toLowerCase();
-      if (!ALLOWED_EVIDENCE_EXTENSIONS.has(ext)) {
-        res.writeHead(403, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "unsupported_evidence_extension", ext }));
-        return;
-      }
-
-      let realPath: string;
-      try {
-        realPath = fs.realpathSync(cleaned);
-      } catch {
-        res.writeHead(404, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "evidence_not_found", path: cleaned }));
-        return;
-      }
-
-      const withinAllowedRoot = allowedEvidenceRoots.some(
-        (root) => realPath === root || realPath.startsWith(root + path.sep)
-      );
-      if (!withinAllowedRoot) {
-        res.writeHead(403, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "evidence_outside_allowed_roots" }));
-        return;
-      }
+      const { realPath, ext } = resolved;
+      const isImage = IMAGE_EXTENSIONS.has(ext);
 
       try {
-        const stat = fs.statSync(realPath);
-        if (!stat.isFile()) {
-          res.writeHead(400, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "evidence_not_a_file" }));
-          return;
-        }
         const buf = fs.readFileSync(realPath);
         const truncated = buf.byteLength > MAX_EVIDENCE_BYTES;
-        const content = truncated
-          ? buf.subarray(0, MAX_EVIDENCE_BYTES).toString("utf8") + "\n\n*(Evidence truncated at 256 KB)*"
-          : buf.toString("utf8");
+        const content = isImage
+          ? null
+          : (truncated
+              ? buf.subarray(0, MAX_EVIDENCE_BYTES).toString("utf8") + "\n\n*(Evidence truncated at 256 KB)*"
+              : buf.toString("utf8"));
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-        res.end(JSON.stringify({ ok: true, path: realPath, basename: path.basename(realPath), truncated, content }));
+        res.end(
+          JSON.stringify({
+            ok: true,
+            path: realPath,
+            basename: path.basename(realPath),
+            kind: isImage ? "image" : "text",
+            ext,
+            byteLength: buf.byteLength,
+            rawUrl: `/api/evidence/raw?path=${encodeURIComponent(realPath)}`,
+            truncated: isImage ? false : truncated,
+            content,
+          })
+        );
       } catch (err) {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ ok: false, error: "evidence_read_failed", message: err instanceof Error ? err.message : String(err) }));
+      }
+      return;
+    }
+
+    // Binary / raw evidence artifact streaming endpoint (images, markdown, documents)
+    if (url.pathname === "/api/evidence/raw" && req.method === "GET") {
+      const rawParam = url.searchParams.get("path") || "";
+      const resolved = resolveEvidenceFile(rawParam, allowedEvidenceRoots);
+      if ("error" in resolved) {
+        res.writeHead(resolved.status, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: resolved.error, ...resolved.details }));
+        return;
+      }
+
+      const { realPath, ext } = resolved;
+      try {
+        const stat = fs.statSync(realPath);
+        const mime = getMimeType(ext);
+        res.writeHead(200, {
+          "Content-Type": mime,
+          "Content-Length": stat.size,
+          "Cache-Control": "public, max-age=3600",
+          "Access-Control-Allow-Origin": "*",
+        });
+        const stream = fs.createReadStream(realPath);
+        stream.pipe(res);
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, error: "evidence_stream_failed", message: err instanceof Error ? err.message : String(err) }));
       }
       return;
     }
@@ -238,12 +350,33 @@ export function startSidecarServer(opts?: SidecarServerOptions): Promise<Running
   });
 
   return new Promise((resolve, reject) => {
-    server.listen(port, host, () => {
-      const addr = server.address();
-      const actualPort = typeof addr === "object" && addr ? addr.port : port;
-      const sidecarUrl = `http://${host}:${actualPort}`;
-      resolve({ server, url: sidecarUrl, port: actualPort });
-    });
-    server.on("error", reject);
+    const bindHost = (host === "0.0.0.0" || host === "::") ? "::" : host;
+
+    function tryListen(targetHost: string, fallbackToIpv4: boolean) {
+      const errorHandler = (err: NodeJS.ErrnoException) => {
+        if (fallbackToIpv4 && (err.code === "EAFNOSUPPORT" || err.code === "EADDRNOTAVAIL")) {
+          server.removeListener("error", errorHandler);
+          tryListen("0.0.0.0", false);
+        } else {
+          reject(err);
+        }
+      };
+
+      server.once("error", errorHandler);
+      server.listen(port, targetHost, () => {
+        server.removeListener("error", errorHandler);
+        server.on("error", (err) => console.error("Sidecar runtime server error:", err));
+
+        const addr = server.address();
+        const actualPort = typeof addr === "object" && addr ? addr.port : port;
+        const formattedHost = targetHost === "::"
+          ? "localhost"
+          : (targetHost.includes(":") ? `[${targetHost}]` : targetHost);
+        const sidecarUrl = `http://${formattedHost}:${actualPort}`;
+        resolve({ server, url: sidecarUrl, port: actualPort });
+      });
+    }
+
+    tryListen(bindHost, bindHost === "::");
   });
 }
