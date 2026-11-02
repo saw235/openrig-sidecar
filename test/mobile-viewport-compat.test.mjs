@@ -135,15 +135,17 @@ test("SDCR.0.6.01: Android Phone & Mobile Viewport Compatibility Suite", async (
   });
 
   await t.test("5. Mobile Topology Graph Touch Pan, Pinch-Zoom & Mobile Auto-Fit", () => {
-    // Lower zoom floor (0.30 instead of 0.45)
+    // Zoom floor is low enough for Fit to show a 100+ seat fleet whole (shared GRAPH_ZOOM_MIN constant)
+    assert.ok(/const GRAPH_ZOOM_MIN = 0\.10;/.test(html), "GRAPH_ZOOM_MIN must be 0.10 so wide multi-rig fleets can be fit");
     assert.ok(
-      /Math\.max\(0\.30,\s*Math\.min\(1\.85/.test(html),
-      "adjustGraphZoom must permit lower zoom floor down to 0.30 for wide multi-pod rigs"
+      /Math\.max\(GRAPH_ZOOM_MIN,\s*Math\.min\(1\.85,\s*Math\.round\(\(graphZoom \+ delta\)/.test(html),
+      "adjustGraphZoom must use the shared zoom floor"
     );
     assert.ok(
-      /Math\.max\(0\.30,\s*Math\.min\(1\.35/.test(html),
-      "fitGraphZoom must permit zoom floor down to 0.30"
+      /const fit = Math\.max\(GRAPH_ZOOM_MIN,\s*Math\.min\(1\.0,\s*Math\.floor\(\(avail \/ lastGraphLogicalWidth\)/.test(html),
+      "fitGraphZoom must use the shared zoom floor and never exceed 100%"
     );
+    assert.ok(/GRAPH_ZOOM_READABLE = 0\.50;/.test(html) && /fitGraphZoom\(true\)/.test(html), "The automatic first view must open at a readable zoom");
 
     // Touch pan and pinch-zoom handlers registered on #topology-graph-viewport
     assert.ok(html.includes("vp.addEventListener('touchstart'"), "initGraphViewportPanZoom must register touchstart");
@@ -151,10 +153,19 @@ test("SDCR.0.6.01: Android Phone & Mobile Viewport Compatibility Suite", async (
     assert.ok(html.includes("vp.addEventListener('touchend'"), "initGraphViewportPanZoom must register touchend");
     assert.ok(html.includes("initialPinchDist"), "Touch handlers must calculate pinch distance for pinch-to-zoom");
 
-    // Auto-fit on initial render when viewport width < 768px
+    // Auto-fit on first visible render on every viewport (desktop included), not only < 768px
     assert.ok(
-      html.includes("initialGraphFitApplied") && html.includes("fitGraphZoom()"),
-      "Graph render must execute fitGraphZoom on initial mobile load when width < 768px"
+      html.includes("initialGraphFitApplied") && html.includes("function ensureGraphFit()"),
+      "Graph must auto-fit through ensureGraphFit on first visible render"
+    );
+    assert.ok(/if \(tabId === 'topology'\) ensureGraphFit\(\);/.test(html), "Switching to the Topology tab must trigger the fit");
+    assert.ok(
+      /lastGraphFitRigFilter\s*===\s*rigFilter/.test(html),
+      "Changing the rig filter must re-fit the graph"
+    );
+    assert.ok(
+      !/innerWidth\s*&&\s*window\.innerWidth\s*<\s*768\)\s*\|\|\s*\(document\.documentElement\s*&&\s*document\.documentElement\.clientWidth\s*<\s*768\)\)\)\s*\{\s*(?:const vpEl|initialGraphFitApplied = true)/.test(html),
+      "Auto-fit must not be gated on a mobile-width check"
     );
 
     // Mobile resize listener
