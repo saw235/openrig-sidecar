@@ -2756,10 +2756,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
         btn.classList.add('active');
         const tabId = btn.getAttribute('data-tab');
         document.getElementById('tab-' + tabId).classList.add('active');
-        if (tabId === 'topology' && topologyViewMode === 'graph' && !initialGraphFitApplied && (typeof window !== 'undefined' && ((window.innerWidth && window.innerWidth < 768) || (document.documentElement && document.documentElement.clientWidth < 768)))) {
-          initialGraphFitApplied = true;
-          fitGraphZoom();
-        }
+        if (tabId === 'topology') ensureGraphFit();
       });
     });
 
@@ -4343,8 +4340,12 @@ export function renderSidecarHtml(daemonUrl: string): string {
 
     // Tab 2 View Switcher & Interactive SVG Topology Graph (Default View)
     let topologyViewMode = 'graph';
+    // Wide multi-rig fleets (100+ seats) are several thousand px across; the floor must be low enough for Fit to show them whole.
+    const GRAPH_ZOOM_MIN = 0.10;
+    const GRAPH_ZOOM_READABLE = 0.50;
     let graphZoom = 1.0;
     let initialGraphFitApplied = false;
+    let lastGraphFitRigFilter = null;
     let lastGraphLogicalWidth = 1040;
     let lastGraphLogicalHeight = 480;
     let selectedGraphSeatKey = null;
@@ -4401,7 +4402,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
     }
 
     function adjustGraphZoom(delta) {
-      graphZoom = Math.max(0.30, Math.min(1.85, Math.round((graphZoom + delta) * 100) / 100));
+      graphZoom = Math.max(GRAPH_ZOOM_MIN, Math.min(1.85, Math.round((graphZoom + delta) * 100) / 100));
       applyGraphZoomToSvg();
     }
 
@@ -4410,12 +4411,30 @@ export function renderSidecarHtml(daemonUrl: string): string {
       applyGraphZoomToSvg();
     }
 
-    function fitGraphZoom() {
+    // "Fit" shows the whole graph. The automatic first view passes readable=true so a very wide fleet
+    // opens at a legible zoom, centered, instead of a speck.
+    function fitGraphZoom(readable) {
       const vp = document.getElementById('topology-graph-viewport');
       if (!vp || !lastGraphLogicalWidth) return;
-      const avail = Math.max(280, (vp.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 360)) - 24);
-      graphZoom = Math.max(0.30, Math.min(1.35, Math.round((avail / lastGraphLogicalWidth) * 100) / 100));
+      const avail = Math.max(280, (vp.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 360)) - 40);
+      const fit = Math.max(GRAPH_ZOOM_MIN, Math.min(1.0, Math.floor((avail / lastGraphLogicalWidth) * 100) / 100));
+      graphZoom = readable ? Math.max(fit, GRAPH_ZOOM_READABLE) : fit;
       applyGraphZoomToSvg();
+      vp.scrollLeft = Math.max(0, Math.round((lastGraphLogicalWidth * graphZoom - vp.clientWidth) / 2));
+    }
+
+    // Fit the graph to the viewport the first time it is visible, and again whenever the rig filter changes
+    // (a one-rig graph and the whole fleet differ in size by an order of magnitude). A hidden tab has a
+    // zero-width viewport, so the fit waits until the tab is shown.
+    function ensureGraphFit() {
+      if (topologyViewMode !== 'graph') return;
+      const vp = document.getElementById('topology-graph-viewport');
+      if (!vp || vp.clientWidth <= 0 || !document.getElementById('topology-svg-canvas')) return;
+      const rigFilter = document.getElementById('topology-rig-filter')?.value || 'all';
+      if (initialGraphFitApplied && lastGraphFitRigFilter === rigFilter) return;
+      initialGraphFitApplied = true;
+      lastGraphFitRigFilter = rigFilter;
+      fitGraphZoom(true);
     }
 
     function selectGraphSeat(seatKey) {
@@ -4533,7 +4552,7 @@ export function renderSidecarHtml(daemonUrl: string): string {
           const dist = Math.hypot(dx, dy);
           if (initialPinchDist > 0) {
             const scale = dist / initialPinchDist;
-            graphZoom = Math.max(0.30, Math.min(1.85, Math.round(initialPinchZoom * scale * 100) / 100));
+            graphZoom = Math.max(GRAPH_ZOOM_MIN, Math.min(1.85, Math.round(initialPinchZoom * scale * 100) / 100));
             applyGraphZoomToSvg();
           }
         } else if (isPanningTouch && e.touches.length === 1) {
@@ -5359,14 +5378,8 @@ export function renderSidecarHtml(daemonUrl: string): string {
 
       updateGraphInspector(allRenderedEdges);
 
-      // Mobile Auto-Fit on initial graph render when viewport width < 768px
-      if (!initialGraphFitApplied && (typeof window !== 'undefined' && ((window.innerWidth && window.innerWidth < 768) || (document.documentElement && document.documentElement.clientWidth < 768)))) {
-        const vpEl = document.getElementById('topology-graph-viewport');
-        if (vpEl && vpEl.clientWidth > 0) {
-          initialGraphFitApplied = true;
-          fitGraphZoom();
-        }
-      }
+      // Auto-fit on first visible render (desktop and mobile) and when the rig filter changes.
+      ensureGraphFit();
     }
 
     // Tab 2 Filtering & Rendering
